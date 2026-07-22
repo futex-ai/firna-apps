@@ -1,0 +1,487 @@
+id: dataforseo
+name: DataForSEO
+version: 1.0.3
+icon:
+  media_type: image/png
+  data_base64: iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAJFBMVEUAAAAxbOwkY+smY+s/hPBfmfN80vzT4fv9/v+o0fqhvPaSsfWD8ygwAAAAAXRSTlMAQObYZgAAAWVJREFUWMO9l+uygyAMhKUkRsj7v2+tlzagUJL0nP3TmTr7uQSNZJqEwiOOKITpTmHIfOhxYYzdu8hhvvs7hdMvCEb/qgNg9h8Z9PWrIjj8WwRPgC2C0gEAVQSVHeeXJEK3h7u/IKgCwHyqDaDlENFC+y+lzAgygIxQA5aGKDHEt39GNeDFyOxIsCl9rwF0AZQuK2gXsUcQfiVgJaRjR0w12BmF3wBY0iiAeFdOFQEHAfzZG6RmhE4RWf7PrQijgILAFkAUlSBtDTahuAQWgIyAJkD2Avj20ngR/wvwh0UEEa69jdAGiBWYHiQZIHUArSJKv+VlKt7noid1APm8OXLZKYtovabaaLDkbKplRzMAqt1VfZlkZawJ6udb+2nD6AJkiA4A8Y19tAbr+QTjvWoAX4UIsS3HUf1XANdZewP4DtvBM6/sAXxrCL6R6Rya7FWwT51iAQ6CnF0tBOfwfDPBaxAf+xPvtkO5yaE2RwAAAABJRU5ErkJggg==
+  color_pair:
+    primary: "#2563EB"
+    secondary: "#7DD3FC"
+source:
+  kind: built_in
+  package: null
+runtime:
+  kind: wasm_component
+  component_ref: component/dataforseo.wasm
+  abi: firna-app-component-v1
+secrets: []
+install:
+  policy: explicit
+capabilities:
+  http:
+    allowed_hosts:
+    - api.dataforseo.com
+    credential_headers: []
+auth_requirements:
+- id: dataforseo_account
+  kind: basic_auth
+  provider: dataforseo
+  credential_flow: dataforseo_basic
+  owner: workspace
+  scopes: []
+  credential_kinds: [login, password]
+  required_for:
+  - dataforseo_google_serp
+  - dataforseo_keyword_overview
+  - dataforseo_keyword_suggestions
+  - dataforseo_ranked_keywords
+  - dataforseo_backlinks_summary
+  - dataforseo_backlinks
+  - dataforseo_referring_domains
+  - dataforseo_instant_page_audit
+  - dataforseo_business_search
+  - dataforseo_business_info
+  - dataforseo_content_search
+  - dataforseo_content_sentiment
+  - dataforseo_domain_technologies
+  - dataforseo_domain_whois
+  - dataforseo_ai_keyword_volume
+  - dataforseo_llm_mentions
+credential_flows:
+- id: dataforseo_basic
+  kind: basic_auth
+  fields:
+  - credential_kind: login
+    role: username
+    label: DataForSEO API login
+    input_mode: text
+    max_bytes: 320
+  - credential_kind: password
+    role: password
+    label: DataForSEO API password
+    input_mode: password
+    max_bytes: 320
+  help_url: https://app.dataforseo.com/api-access
+  verification:
+    method: GET
+    url: https://api.dataforseo.com/v3/appendix/status
+    max_response_bytes: 65536
+    success_http_status: 200
+    json_code_pointer: /status_code
+    json_code_equals: 20000
+tools:
+- name: dataforseo_google_serp
+  description: Search the first ten Google organic results for one bounded query.
+  activity_verb: Searching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.google_serp
+  side_effect: external_read
+  limits: &tool_limits
+    max_response_bytes: 1048576
+    max_component_ms: 300000
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [keyword]
+    allOf: &location_language_selectors
+    - oneOf:
+      - required: [location_name]
+      - required: [location_code]
+    - oneOf:
+      - required: [language_name]
+      - required: [language_code]
+    properties:
+      keyword: &keyword_700 { type: string, minLength: 1, maxLength: 700 }
+      location_name: &location_name { type: string, minLength: 1, maxLength: 255 }
+      location_code: &location_code { type: integer, minimum: 1, maximum: 2147483647 }
+      language_name: &language_name { type: string, minLength: 1, maxLength: 100 }
+      language_code: &language_code { type: string, minLength: 1, maxLength: 32 }
+      device: { type: string, enum: [desktop, mobile] }
+      depth: { type: integer, minimum: 1, maximum: 10 }
+      timeout_seconds: &timeout { type: integer, minimum: 1, maximum: 300 }
+- name: dataforseo_keyword_overview
+  description: Return compact Google search metrics for up to one hundred keywords.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.keyword_overview
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [keywords]
+    allOf: *location_language_selectors
+    properties:
+      keywords: &keywords_80
+        type: array
+        minItems: 1
+        maxItems: 100
+        uniqueItems: true
+        items: { type: string, minLength: 1, maxLength: 80 }
+      location_name: *location_name
+      location_code: *location_code
+      language_name: *language_name
+      language_code: *language_code
+      timeout_seconds: *timeout
+- name: dataforseo_keyword_suggestions
+  description: Discover up to fifty bounded Google keyword suggestions with typed filters.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.keyword_suggestions
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [keyword]
+    allOf: *location_language_selectors
+    properties:
+      keyword: { type: string, minLength: 1, maxLength: 80 }
+      location_name: *location_name
+      location_code: *location_code
+      language_name: *language_name
+      language_code: *language_code
+      limit: &limit { type: integer, minimum: 1, maximum: 50 }
+      exact_match: { type: boolean }
+      ignore_synonyms: { type: boolean }
+      min_search_volume: { type: integer, minimum: 0, maximum: 2147483647 }
+      max_keyword_difficulty: { type: integer, minimum: 0, maximum: 100 }
+      timeout_seconds: *timeout
+- name: dataforseo_ranked_keywords
+  description: Inspect up to fifty organic keywords currently ranking for a domain or page.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.ranked_keywords
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [target]
+    allOf: *location_language_selectors
+    properties:
+      target: &target { type: string, minLength: 1, maxLength: 2048 }
+      location_name: *location_name
+      location_code: *location_code
+      language_name: *language_name
+      language_code: *language_code
+      limit: *limit
+      offset: &offset { type: integer, minimum: 0, maximum: 1000 }
+      historical_serp_mode: { type: string, enum: [live, lost, all] }
+      max_rank: { type: integer, minimum: 1, maximum: 100 }
+      min_search_volume: { type: integer, minimum: 0, maximum: 2147483647 }
+      timeout_seconds: *timeout
+- name: dataforseo_backlinks_summary
+  description: Summarize a bounded live or lost backlink profile.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.backlinks_summary
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema: &backlink_summary_schema
+    type: object
+    additionalProperties: false
+    required: [target]
+    properties:
+      target: *target
+      include_subdomains: { type: boolean }
+      backlinks_status: &backlinks_status { type: string, enum: [live, lost, all] }
+      dofollow_only: { type: boolean }
+      timeout_seconds: *timeout
+- name: dataforseo_backlinks
+  description: Return the strongest bounded external backlinks for a domain or page.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.backlinks
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [target]
+    properties:
+      target: *target
+      include_subdomains: { type: boolean }
+      backlinks_status: *backlinks_status
+      dofollow_only: { type: boolean }
+      limit: *limit
+      offset: *offset
+      mode: { type: string, enum: [as_is, one_per_domain, one_per_anchor] }
+      timeout_seconds: *timeout
+- name: dataforseo_referring_domains
+  description: Return the strongest bounded referring domains for a domain or page.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.referring_domains
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [target]
+    properties:
+      target: *target
+      include_subdomains: { type: boolean }
+      backlinks_status: *backlinks_status
+      dofollow_only: { type: boolean }
+      limit: *limit
+      offset: *offset
+      min_backlinks: { type: integer, minimum: 0, maximum: 2147483647 }
+      timeout_seconds: *timeout
+- name: dataforseo_instant_page_audit
+  description: Audit one public HTTPS page without crawling or browser rendering.
+  activity_verb: Auditing
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.instant_page_audit
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [url]
+    properties:
+      url: { type: string, minLength: 1, maxLength: 2048 }
+      timeout_seconds: *timeout
+- name: dataforseo_business_search
+  description: Search bounded local business listings around one coordinate and radius.
+  activity_verb: Searching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.business_search
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [latitude, longitude, radius_km]
+    anyOf:
+    - required: [query]
+    - required: [categories]
+    properties:
+      latitude: { type: number, minimum: -90, maximum: 90 }
+      longitude: { type: number, minimum: -180, maximum: 180 }
+      radius_km: { type: number, minimum: 1, maximum: 100 }
+      query: { type: string, minLength: 1, maxLength: 200 }
+      categories:
+        type: array
+        minItems: 1
+        maxItems: 5
+        uniqueItems: true
+        items: { type: string, minLength: 1, maxLength: 100 }
+      is_claimed: { type: boolean }
+      min_rating: { type: number, minimum: 0, maximum: 5 }
+      limit: *limit
+      offset: *offset
+      timeout_seconds: *timeout
+- name: dataforseo_business_info
+  description: Return compact identity, contact, hours, attributes, and popularity data for one business.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.business_info
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    allOf:
+    - oneOf:
+      - required: [location_name]
+      - required: [location_code]
+    - oneOf:
+      - required: [language_name]
+      - required: [language_code]
+    - oneOf:
+      - required: [business_name]
+      - required: [cid]
+      - required: [place_id]
+    properties:
+      business_name: { type: string, minLength: 1, maxLength: 700 }
+      cid: { type: string, pattern: '^[0-9]{1,32}$' }
+      place_id: { type: string, minLength: 1, maxLength: 255 }
+      location_name: *location_name
+      location_code: *location_code
+      language_name: *language_name
+      language_code: *language_code
+      timeout_seconds: *timeout
+- name: dataforseo_content_search
+  description: Search bounded web citations with typed country, language, rank, and sentiment filters.
+  activity_verb: Searching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.content_search
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [keyword]
+    properties: &content_properties
+      keyword: { type: string, minLength: 1, maxLength: 250 }
+      page_types:
+        type: array
+        minItems: 1
+        maxItems: 5
+        uniqueItems: true
+        items: { type: string, enum: [ecommerce, news, blogs, message-boards, organization] }
+      country_code: { type: string, pattern: '^[A-Z]{2}$' }
+      language_code: { type: string, pattern: '^[a-z]{2}$' }
+      min_domain_rank: { type: integer, minimum: 0, maximum: 100 }
+      search_mode: { type: string, enum: [as_is, one_per_domain] }
+      sentiment: { type: string, enum: [positive, negative, neutral] }
+      limit: *limit
+      offset: *offset
+      timeout_seconds: *timeout
+- name: dataforseo_content_sentiment
+  description: Summarize bounded sentiment and connotation distributions for one topic.
+  activity_verb: Analyzing
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.content_sentiment
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [keyword]
+    properties:
+      keyword: { type: string, minLength: 1, maxLength: 250 }
+      page_types:
+        type: array
+        minItems: 1
+        maxItems: 5
+        uniqueItems: true
+        items: { type: string, enum: [ecommerce, news, blogs, message-boards, organization] }
+      country_code: { type: string, pattern: '^[A-Z]{2}$' }
+      language_code: { type: string, pattern: '^[a-z]{2}$' }
+      min_domain_rank: { type: integer, minimum: 0, maximum: 100 }
+      timeout_seconds: *timeout
+- name: dataforseo_domain_technologies
+  description: Return bounded technology detections for one hostname without contact data.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.domain_technologies
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema: &hostname_schema
+    type: object
+    additionalProperties: false
+    required: [hostname]
+    properties:
+      hostname: { type: string, minLength: 1, maxLength: 253 }
+      timeout_seconds: *timeout
+- name: dataforseo_domain_whois
+  description: Return registration and aggregate traffic metadata for one exact hostname without contact data.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.domain_whois
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema: *hostname_schema
+- name: dataforseo_ai_keyword_volume
+  description: Return current and twelve-month AI search demand for up to one hundred keywords.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.ai_keyword_volume
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [keywords]
+    allOf: *location_language_selectors
+    properties:
+      keywords:
+        type: array
+        minItems: 1
+        maxItems: 100
+        uniqueItems: true
+        items: { type: string, minLength: 1, maxLength: 250 }
+      location_name: *location_name
+      location_code: *location_code
+      language_name: *language_name
+      language_code: *language_code
+      timeout_seconds: *timeout
+- name: dataforseo_llm_mentions
+  description: Return bounded Google or ChatGPT target mention aggregates in one Live request.
+  activity_verb: Researching
+  auth: [dataforseo_account]
+  export: call-tool
+  operation: dataforseo.llm_mentions
+  side_effect: external_read
+  limits: *tool_limits
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [platform, targets]
+    allOf:
+    - oneOf:
+      - required: [location_name]
+      - required: [location_code]
+    - oneOf:
+      - required: [language_name]
+      - required: [language_code]
+    - oneOf:
+      - properties:
+          platform: { type: string, enum: [google] }
+      - properties:
+          platform: { type: string, enum: [chat_gpt] }
+          location_name: { type: string, enum: [United States] }
+          location_code: { type: integer, enum: [2840] }
+          language_name: { type: string, enum: [English] }
+          language_code: { type: string, enum: [en] }
+    properties:
+      platform: { type: string, enum: [google, chat_gpt] }
+      location_name: *location_name
+      location_code: *location_code
+      language_name: *language_name
+      language_code: *language_code
+      targets:
+        type: array
+        minItems: 1
+        maxItems: 10
+        items:
+          oneOf:
+          - type: object
+            additionalProperties: false
+            required: [domain]
+            properties:
+              domain: { type: string, minLength: 1, maxLength: 63 }
+              search_filter: { type: string, enum: [include, exclude] }
+              search_scope:
+                type: array
+                minItems: 1
+                maxItems: 3
+                uniqueItems: true
+                items: { type: string, enum: [any, sources, search_results] }
+              include_subdomains: { type: boolean }
+          - type: object
+            additionalProperties: false
+            required: [keyword]
+            properties:
+              keyword: { type: string, minLength: 1, maxLength: 250 }
+              search_filter: { type: string, enum: [include, exclude] }
+              search_scope:
+                type: array
+                minItems: 1
+                maxItems: 5
+                uniqueItems: true
+                items: { type: string, enum: [any, question, answer, brand_entities, fan_out_queries] }
+              match_type: { type: string, enum: [word_match, partial_match] }
+      timeout_seconds: *timeout
+ingress: []
+event_subscriptions: []
+handler_roles: []
+limits:
+  max_tool_response_bytes: 1048576

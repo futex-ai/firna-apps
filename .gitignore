@@ -1,0 +1,9 @@
+target/
+.DS_Store
+.DS_STORE
+.context/
+.firna/
+__pycache__/
+*.py[cod]
+apps/*/component/target/
+apps/*/tests/platform-runtime/target/
