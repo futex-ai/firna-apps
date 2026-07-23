@@ -8,19 +8,27 @@ fn check_plan_covers_every_standalone_package() {
 
     for manifest in COMPONENT_MANIFESTS.iter().chain(RUNTIME_TEST_MANIFESTS) {
         for cargo_command in ["fmt", "clippy"] {
-            assert!(commands.iter().any(|command| {
-                command.program() == "cargo"
-                    && command.args().first().map(String::as_str) == Some(cargo_command)
-                    && command.args().iter().any(|argument| argument == manifest)
-            }));
+            assert!(
+                commands.iter().any(|command| {
+                    command.program() == "cargo"
+                        && command.args().first().map(String::as_str) == Some(cargo_command)
+                        && command.args().iter().any(|argument| argument == manifest)
+                }),
+                "missing cargo {cargo_command} for {manifest}"
+            );
         }
     }
     for manifest in COMPONENT_MANIFESTS {
-        assert!(commands.iter().any(|command| {
-            command.program() == "cargo"
-                && command.args().first().map(String::as_str) == Some("build")
-                && command.args().iter().any(|argument| argument == manifest)
-        }));
+        for cargo_command in ["build", "test"] {
+            assert!(
+                commands.iter().any(|command| {
+                    command.program() == "cargo"
+                        && command.args().first().map(String::as_str) == Some(cargo_command)
+                        && command.args().iter().any(|argument| argument == manifest)
+                }),
+                "missing cargo {cargo_command} for {manifest}"
+            );
+        }
     }
     for manifest in RUNTIME_TEST_MANIFESTS {
         assert!(commands.iter().any(|command| {

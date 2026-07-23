@@ -114,10 +114,7 @@ fn check_commands() -> Vec<CommandSpec> {
             &["--all-targets", "--locked", "--", "-D", "warnings"],
         ));
     }
-    for manifest in [
-        "apps/dataforseo/component/Cargo.toml",
-        "apps/http/component/Cargo.toml",
-    ] {
+    for manifest in COMPONENT_MANIFESTS {
         commands.push(cargo_manifest_command("test", manifest, &["--locked"]));
     }
     for manifest in RUNTIME_TEST_MANIFESTS {
