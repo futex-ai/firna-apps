@@ -1,0 +1,16 @@
+[package]
+name = "fna-app-http-component"
+version = "1.0.0"
+edition = "2024"
+license = "MIT"
+authors = ["Polybase"]
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+wit-bindgen = "0.57.1"

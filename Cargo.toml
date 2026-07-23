@@ -1,0 +1,10 @@
+[workspace]
+members = ["xtask"]
+resolver = "2"
+
+[workspace.package]
+authors = ["Polybase"]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/futex-ai/firna-apps.git"
+version = "0.1.0"

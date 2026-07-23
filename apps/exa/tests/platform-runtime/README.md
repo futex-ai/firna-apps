@@ -1,0 +1,37 @@
+# Exa Platform Runtime Tests
+
+This crate verifies the Exa component against the pinned Firna Wasm runtime.
+Depend on it only as a standalone integration-test package.
+
+## Responsibilities
+
+- Build and wrap the Exa WebAssembly component reproducibly.
+- Validate the app manifest and search-tool contract.
+- Exercise host-mediated Exa requests without live credentials or network IO.
+
+## What This Crate Does
+
+The tests run the real component through `fna-apps-wasm` with a fake host and
+assert the bounded provider request and normalized response behavior.
+
+## Quick Start
+
+```sh
+cargo test --manifest-path apps/exa/tests/platform-runtime/Cargo.toml --locked
+```
+
+## Development
+
+Install `wasm32-unknown-unknown` and the `wasm-tools` version from the root
+`platform.toml` before running the suite.
+
+### Key Code
+
+- `src/lib.rs` builds and wraps the component.
+- `exa_package_tests.rs` validates package metadata.
+- `exa_tool_smoke_tests.rs` exercises the host/runtime boundary.
+
+### Related Docs
+
+- [Exa package](../../README.md)
+- [Repository development](../../../../README.md#development)

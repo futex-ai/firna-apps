@@ -1,0 +1,208 @@
+name: Deploy Firna Apps
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      app:
+        description: App id to deploy, or all
+        required: false
+        default: all
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+concurrency:
+  group: firna-apps-production
+  cancel-in-progress: false
+
+env:
+  FIRNA_BOOTSTRAP_USERNAME: ${{ vars.FIRNA_BOOTSTRAP_USERNAME }}
+  FIRNA_PLATFORM_REPOSITORY: https://github.com/futex-ai/firna.git
+  FIRNA_PLATFORM_REVISION: c9553f98b796fb267dd54258c26589a9e7f42811
+  FIRNA_SECRET_MANAGER_PREFIX: firna-prod
+  FIRNA_SERVER_URL: https://api.firna.ai
+  GCP_PROJECT_ID: firna-498513
+  RUST_TOOLCHAIN_VERSION: 1.89.0
+
+jobs:
+  deploy:
+    name: Submit trusted app packages
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest-m
+    timeout-minutes: 45
+    environment: production
+    steps:
+      - name: Check out verified revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Configure private Firna source access
+        env:
+          FIRNA_REPOSITORY_TOKEN: ${{ secrets.FIRNA_REPOSITORY_TOKEN }}
+        run: bash scripts/configure-firna-repository-access.sh
+
+      - name: Select app packages
+        id: selection
+        shell: bash
+        env:
+          MANUAL_APP: ${{ inputs.app }}
+        run: |
+          set -euo pipefail
+          manual_app="${MANUAL_APP:-}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "$manual_app" != "all" ]; then
+            if [ ! -f "apps/$manual_app/manifest.yaml" ] && [ ! -f "apps/$manual_app/manifest.json" ]; then
+              echo "::error::app package apps/$manual_app does not exist"
+              exit 1
+            fi
+            printf '%s\n' "$manual_app" > /tmp/candidate-apps
+          else
+            find apps -mindepth 2 -maxdepth 2 \( -name manifest.yaml -o -name manifest.json \) -print \
+              | awk -F/ '{ print $2 }' \
+              | sort -u > /tmp/candidate-apps
+          fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "forced=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "forced=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Firna CLI system dependencies
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            libasound2-dev \
+            libpq-dev \
+            pkg-config \
+            protobuf-compiler
+
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install "${RUST_TOOLCHAIN_VERSION}"
+          rustup default "${RUST_TOOLCHAIN_VERSION}"
+
+      - name: Restore Firna CLI build cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: firna-apps-cli-${{ env.FIRNA_PLATFORM_REVISION }}
+          cache-targets: false
+
+      - name: Install pinned Firna CLI
+        run: |
+          cargo install --locked \
+            --git "${FIRNA_PLATFORM_REPOSITORY}" \
+            --rev "${FIRNA_PLATFORM_REVISION}" \
+            --root "${RUNNER_TEMP}/firna-cli" \
+            --bin firna \
+            fna-cli
+          echo "${RUNNER_TEMP}/firna-cli/bin" >> "$GITHUB_PATH"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Log in as Firna deployment admin
+        shell: bash
+        run: |
+          set -euo pipefail
+          escape_github_command() {
+            local value="$1"
+            value="${value//'%'/'%25'}"
+            value="${value//$'\r'/'%0D'}"
+            value="${value//$'\n'/'%0A'}"
+            printf '%s' "$value"
+          }
+          password="$(gcloud secrets versions access latest \
+            --project="${GCP_PROJECT_ID}" \
+            --secret="${FIRNA_SECRET_MANAGER_PREFIX}-runtime-firna-bootstrap-password")"
+          echo "::add-mask::$(escape_github_command "$password")"
+          firna config set-server "$FIRNA_SERVER_URL"
+          FIRNA_APP_ADMIN_PASSWORD="$password" \
+            firna admin login \
+              --email "${FIRNA_BOOTSTRAP_USERNAME:-admin}" \
+              --password-env FIRNA_APP_ADMIN_PASSWORD
+
+      - name: Plan app package deployment
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.selection.outputs.forced }}" = "true" ]; then
+            cp /tmp/candidate-apps /tmp/deploy-apps
+          else
+            firna admin apps catalog --json > /tmp/remote-app-catalog.json
+            : > /tmp/changed-apps
+            : > /tmp/local-app-manifests.jsonl
+            while IFS= read -r app; do
+              [ -n "$app" ] || continue
+              manifest_json="$(firna apps validate "apps/$app" --json)"
+              python3 -c 'import json,sys; payload=json.load(sys.stdin); payload["directory"]=sys.argv[1]; print(json.dumps(payload, sort_keys=True))' "$app" \
+                <<< "$manifest_json" >> /tmp/local-app-manifests.jsonl
+            done < /tmp/candidate-apps
+            python3 scripts/plan-app-deploys.py \
+              --catalog /tmp/remote-app-catalog.json \
+              --local-manifests /tmp/local-app-manifests.jsonl \
+              --changed-apps /tmp/changed-apps > /tmp/deploy-apps
+          fi
+          {
+            echo "apps<<EOF"
+            cat /tmp/deploy-apps
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Submit through trusted admin auto-approval
+        if: steps.plan.outputs.apps != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          escape_github_command() {
+            local value="$1"
+            value="${value//'%'/'%25'}"
+            value="${value//$'\r'/'%0D'}"
+            value="${value//$'\n'/'%0A'}"
+            printf '%s' "$value"
+          }
+          while IFS= read -r app; do
+            [ -n "$app" ] || continue
+            app_dir="apps/$app"
+            manifest_json="$(firna apps validate "$app_dir" --json)"
+            manifest_id="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])' <<< "$manifest_json")"
+            safe_app="${manifest_id//-/_}"
+            mapfile -t secrets < <(python3 -c 'import json,sys; [print(secret) for secret in json.load(sys.stdin)["required_secrets"]]' <<< "$manifest_json")
+            submit_args=()
+            for secret_name in "${secrets[@]}"; do
+              secret_id="${FIRNA_SECRET_MANAGER_PREFIX}-app-${manifest_id}-${secret_name//_/-}"
+              echo "Reading Secret Manager app secret projects/${GCP_PROJECT_ID}/secrets/${secret_id}"
+              value="$(gcloud secrets versions access latest \
+                --project="${GCP_PROJECT_ID}" \
+                --secret="$secret_id")"
+              if [ -z "$value" ]; then
+                echo "::error::missing required app secret $secret_id"
+                exit 1
+              fi
+              echo "::add-mask::$(escape_github_command "$value")"
+              env_name="FIRNA_APP_SECRET_${safe_app}_${secret_name}"
+              export "$env_name=$value"
+              submit_args+=(--secret-env "${secret_name}=${env_name}")
+            done
+            firna admin apps submit "$app_dir" "${submit_args[@]}"
+          done <<< "${{ steps.plan.outputs.apps }}"
