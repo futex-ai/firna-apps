@@ -77,6 +77,7 @@ reading the production bootstrap password plus manifest-declared app secrets.
 
 - [`apps/`](apps/README.md): manifests, component source, assets, and runtime
   tests.
+- [`plans/`](plans/README.md): active and completed implementation plans.
 - [`scripts/repository_audit.py`](scripts/repository_audit.py): compatibility,
   version, source-layout, and file-length checks.
 - [`scripts/plan-app-deploys.py`](scripts/plan-app-deploys.py): catalog-aware
