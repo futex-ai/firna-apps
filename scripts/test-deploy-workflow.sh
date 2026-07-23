@@ -8,7 +8,7 @@ deploy_workflow="$repo_root/.github/workflows/deploy-apps.yml"
 require_line() {
   local file="$1"
   local pattern="$2"
-  if ! rg --quiet --fixed-strings -- "$pattern" "$file"; then
+  if ! grep -Fq -- "$pattern" "$file"; then
     printf 'workflow missing in %s: %s\n' "$file" "$pattern" >&2
     exit 1
   fi
@@ -17,7 +17,7 @@ require_line() {
 reject_line() {
   local file="$1"
   local pattern="$2"
-  if rg --quiet --fixed-strings -- "$pattern" "$file"; then
+  if grep -Fq -- "$pattern" "$file"; then
     printf 'unexpected workflow content in %s: %s\n' "$file" "$pattern" >&2
     exit 1
   fi
