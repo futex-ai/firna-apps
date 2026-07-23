@@ -6,8 +6,9 @@ Use it when validating packages locally or running the same checks as CI.
 ## Responsibilities
 
 - Run repository, workflow, Rust formatting, lint, build, and test checks.
-- Keep every standalone app component and platform-runtime test in the check
-  plan.
+- Use the complete component manifest inventory for every standalone component
+  format, lint, build, and unit-test command.
+- Keep every standalone platform-runtime test in the check plan.
 - Launch a read-only Codex review of the branch diff against `origin/main`.
 
 ## What This Crate Does
