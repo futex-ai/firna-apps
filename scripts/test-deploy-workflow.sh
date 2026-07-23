@@ -23,6 +23,17 @@ reject_line() {
   fi
 }
 
+line_number() {
+  local file="$1"
+  local pattern="$2"
+  local match
+  while IFS= read -r match; do
+    printf '%s' "${match%%:*}"
+    return
+  done < <(grep -nF -- "$pattern" "$file")
+  return 1
+}
+
 require_line "$ci_workflow" '  pull_request:'
 require_line "$ci_workflow" '  push:'
 require_line "$ci_workflow" '        run: cargo xtask check'
@@ -45,6 +56,7 @@ require_line "$deploy_workflow" '--git "${FIRNA_PLATFORM_REPOSITORY}"'
 require_line "$deploy_workflow" '--rev "${FIRNA_PLATFORM_REVISION}"'
 require_line "$deploy_workflow" 'firna admin apps catalog --json'
 require_line "$deploy_workflow" 'python3 scripts/plan-app-deploys.py \'
+require_line "$deploy_workflow" '      - name: Validate planned app deployment readiness'
 require_line "$deploy_workflow" 'bash scripts/check-app-deploy-readiness.sh "$app_dir"'
 require_line "$deploy_workflow" 'firna admin apps submit "$app_dir" "${submit_args[@]}"'
 require_line "$deploy_workflow" 'gcloud secrets versions access latest \'
@@ -59,5 +71,16 @@ reject_line "$deploy_workflow" 'pull_request_target:'
 reject_line "$deploy_workflow" '--secret-value'
 reject_line "$deploy_workflow" 'cargo run -p fna-cli'
 reject_line "$repo_root/apps/github/manifest.yaml" '- name: client_id'
+
+readiness_step_line="$(line_number "$deploy_workflow" '      - name: Validate planned app deployment readiness')"
+readiness_command_line="$(line_number "$deploy_workflow" 'bash scripts/check-app-deploy-readiness.sh "$app_dir"')"
+readiness_command_count="$(grep -cF -- 'bash scripts/check-app-deploy-readiness.sh "$app_dir"' "$deploy_workflow")"
+submit_step_line="$(line_number "$deploy_workflow" '      - name: Submit through trusted admin auto-approval')"
+if [ "$readiness_command_count" -ne 1 ] \
+  || [ "$readiness_step_line" -ge "$readiness_command_line" ] \
+  || [ "$readiness_command_line" -ge "$submit_step_line" ]; then
+  printf 'deployment readiness must run before app submission\n' >&2
+  exit 1
+fi
 
 printf 'deploy_workflow=ok\n'

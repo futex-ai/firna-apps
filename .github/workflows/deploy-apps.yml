@@ -169,6 +169,17 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Validate planned app deployment readiness
+        if: steps.plan.outputs.apps != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r app; do
+            [ -n "$app" ] || continue
+            app_dir="apps/$app"
+            bash scripts/check-app-deploy-readiness.sh "$app_dir"
+          done <<< "${{ steps.plan.outputs.apps }}"
+
       - name: Submit through trusted admin auto-approval
         if: steps.plan.outputs.apps != ''
         shell: bash
@@ -184,7 +195,6 @@ jobs:
           while IFS= read -r app; do
             [ -n "$app" ] || continue
             app_dir="apps/$app"
-            bash scripts/check-app-deploy-readiness.sh "$app_dir"
             manifest_json="$(firna apps validate "$app_dir" --json)"
             manifest_id="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])' <<< "$manifest_json")"
             safe_app="${manifest_id//-/_}"

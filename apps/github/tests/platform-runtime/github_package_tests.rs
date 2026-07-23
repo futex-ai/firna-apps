@@ -27,6 +27,14 @@ fn github_manifest_declares_read_only_app_installation_package() {
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "github");
     assert_eq!(manifest.version, "2.0.0");
+    assert_eq!(
+        manifest.icon.as_ref().unwrap().color_pair.primary,
+        "#24292F"
+    );
+    assert_eq!(
+        manifest.icon.as_ref().unwrap().color_pair.secondary,
+        "#2F81F7"
+    );
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);
     assert_eq!(manifest.secrets.len(), 2);
     assert_eq!(manifest.secrets[0].name, "client_secret");
