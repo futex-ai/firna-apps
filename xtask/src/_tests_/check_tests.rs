@@ -1,6 +1,42 @@
 //! Verification command-plan tests.
 
+use std::fs;
+use std::path::Path;
+
 use super::{COMPONENT_MANIFESTS, RUNTIME_TEST_MANIFESTS, check_commands};
+
+#[test]
+fn check_plan_lists_every_manifest_on_disk() {
+    let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("xtask must live below the workspace root");
+    let apps_root = workspace_root.join("apps");
+    let mut expected_components = Vec::new();
+    let mut expected_runtime_tests = Vec::new();
+
+    for entry in fs::read_dir(apps_root).expect("read apps directory") {
+        let app_root = entry.expect("read app entry").path();
+        if !app_root.is_dir() {
+            continue;
+        }
+        let app_id = app_root
+            .file_name()
+            .expect("app directory must have a name")
+            .to_string_lossy();
+        expected_components.push(format!("apps/{app_id}/component/Cargo.toml"));
+        expected_runtime_tests.push(format!("apps/{app_id}/tests/platform-runtime/Cargo.toml"));
+    }
+    expected_components.sort();
+    expected_runtime_tests.sort();
+
+    let mut actual_components = COMPONENT_MANIFESTS.to_vec();
+    let mut actual_runtime_tests = RUNTIME_TEST_MANIFESTS.to_vec();
+    actual_components.sort();
+    actual_runtime_tests.sort();
+
+    assert_eq!(actual_components, expected_components);
+    assert_eq!(actual_runtime_tests, expected_runtime_tests);
+}
 
 #[test]
 fn check_plan_covers_every_standalone_package() {

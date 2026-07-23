@@ -13,6 +13,7 @@ const RESPONSE_LIMIT_BYTES: u64 = 1_048_576;
 #[derive(Debug, Serialize)]
 struct HostCredentialReference {
     app_id: &'static str,
+    auth_requirement_id: Option<&'static str>,
     credential_kind: &'static str,
     installation_id: Option<String>,
     user_grant_id: Option<String>,
@@ -98,6 +99,7 @@ impl ProviderClient for WasmProviderClient<'_> {
 fn credential(installation_id: &str, credential_kind: &'static str) -> HostCredentialReference {
     HostCredentialReference {
         app_id: "dataforseo",
+        auth_requirement_id: None,
         credential_kind,
         installation_id: Some(installation_id.to_owned()),
         user_grant_id: None,

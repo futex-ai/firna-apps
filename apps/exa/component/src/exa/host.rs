@@ -12,6 +12,7 @@ const EXA_SEARCH_URL: &str = "https://api.exa.ai/search";
 #[derive(Debug, Serialize)]
 pub(crate) struct HostCredentialReference {
     pub(crate) app_id: String,
+    pub(crate) auth_requirement_id: Option<String>,
     pub(crate) credential_kind: String,
     pub(crate) installation_id: Option<String>,
     pub(crate) user_grant_id: Option<String>,
@@ -66,6 +67,7 @@ pub(crate) fn exa_search(body: ExaProviderRequest, timeout_seconds: u64) -> Resu
 fn api_key_credential() -> HostCredentialReference {
     HostCredentialReference {
         app_id: String::from("exa"),
+        auth_requirement_id: None,
         credential_kind: String::from("api_key"),
         installation_id: None,
         user_grant_id: None,

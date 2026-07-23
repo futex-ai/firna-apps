@@ -11,6 +11,8 @@ The current catalog packages are:
 - Exa: workspace-default web search backed by a Firna-managed API key.
 - HTTP: workspace-default, first-party arbitrary-host HTTP requests.
 - Slack: explicitly installed Slack tools, OAuth, webhooks, and event handling.
+- GitHub: explicitly installed, workspace-owned repository access through a
+  GitHub App and five bounded read-only tools.
 
 Each package is an isolated Rust WebAssembly component under
 [`apps/`](apps/README.md). Production deployment uploads source bundles to the
@@ -37,7 +39,7 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev c9553f98b796fb267dd54258c26589a9e7f42811 \
+  --rev 89b988301c6ef7dc8737a92f09c02501f9549fc1 \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```
@@ -72,6 +74,11 @@ not grant access to private GitHub source dependencies.
 
 The Google identity should be dedicated to this repository and limited to
 reading the production bootstrap password plus manifest-declared app secrets.
+GitHub deployment additionally requires
+`firna-prod-app-github-client-secret` and
+`firna-prod-app-github-private-key`. The package remains intentionally blocked
+from deployment until its public GitHub App client-id placeholder is replaced
+with the registered production value.
 
 ## Key Code
 

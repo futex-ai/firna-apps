@@ -103,9 +103,14 @@ async fn call_tool(
 fn provider_response(request: HostHttpRequest) -> HostHttpResponse {
     let credential = request.credential.as_ref().unwrap();
     if request.url.ends_with("search.messages") {
+        assert_eq!(
+            credential.auth_requirement_id.as_deref(),
+            Some("slack_user_search")
+        );
         assert_eq!(credential.credential_kind, "user_token");
         assert!(credential.effective_user_id.is_some());
     } else {
+        assert_eq!(credential.auth_requirement_id, None);
         assert_eq!(credential.credential_kind, "bot_token");
     }
     assert_request_body_has_no_null_fields(&request);

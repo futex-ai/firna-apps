@@ -8,6 +8,7 @@ use serde_json::{Value, json};
 #[derive(Debug, Serialize)]
 pub(crate) struct HostCredentialReference {
     pub(crate) app_id: String,
+    pub(crate) auth_requirement_id: Option<String>,
     pub(crate) credential_kind: String,
     pub(crate) installation_id: Option<String>,
     pub(crate) user_grant_id: Option<String>,
@@ -54,6 +55,7 @@ pub(crate) fn bot_credential(
 ) -> HostCredentialReference {
     HostCredentialReference {
         app_id: String::from("slack"),
+        auth_requirement_id: None,
         credential_kind: credential_kind.to_owned(),
         installation_id: Some(installation_id.to_owned()),
         user_grant_id: None,
@@ -65,6 +67,7 @@ pub(crate) fn bot_credential(
 pub(crate) fn signing_credential() -> HostCredentialReference {
     HostCredentialReference {
         app_id: String::from("slack"),
+        auth_requirement_id: None,
         credential_kind: String::from("signing_secret"),
         installation_id: None,
         user_grant_id: None,
@@ -79,6 +82,7 @@ pub(crate) fn user_credential(
 ) -> HostCredentialReference {
     HostCredentialReference {
         app_id: String::from("slack"),
+        auth_requirement_id: Some(String::from("slack_user_search")),
         credential_kind: String::from("user_token"),
         installation_id: Some(installation_id.to_owned()),
         user_grant_id: None,

@@ -22,7 +22,7 @@ fn slack_manifest_declares_v1_tools_and_ingress() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "slack");
-    assert_eq!(manifest.version, "1.1.14");
+    assert_eq!(manifest.version, "1.1.15");
     assert!(manifest.icon.is_some());
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
@@ -116,6 +116,10 @@ async fn slack_component_sends_messages_through_host_http() {
         requests[0].credential.as_ref().unwrap().credential_kind,
         "bot_token"
     );
+    assert_eq!(
+        requests[0].credential.as_ref().unwrap().auth_requirement_id,
+        None
+    );
 }
 
 #[tokio::test]
@@ -124,6 +128,7 @@ async fn slack_component_verifies_and_normalizes_webhooks() {
         WasmHostMock::hmac_sha256.next_call(matching!(_)).answers(
             &|_, request: HostHmacSha256Request| {
                 assert_eq!(request.credential.credential_kind, "signing_secret");
+                assert_eq!(request.credential.auth_requirement_id, None);
                 assert_eq!(request.credential.provider_account_id, None);
                 HostHmacSha256Response {
                     ok: true,

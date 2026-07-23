@@ -1,4 +1,4 @@
 repository = "https://github.com/futex-ai/firna.git"
-revision = "c9553f98b796fb267dd54258c26589a9e7f42811"
+revision = "89b988301c6ef7dc8737a92f09c02501f9549fc1"
 rust_toolchain = "1.89.0"
 wasm_tools_version = "1.248.0"

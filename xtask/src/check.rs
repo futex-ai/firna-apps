@@ -8,12 +8,14 @@ use crate::error::Result;
 const COMPONENT_MANIFESTS: &[&str] = &[
     "apps/dataforseo/component/Cargo.toml",
     "apps/exa/component/Cargo.toml",
+    "apps/github/component/Cargo.toml",
     "apps/http/component/Cargo.toml",
     "apps/slack/component/Cargo.toml",
 ];
 const RUNTIME_TEST_MANIFESTS: &[&str] = &[
     "apps/dataforseo/tests/platform-runtime/Cargo.toml",
     "apps/exa/tests/platform-runtime/Cargo.toml",
+    "apps/github/tests/platform-runtime/Cargo.toml",
     "apps/http/tests/platform-runtime/Cargo.toml",
     "apps/slack/tests/platform-runtime/Cargo.toml",
 ];

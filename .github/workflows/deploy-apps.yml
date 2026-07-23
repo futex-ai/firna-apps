@@ -25,7 +25,7 @@ concurrency:
 env:
   FIRNA_BOOTSTRAP_USERNAME: ${{ vars.FIRNA_BOOTSTRAP_USERNAME }}
   FIRNA_PLATFORM_REPOSITORY: https://github.com/futex-ai/firna.git
-  FIRNA_PLATFORM_REVISION: c9553f98b796fb267dd54258c26589a9e7f42811
+  FIRNA_PLATFORM_REVISION: 89b988301c6ef7dc8737a92f09c02501f9549fc1
   FIRNA_SECRET_MANAGER_PREFIX: firna-prod
   FIRNA_SERVER_URL: https://api.firna.ai
   GCP_PROJECT_ID: firna-498513
@@ -184,6 +184,7 @@ jobs:
           while IFS= read -r app; do
             [ -n "$app" ] || continue
             app_dir="apps/$app"
+            bash scripts/check-app-deploy-readiness.sh "$app_dir"
             manifest_json="$(firna apps validate "$app_dir" --json)"
             manifest_id="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])' <<< "$manifest_json")"
             safe_app="${manifest_id//-/_}"

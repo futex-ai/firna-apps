@@ -15,6 +15,9 @@ Cargo workspace, so platform crates cannot depend on Slack source directly.
 - Slack message sends pass the durable tool `operation_id` through as
   `chat.postMessage.client_msg_id`, so resumed tool execution reuses the same
   provider-facing idempotency key.
+- Slack message search binds its effective-user credential reference to
+  `slack_user_search`; bot and signing-secret references omit a user auth
+  requirement and retain their workspace/app-owned scopes.
 
 ## Local Commands
 
