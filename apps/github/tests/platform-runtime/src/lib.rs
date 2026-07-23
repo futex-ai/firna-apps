@@ -102,6 +102,9 @@ fn component_filename() -> String {
 }
 
 #[cfg(test)]
+#[path = "../github_file_smoke_tests.rs"]
+mod github_file_smoke_tests;
+#[cfg(test)]
 #[path = "../github_fixtures.rs"]
 mod github_fixtures;
 #[cfg(test)]

@@ -29,7 +29,10 @@ The tool interface is:
 
 - `github_list_repositories`: list repositories selected for the installation.
 - `github_search_code`: search visible code with bounded literal qualifiers.
-- `github_read_file`: return one exact UTF-8 file up to 256 KiB.
+- `github_read_file`: return one exact regular UTF-8 file up to 256 KiB.
+  It resolves the requested ref to an immutable commit, verifies every path
+  segment against Git tree object modes, rejects directories, symlinks, and
+  submodules, then reads the matching blob at that commit.
 - `github_read_pr`: read PR detail and one bounded changed-files page.
 - `github_read_issue`: read issue detail and one bounded comments page.
 
@@ -76,7 +79,8 @@ do not call GitHub.
   ref constraints; component validation retains stricter UTF-8 byte, Unicode
   control-character, trimming, and path-segment checks.
 - `component/src/github/provider.rs` defines the mocked provider boundary.
-- `component/src/github/tools/` validates calls and builds typed projections.
+- `component/src/github/tools/` validates calls and builds typed projections;
+  `repository_file.rs` owns commit-pinned tree verification for exact reads.
 - `component/src/github/host.rs` emits only known GitHub REST requests with the
   virtual installation credential reference.
 - `tests/platform-runtime/` verifies package metadata and Wasm host behavior.

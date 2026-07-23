@@ -6,13 +6,11 @@ use serde_json::{Value, json};
 
 use crate::github::error::{GitHubError, InvalidReason};
 use crate::github::input::{
-    AppToolCall, ListRepositoriesInput, ReadFileInput, SearchCodeInput, encoded_path,
-    encoded_segment, git_ref, language, owner, page, page_size, path, repository, result_offset,
-    search_path, search_term,
+    AppToolCall, ListRepositoriesInput, SearchCodeInput, language, owner, page, page_size,
+    repository, result_offset, search_path, search_term,
 };
-use crate::github::models::{CodeSearchResponse, FileContent, InstallationRepositoriesResponse};
+use crate::github::models::{CodeSearchResponse, InstallationRepositoriesResponse};
 use crate::github::pagination::next_page;
-use crate::github::projection::{ExactKind, decode_file_content, exact, nullable_exact};
 use crate::github::provider::ProviderMediaType;
 use crate::github::tools::GitHubToolService;
 use crate::github::tools::repository_projection::{
@@ -131,66 +129,4 @@ pub(super) fn search(
     }
     reduce_search_previews(&mut output)?;
     Ok(output)
-}
-
-pub(super) fn read_file(
-    service: &GitHubToolService<'_>,
-    call: AppToolCall,
-) -> Result<Value, GitHubError> {
-    let input = service.parse::<ReadFileInput>(call.input.clone())?;
-    let owner = owner(&input.owner)?;
-    let repository = repository(&input.repository)?;
-    let requested_path = path(&input.path)?;
-    let git_ref = git_ref(input.git_ref)?;
-    let mut query = BTreeMap::new();
-    if let Some(git_ref) = &git_ref {
-        query.insert(String::from("ref"), git_ref.clone());
-    }
-    let endpoint = format!(
-        "/repos/{}/{}/contents/{}",
-        encoded_segment(&owner),
-        encoded_segment(&repository),
-        encoded_path(&requested_path)
-    );
-    let (raw_response, _) =
-        service.get::<Value>(&call, endpoint, query, ProviderMediaType::Json, None)?;
-    let response = file_response(raw_response)?;
-    if response.path != requested_path {
-        return Err(GitHubError::InvalidRequest {
-            reason: InvalidReason::UnsupportedContent,
-        });
-    }
-    let content = decode_file_content(&response.encoding, &response.content, response.size)?;
-    let output = json!({
-        "repository_full_name": format!("{owner}/{repository}"),
-        "path": exact(&response.path, ExactKind::PathOrTitle)?,
-        "ref": git_ref,
-        "sha": exact(&response.sha, ExactKind::Identifier)?,
-        "size": response.size,
-        "html_url": nullable_exact(response.html_url.0.as_deref(), ExactKind::Url)?,
-        "content": content
-    });
-    crate::github::projection::ensure_budget(&output)?;
-    Ok(output)
-}
-
-fn file_response(value: Value) -> Result<FileContent, GitHubError> {
-    if value.is_array() {
-        return Err(GitHubError::InvalidRequest {
-            reason: InvalidReason::UnsupportedContent,
-        });
-    }
-    match value.get("type") {
-        Some(Value::String(content_type)) if content_type == "file" => {}
-        Some(Value::String(_)) => {
-            return Err(GitHubError::InvalidRequest {
-                reason: InvalidReason::UnsupportedContent,
-            });
-        }
-        _ => return Err(GitHubError::InvalidProviderResponse),
-    }
-    match serde_json::from_value(value) {
-        Ok(response) => Ok(response),
-        Err(_) => Err(GitHubError::InvalidProviderResponse),
-    }
 }

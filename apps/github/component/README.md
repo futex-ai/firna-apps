@@ -20,6 +20,12 @@ stable host `credential_not_found` response becomes `auth_required` for
 `github_installation`; provider, vault, network, malformed, and unknown host
 failures remain redacted provider-unavailable errors.
 
+Exact file reads first resolve the requested ref to a commit and walk
+non-recursive Git trees one path segment at a time. Only regular and executable
+blob modes are accepted; directories, symlinks, and submodules are rejected
+before the Contents API can dereference them. The final Contents request is
+pinned to the resolved commit and must return the verified blob SHA.
+
 ## Quick Start
 
 ```bash
@@ -41,7 +47,8 @@ limit.
 - `src/lib.rs` defines the WIT imports and `call-tool` export.
 - `src/github/input.rs` and `input_validation.rs` own input contracts.
 - `src/github/models/` owns provider DTOs.
-- `src/github/tools/` owns request construction and projections.
+- `src/github/tools/` owns request construction and projections, including the
+  commit-pinned file tree walk in `repository_file.rs`.
 - `src/github/provider_response.rs` owns provider status and rate-limit mapping.
 
 ### Related Docs

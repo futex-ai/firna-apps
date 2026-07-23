@@ -18,6 +18,9 @@ use crate::github_fixtures::{
 };
 use crate::github_runtime_support::runtime_with_host;
 
+const FILE_COMMIT_SHA: &str = "cccccccccccccccccccccccccccccccccccccccc";
+const FILE_ROOT_TREE_SHA: &str = "1111111111111111111111111111111111111111";
+
 #[tokio::test]
 async fn github_component_smoke_calls_all_read_tools_with_opaque_grant() {
     let requests = Arc::new(Mutex::new(Vec::new()));
@@ -77,13 +80,25 @@ async fn github_component_smoke_calls_all_read_tools_with_opaque_grant() {
     assert_eq!(issue["comments"][0]["body"], "Confirmed");
 
     let requests = requests.lock().unwrap();
-    assert_eq!(requests.len(), 7);
+    assert_eq!(requests.len(), 9);
     let search_request = requests
         .iter()
         .find(|request| request.url == "https://api.github.com/search/code")
         .unwrap();
     assert_eq!(search_request.query["q"], r#""call" repo:"octo/repo""#);
     assert!(!search_request.query["q"].contains("%22"));
+    let commit_request = requests
+        .iter()
+        .find(|request| request.url == "https://api.github.com/repos/octo/repo/commits")
+        .unwrap();
+    assert_eq!(commit_request.query["per_page"], "1");
+    let content_request = requests
+        .iter()
+        .find(|request| {
+            request.url == "https://api.github.com/repos/octo/repo/contents/README%2Emd"
+        })
+        .unwrap();
+    assert_eq!(content_request.query["ref"], FILE_COMMIT_SHA);
     for request in requests.iter() {
         assert_eq!(request.method, "GET");
         assert!(request.url.starts_with("https://api.github.com/"));
@@ -235,6 +250,23 @@ fn provider_response(request: &HostHttpRequest) -> HostHttpResponse {
             json!({ "total_count": 1, "repositories": [repository(1, None)] })
         }
         "https://api.github.com/search/code" => code_search(),
+        "https://api.github.com/repos/octo/repo/commits" => json!([{
+            "sha": FILE_COMMIT_SHA,
+            "commit": { "tree": { "sha": FILE_ROOT_TREE_SHA } }
+        }]),
+        "https://api.github.com/repos/octo/repo/git/trees/1111111111111111111111111111111111111111" =>
+        {
+            json!({
+                "sha": FILE_ROOT_TREE_SHA,
+                "truncated": false,
+                "tree": [{
+                    "path": "README.md",
+                    "mode": "100644",
+                    "type": "blob",
+                    "sha": "abc"
+                }]
+            })
+        }
         "https://api.github.com/repos/octo/repo/contents/README%2Emd" => file(),
         "https://api.github.com/repos/octo/repo/pulls/7" => pull_request(),
         "https://api.github.com/repos/octo/repo/pulls/7/files" => pull_request_files(),

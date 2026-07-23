@@ -7,6 +7,8 @@ use unimock::{MockFn as _, Unimock, matching};
 use crate::github::call_tool_with;
 use crate::github::provider::{Clock, GitHubProviderGet, ProviderRequest, ProviderResponse};
 
+pub(super) const FILE_COMMIT_SHA: &str = "cccccccccccccccccccccccccccccccccccccccc";
+
 pub(super) struct FixedClock(pub(super) u64);
 
 impl Clock for FixedClock {
@@ -125,4 +127,65 @@ pub(super) fn installation_repositories(repositories: Vec<Value>) -> Value {
         "total_count": repositories.len(),
         "repositories": repositories
     })
+}
+
+pub(super) fn file_responses(path: &str, body: Value) -> Vec<ProviderResponse> {
+    let blob_sha = body
+        .get("sha")
+        .and_then(Value::as_str)
+        .unwrap_or("abc")
+        .to_owned();
+    let mut responses = path_entry_responses(path, "100644", "blob", &blob_sha);
+    responses.push(response(200, body));
+    responses
+}
+
+pub(super) fn path_entry_responses(
+    path: &str,
+    final_mode: &str,
+    final_type: &str,
+    final_sha: &str,
+) -> Vec<ProviderResponse> {
+    let segments = path.split('/').collect::<Vec<_>>();
+    let mut responses = vec![response(
+        200,
+        json!([{
+            "sha": FILE_COMMIT_SHA,
+            "commit": { "tree": { "sha": tree_sha(0) } }
+        }]),
+    )];
+    for (index, segment) in segments.iter().enumerate() {
+        let is_final = index + 1 == segments.len();
+        let (mode, object_type, sha) = if is_final {
+            (
+                final_mode.to_owned(),
+                final_type.to_owned(),
+                final_sha.to_owned(),
+            )
+        } else {
+            (
+                String::from("040000"),
+                String::from("tree"),
+                tree_sha(index + 1),
+            )
+        };
+        responses.push(response(
+            200,
+            json!({
+                "sha": tree_sha(index),
+                "truncated": false,
+                "tree": [{
+                    "path": segment,
+                    "mode": mode,
+                    "type": object_type,
+                    "sha": sha
+                }]
+            }),
+        ));
+    }
+    responses
+}
+
+pub(super) fn tree_sha(depth: usize) -> String {
+    format!("{:040x}", depth + 1)
 }

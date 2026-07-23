@@ -4,6 +4,7 @@ mod common;
 mod issues;
 mod pull_requests;
 mod repositories;
+mod repository_file;
 mod repository_projection;
 
 use serde::de::DeserializeOwned;
@@ -27,7 +28,7 @@ impl<'a> GitHubToolService<'a> {
         match call.tool_name.as_str() {
             "github_list_repositories" => repositories::list(self, call),
             "github_search_code" => repositories::search(self, call),
-            "github_read_file" => repositories::read_file(self, call),
+            "github_read_file" => repository_file::read(self, call),
             "github_read_pr" => pull_requests::read(self, call),
             "github_read_issue" => issues::read(self, call),
             _ => Err(GitHubError::InvalidRequest {

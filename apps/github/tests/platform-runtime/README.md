@@ -13,7 +13,8 @@ runtime. Depend on it only as a standalone integration-test package.
 
 The tests run the real component through `fna-apps-wasm` without live GitHub
 credentials or network calls. They cover package metadata, credential
-references, request construction, provider failures, and all five tools.
+references, request construction, provider failures, all five tools, and the
+Git tree-mode guard that prevents symlinks from being read as regular files.
 
 ## Quick Start
 
@@ -30,6 +31,7 @@ Install `wasm32-unknown-unknown` and the `wasm-tools` version from the root
 
 - `src/lib.rs` builds and wraps the component.
 - `github_package_tests.rs` validates package metadata and runtime behavior.
+- `github_file_smoke_tests.rs` verifies commit-pinned Git tree file checks.
 - `github_tool_smoke_tests.rs` exercises the host/runtime boundary.
 
 ### Related Docs

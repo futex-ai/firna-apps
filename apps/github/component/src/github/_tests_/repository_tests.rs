@@ -7,7 +7,8 @@ use serde_json::json;
 use crate::github::provider::ProviderMediaType;
 
 use super::support::{
-    call, installation_repositories, repository, response, response_with_headers,
+    FILE_COMMIT_SHA, call, file_responses, installation_repositories, repository, response,
+    response_with_headers,
 };
 
 #[test]
@@ -130,8 +131,8 @@ fn reads_exact_text_file_and_rejects_missing_required_provider_fields() {
     let (output, requests) = call(
         "github_read_file",
         json!({ "owner": "octo", "repository": "repo", "path": "docs/read me.md", "ref": "main" }),
-        vec![response(
-            200,
+        file_responses(
+            "docs/read me.md",
             json!({
                 "type": "file",
                 "path": "docs/read me.md",
@@ -141,15 +142,17 @@ fn reads_exact_text_file_and_rejects_missing_required_provider_fields() {
                 "encoding": "base64",
                 "content": encoded
             }),
-        )],
+        ),
     );
     assert_eq!(output["content"], "hello\n");
     assert_eq!(output["ref"], "main");
+    assert_eq!(requests[0].path, "/repos/octo/repo/commits");
+    assert_eq!(requests[0].query["sha"], "main");
     assert_eq!(
-        requests[0].path,
+        requests[3].path,
         "/repos/octo/repo/contents/docs/read%20me%2Emd"
     );
-    assert_eq!(requests[0].query["ref"], "main");
+    assert_eq!(requests[3].query["ref"], FILE_COMMIT_SHA);
 
     let mut incomplete = repository();
     incomplete

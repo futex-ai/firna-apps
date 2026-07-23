@@ -65,3 +65,67 @@ pub(crate) struct FileContent {
     pub(crate) encoding: String,
     pub(crate) content: String,
 }
+
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct CommitListEntry {
+    sha: String,
+    commit: CommitMetadata,
+}
+
+impl CommitListEntry {
+    pub(crate) fn sha(&self) -> &str {
+        &self.sha
+    }
+
+    pub(crate) fn root_tree_sha(&self) -> &str {
+        &self.commit.tree.sha
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct CommitMetadata {
+    tree: CommitTree,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct CommitTree {
+    sha: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct GitTree {
+    pub(crate) sha: String,
+    pub(crate) tree: Vec<GitTreeEntry>,
+    pub(crate) truncated: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct GitTreeEntry {
+    pub(crate) path: String,
+    pub(crate) mode: GitTreeEntryMode,
+    #[serde(rename = "type")]
+    pub(crate) object_type: GitObjectType,
+    pub(crate) sha: String,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+pub(crate) enum GitTreeEntryMode {
+    #[serde(rename = "100644")]
+    File,
+    #[serde(rename = "100755")]
+    Executable,
+    #[serde(rename = "040000")]
+    Directory,
+    #[serde(rename = "160000")]
+    Submodule,
+    #[serde(rename = "120000")]
+    Symlink,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum GitObjectType {
+    Blob,
+    Tree,
+    Commit,
+}
