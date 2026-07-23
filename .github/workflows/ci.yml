@@ -36,6 +36,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure private Firna source access
+        env:
+          FIRNA_REPOSITORY_TOKEN: ${{ secrets.FIRNA_REPOSITORY_TOKEN }}
+        run: bash scripts/configure-firna-repository-access.sh
+
       - name: Install Rust toolchain
         run: |
           rustup toolchain install "${RUST_TOOLCHAIN_VERSION}" --component rustfmt --component clippy

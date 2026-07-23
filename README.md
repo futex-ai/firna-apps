@@ -65,6 +65,11 @@ The workflow expects these GitHub Actions variables:
 - `GCP_WORKLOAD_IDENTITY_PROVIDER`
 - `FIRNA_BOOTSTRAP_USERNAME`
 
+CI and deployment also require the repository Actions secret
+`FIRNA_REPOSITORY_TOKEN`. It should contain a machine token restricted to
+reading the private `futex-ai/firna` platform repository. Google Cloud IAM does
+not grant access to private GitHub source dependencies.
+
 The Google identity should be dedicated to this repository and limited to
 reading the production bootstrap password plus manifest-declared app secrets.
 

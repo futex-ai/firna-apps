@@ -28,6 +28,8 @@ require_line "$ci_workflow" '  push:'
 require_line "$ci_workflow" '        run: cargo xtask check'
 require_line "$ci_workflow" '          fetch-depth: 0'
 require_line "$ci_workflow" 'tool: wasm-tools@${{ env.WASM_TOOLS_VERSION }}'
+require_line "$ci_workflow" 'FIRNA_REPOSITORY_TOKEN: ${{ secrets.FIRNA_REPOSITORY_TOKEN }}'
+require_line "$ci_workflow" 'run: bash scripts/configure-firna-repository-access.sh'
 
 require_line "$deploy_workflow" '  workflow_run:'
 require_line "$deploy_workflow" '      - CI'
@@ -37,6 +39,8 @@ require_line "$deploy_workflow" 'github.event.workflow_run.head_repository.full_
 require_line "$deploy_workflow" "github.ref == 'refs/heads/main'"
 require_line "$deploy_workflow" '  id-token: write'
 require_line "$deploy_workflow" '          fetch-depth: 0'
+require_line "$deploy_workflow" 'FIRNA_REPOSITORY_TOKEN: ${{ secrets.FIRNA_REPOSITORY_TOKEN }}'
+require_line "$deploy_workflow" 'run: bash scripts/configure-firna-repository-access.sh'
 require_line "$deploy_workflow" '--git "${FIRNA_PLATFORM_REPOSITORY}"'
 require_line "$deploy_workflow" '--rev "${FIRNA_PLATFORM_REVISION}"'
 require_line "$deploy_workflow" 'firna admin apps catalog --json'

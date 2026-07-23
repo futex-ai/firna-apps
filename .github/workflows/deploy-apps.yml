@@ -50,6 +50,11 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
+      - name: Configure private Firna source access
+        env:
+          FIRNA_REPOSITORY_TOKEN: ${{ secrets.FIRNA_REPOSITORY_TOKEN }}
+        run: bash scripts/configure-firna-repository-access.sh
+
       - name: Select app packages
         id: selection
         shell: bash
