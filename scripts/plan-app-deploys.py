@@ -31,7 +31,7 @@ class PackageManifestError(ValueError):
 
 def main() -> int:
     args = parse_args()
-    catalog = load_catalog(args.catalog)
+    catalog = load_catalog(args.catalog) if args.catalog else {}
     changed_apps = load_changed_apps(args.changed_apps)
     registration_placeholders = load_registration_placeholders()
     apps_root = Path(args.apps_root)
@@ -57,6 +57,9 @@ def main() -> int:
                     manifest_source, registration_placeholders
                 ):
                     decision = "skip_registration_pending"
+                elif args.force:
+                    decision = "deploy_forced"
+                    deploy_dirs.append(app_dir)
                 elif remote_version is None:
                     decision = "deploy_missing"
                     deploy_dirs.append(app_dir)
@@ -99,11 +102,15 @@ def main() -> int:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--catalog", required=True)
+    parser.add_argument("--catalog")
     parser.add_argument("--local-manifests", required=True)
     parser.add_argument("--changed-apps", required=True)
     parser.add_argument("--apps-root", required=True)
-    return parser.parse_args()
+    parser.add_argument("--force", action="store_true")
+    args = parser.parse_args()
+    if not args.force and args.catalog is None:
+        parser.error("--catalog is required unless --force is used")
+    return args
 
 
 def load_catalog(path: str) -> dict[str, str]:

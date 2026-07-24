@@ -48,10 +48,10 @@ cargo test --manifest-path apps/github/tests/platform-runtime/Cargo.toml --locke
 
 Local provider testing requires a separately registered GitHub App and an
 uncommitted manifest override. Never commit its client secret or RSA private
-key, or put either value below `apps/github`. Automatic deployment planning
-omits this package while a public registration sentinel remains. An explicit
-manual deployment still fails readiness, as does any deployment where a
-required Secret Manager value cannot be loaded.
+key, or put either value below `apps/github`. Automatic and manual deploy-all
+planning omit this package while a public registration sentinel remains. An
+explicit manual deployment still fails readiness, as does any deployment where
+a required Secret Manager value cannot be loaded.
 
 The production GitHub App uses slug `firna`, setup URL
 `https://firna.ai/apps/github/install/callback`, and authorization callback URL

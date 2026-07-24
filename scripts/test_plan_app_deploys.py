@@ -31,6 +31,30 @@ class PlanAppDeploysTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertIn("decision=skip_registration_pending", result.stderr)
 
+    def test_forced_all_skips_pending_provider_registration(self) -> None:
+        result = self.run_plan(
+            [self.catalog_app("1.1.3")],
+            manifest_contents=(
+                "id: slack\n"
+                "client_id: replace-with-registered-github-app-client-id\n"
+            ),
+            force=True,
+        )
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("decision=skip_registration_pending", result.stderr)
+
+    def test_forced_all_redeploys_registered_matching_version(self) -> None:
+        result = self.run_plan(
+            [self.catalog_app("1.1.3")],
+            force=True,
+        )
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.strip(), "slack")
+        self.assertIn("decision=deploy_forced", result.stderr)
+
     def test_matching_version_is_skipped(self) -> None:
         result = self.run_plan([self.catalog_app("1.1.3")])
 
@@ -72,6 +96,7 @@ class PlanAppDeploysTests(unittest.TestCase):
         catalog_apps: list[dict[str, str]],
         local_version: str = "1.1.3",
         manifest_contents: str = "id: slack\n",
+        force: bool = False,
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -97,19 +122,22 @@ class PlanAppDeploysTests(unittest.TestCase):
                 encoding="utf-8",
             )
             changed.write_text("slack\n", encoding="utf-8")
+            arguments = [
+                "python3",
+                str(SCRIPT),
+                "--local-manifests",
+                str(manifests),
+                "--changed-apps",
+                str(changed),
+                "--apps-root",
+                str(root / "apps"),
+            ]
+            if force:
+                arguments.append("--force")
+            else:
+                arguments.extend(["--catalog", str(catalog)])
             return subprocess.run(
-                [
-                    "python3",
-                    str(SCRIPT),
-                    "--catalog",
-                    str(catalog),
-                    "--local-manifests",
-                    str(manifests),
-                    "--changed-apps",
-                    str(changed),
-                    "--apps-root",
-                    str(root / "apps"),
-                ],
+                arguments,
                 check=False,
                 capture_output=True,
                 text=True,

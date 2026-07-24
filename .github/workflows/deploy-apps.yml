@@ -69,16 +69,18 @@ jobs:
               exit 1
             fi
             printf '%s\n' "$manual_app" > /tmp/candidate-apps
+            selection_mode=explicit
           else
             find apps -mindepth 2 -maxdepth 2 \( -name manifest.yaml -o -name manifest.json \) -print \
               | awk -F/ '{ print $2 }' \
               | sort -u > /tmp/candidate-apps
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              selection_mode=force_all
+            else
+              selection_mode=automatic
+            fi
           fi
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "forced=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "forced=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "mode=$selection_mode" >> "$GITHUB_OUTPUT"
 
       - name: Install Firna CLI system dependencies
         run: |
@@ -146,10 +148,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "${{ steps.selection.outputs.forced }}" = "true" ]; then
+          deployment_mode="${{ steps.selection.outputs.mode }}"
+          if [ "$deployment_mode" = "explicit" ]; then
             cp /tmp/candidate-apps /tmp/deploy-apps
           else
-            firna admin apps catalog --json > /tmp/remote-app-catalog.json
+            if [ "$deployment_mode" = "force_all" ]; then
+              planner_mode_args=(--force)
+            else
+              firna admin apps catalog --json > /tmp/remote-app-catalog.json
+              planner_mode_args=(--catalog /tmp/remote-app-catalog.json)
+            fi
             : > /tmp/changed-apps
             : > /tmp/local-app-manifests.jsonl
             while IFS= read -r app; do
@@ -159,7 +167,7 @@ jobs:
                 <<< "$manifest_json" >> /tmp/local-app-manifests.jsonl
             done < /tmp/candidate-apps
             python3 scripts/plan-app-deploys.py \
-              --catalog /tmp/remote-app-catalog.json \
+              "${planner_mode_args[@]}" \
               --local-manifests /tmp/local-app-manifests.jsonl \
               --changed-apps /tmp/changed-apps \
               --apps-root apps > /tmp/deploy-apps

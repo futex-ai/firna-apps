@@ -51,8 +51,9 @@ See [`apps/README.md`](apps/README.md) for package commands and conventions.
 Pull requests and `main` pushes run [CI](.github/workflows/ci.yml). After a
 successful CI run on `main`, [Deploy Firna Apps](.github/workflows/deploy-apps.yml)
 compares every local manifest with the live catalog and submits only missing or
-newer versions. A manual dispatch can force one app or all apps to be
-resubmitted.
+newer versions. A manual dispatch can force one app or all deployment-ready
+apps to be resubmitted. Deploy-all omits packages whose provider registration
+is still pending; explicitly selecting such a package fails readiness.
 
 Deployment authenticates as the production global admin and uses
 `firna admin apps submit`. That operator-controlled route builds, approves, and
@@ -78,9 +79,9 @@ GitHub deployment additionally requires
 `firna-prod-app-github-client-secret` and
 `firna-prod-app-github-private-key`. Automatic plans omit packages that retain a
 public provider-registration placeholder, so the unregistered GitHub package
-cannot block unrelated app deployments. A manual GitHub deployment fails
-readiness until the placeholder is replaced with the registered production
-client ID.
+cannot block unrelated automatic or manual deploy-all runs. An explicit manual
+GitHub deployment fails readiness until the placeholder is replaced with the
+registered production client ID.
 
 ## Key Code
 
