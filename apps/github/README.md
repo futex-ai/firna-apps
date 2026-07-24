@@ -29,7 +29,7 @@ The tool interface is:
 
 - `github_list_repositories`: list repositories selected for the installation.
 - `github_search_code`: search visible code with bounded literal qualifiers.
-- `github_read_file`: return one exact regular UTF-8 file up to 256 KiB.
+- `github_read_file`: return one exact regular UTF-8 file up to 256 KiB and 16 path segments.
   It resolves the requested ref to an immutable commit, verifies every path
   segment against Git tree object modes, rejects directories, symlinks, and
   submodules, then reads the matching blob at that commit.
@@ -48,9 +48,10 @@ cargo test --manifest-path apps/github/tests/platform-runtime/Cargo.toml --locke
 
 Local provider testing requires a separately registered GitHub App and an
 uncommitted manifest override. Never commit its client secret or RSA private
-key, or put either value below `apps/github`. Deployment refuses this package
-while a public registration sentinel remains or either required Secret Manager
-value cannot be loaded.
+key, or put either value below `apps/github`. Automatic deployment planning
+omits this package while a public registration sentinel remains. An explicit
+manual deployment still fails readiness, as does any deployment where a
+required Secret Manager value cannot be loaded.
 
 The production GitHub App uses slug `firna`, setup URL
 `https://firna.ai/apps/github/install/callback`, and authorization callback URL

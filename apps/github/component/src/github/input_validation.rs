@@ -5,6 +5,7 @@ use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
 use crate::github::error::{GitHubError, InvalidReason};
 
 const MAX_I32: i64 = 2_147_483_647;
+const MAX_FILE_PATH_SEGMENTS: usize = 16;
 
 pub(crate) fn owner(value: &str) -> Result<String, GitHubError> {
     if value.is_empty()
@@ -38,6 +39,7 @@ pub(crate) fn path(value: &str) -> Result<String, GitHubError> {
         || value.len() > 1_024
         || value.starts_with('/')
         || has_control(value)
+        || value.split('/').count() > MAX_FILE_PATH_SEGMENTS
         || value
             .split('/')
             .any(|segment| segment.is_empty() || matches!(segment, "." | ".."))

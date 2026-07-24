@@ -75,7 +75,7 @@ fn rejects_repository_and_search_provider_cardinality_overruns() {
         json!({ "per_page": 1 }),
         vec![response(200, repositories)],
     );
-    assert_eq!(output["error"], "invalid_provider_response");
+    assert_eq!(output["error"], "provider_contract_error");
 
     let items = Value::Array((0..2).map(|_| search_item(0)).collect());
     let (output, _) = call(
@@ -86,7 +86,7 @@ fn rejects_repository_and_search_provider_cardinality_overruns() {
             json!({ "total_count": 2, "incomplete_results": false, "items": items }),
         )],
     );
-    assert_eq!(output["error"], "invalid_provider_response");
+    assert_eq!(output["error"], "provider_contract_error");
 
     let (output, _) = call(
         "github_search_code",
@@ -100,7 +100,7 @@ fn rejects_repository_and_search_provider_cardinality_overruns() {
             }),
         )],
     );
-    assert_eq!(output["error"], "invalid_provider_response");
+    assert_eq!(output["error"], "provider_contract_error");
 }
 
 #[test]
@@ -117,7 +117,7 @@ fn fails_closed_for_missing_null_and_wrong_typed_required_list_fields() {
             json!({}),
             vec![response(200, installation_repositories(vec![row]))],
         );
-        assert_eq!(output["error"], "invalid_provider_response");
+        assert_eq!(output["error"], "provider_contract_error");
     }
 
     for body in [
@@ -130,7 +130,7 @@ fn fails_closed_for_missing_null_and_wrong_typed_required_list_fields() {
             json!({ "query": "rust" }),
             vec![response(200, body)],
         );
-        assert_eq!(output["error"], "invalid_provider_response");
+        assert_eq!(output["error"], "provider_contract_error");
     }
 }
 

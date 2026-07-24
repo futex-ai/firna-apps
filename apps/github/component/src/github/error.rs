@@ -85,9 +85,17 @@ impl GitHubError {
                 "error": "rate_limited",
                 "retry_after_seconds": retry_after_seconds
             }),
-            Self::AccessDenied => json!({ "ok": false, "error": "access_denied" }),
+            Self::AccessDenied => json!({
+                "ok": false,
+                "error": "provider_access_denied",
+                "provider_code": null
+            }),
             Self::NotFoundOrNotAccessible => {
-                json!({ "ok": false, "error": "not_found_or_not_accessible" })
+                json!({
+                    "ok": false,
+                    "error": "invalid_request",
+                    "reason": "not_found_or_not_accessible"
+                })
             }
             Self::ProviderResponseTooLarge { retry_input } => json!({
                 "ok": false,
@@ -95,13 +103,17 @@ impl GitHubError {
                 "retry_input": retry_input
             }),
             Self::InvalidProviderResponse => {
-                json!({ "ok": false, "error": "invalid_provider_response" })
+                json!({ "ok": false, "error": "provider_contract_error" })
             }
             Self::ProviderUnavailable => {
                 json!({ "ok": false, "error": "provider_unavailable" })
             }
             Self::UseGitHubReadPr => {
-                json!({ "ok": false, "error": "use_github_read_pr" })
+                json!({
+                    "ok": false,
+                    "error": "invalid_request",
+                    "reason": "use_github_read_pr"
+                })
             }
         }
     }

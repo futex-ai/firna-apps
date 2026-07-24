@@ -44,7 +44,7 @@ fn encode_result(result: Result<Value, GitHubError>) -> String {
     };
     match serde_json::to_string(&value) {
         Ok(encoded) => encoded,
-        Err(_) => String::from(r#"{"ok":false,"error":"invalid_provider_response"}"#),
+        Err(_) => String::from(r#"{"ok":false,"error":"provider_contract_error"}"#),
     }
 }
 

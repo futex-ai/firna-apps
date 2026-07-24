@@ -76,9 +76,11 @@ The Google identity should be dedicated to this repository and limited to
 reading the production bootstrap password plus manifest-declared app secrets.
 GitHub deployment additionally requires
 `firna-prod-app-github-client-secret` and
-`firna-prod-app-github-private-key`. The package remains intentionally blocked
-from deployment until its public GitHub App client-id placeholder is replaced
-with the registered production value.
+`firna-prod-app-github-private-key`. Automatic plans omit packages that retain a
+public provider-registration placeholder, so the unregistered GitHub package
+cannot block unrelated app deployments. A manual GitHub deployment fails
+readiness until the placeholder is replaced with the registered production
+client ID.
 
 ## Key Code
 

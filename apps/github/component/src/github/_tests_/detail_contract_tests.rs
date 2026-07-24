@@ -183,7 +183,7 @@ fn rejects_provider_pages_that_exceed_requested_cardinality() {
         json!({ "owner": "octo", "repository": "repo", "number": 7 }),
         vec![response(200, pull_request_detail()), response(200, files)],
     );
-    assert_eq!(error["error"], "invalid_provider_response");
+    assert_eq!(error["error"], "provider_contract_error");
 
     let comments = Value::Array((0..11).map(issue_comment).collect());
     let (error, _) = call(
@@ -191,7 +191,7 @@ fn rejects_provider_pages_that_exceed_requested_cardinality() {
         json!({ "owner": "octo", "repository": "repo", "number": 9 }),
         vec![response(200, issue_detail()), response(200, comments)],
     );
-    assert_eq!(error["error"], "invalid_provider_response");
+    assert_eq!(error["error"], "provider_contract_error");
 }
 
 pub(super) fn pull_request_file() -> Value {

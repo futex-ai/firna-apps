@@ -15,18 +15,15 @@ if [ -z "$manifest" ]; then
   exit 1
 fi
 
-placeholders=(
-  'replace-with-registered-hosted-client-id'
-  'replace-with-registered-github-app-client-id'
-  'replace-with-registered-github-app-slug'
-)
-for placeholder in "${placeholders[@]}"; do
+placeholder_file="${BASH_SOURCE[0]%/*}/provider-registration-placeholders.txt"
+while IFS= read -r placeholder; do
+  [ -n "$placeholder" ] || continue
   if grep -qF -- "$placeholder" "$manifest"; then
     printf '::error::app %s still uses a provider registration placeholder (%s); register the provider app and replace the public manifest value before deployment\n' \
       "$app_dir" "$placeholder" >&2
     exit 1
   fi
-done
+done < "$placeholder_file"
 
 if grep -qE '^id:[[:space:]]*github[[:space:]]*$' "$manifest"; then
   for secret_name in client_secret private_key; do

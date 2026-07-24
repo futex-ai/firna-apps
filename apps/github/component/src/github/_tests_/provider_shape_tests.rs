@@ -47,7 +47,7 @@ fn rejects_missing_nullable_or_malformed_pull_request_file_fields() {
                 response(200, json!([file])),
             ],
         );
-        assert_eq!(output["error"], "invalid_provider_response");
+        assert_eq!(output["error"], "provider_contract_error");
     }
 }
 
@@ -94,7 +94,7 @@ fn rejects_missing_nullable_or_malformed_issue_comment_fields() {
                 response(200, json!([comment])),
             ],
         );
-        assert_eq!(output["error"], "invalid_provider_response");
+        assert_eq!(output["error"], "provider_contract_error");
     }
 }
 
@@ -107,7 +107,7 @@ fn rejects_detail_number_mismatches_without_fetching_a_page() {
         json!({ "owner": "octo", "repository": "repo", "number": 7 }),
         vec![response(200, pull_request)],
     );
-    assert_eq!(output["error"], "invalid_provider_response");
+    assert_eq!(output["error"], "provider_contract_error");
     assert_eq!(requests.len(), 1);
 
     let mut issue = issue_detail();
@@ -117,7 +117,7 @@ fn rejects_detail_number_mismatches_without_fetching_a_page() {
         json!({ "owner": "octo", "repository": "repo", "number": 9 }),
         vec![response(200, issue)],
     );
-    assert_eq!(output["error"], "invalid_provider_response");
+    assert_eq!(output["error"], "provider_contract_error");
     assert_eq!(requests.len(), 1);
 }
 
@@ -132,7 +132,7 @@ fn assert_invalid_pull_request(detail: Value, context: &str) {
         }),
         vec![response(200, detail)],
     );
-    assert_eq!(output["error"], "invalid_provider_response", "{context}");
+    assert_eq!(output["error"], "provider_contract_error", "{context}");
 }
 
 fn assert_invalid_issue(detail: Value, context: &str) {
@@ -146,5 +146,5 @@ fn assert_invalid_issue(detail: Value, context: &str) {
         }),
         vec![response(200, detail)],
     );
-    assert_eq!(output["error"], "invalid_provider_response", "{context}");
+    assert_eq!(output["error"], "provider_contract_error", "{context}");
 }

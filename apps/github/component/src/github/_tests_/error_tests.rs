@@ -46,8 +46,8 @@ fn dispatches_with_installation_scope_without_effective_user() {
 fn maps_provider_statuses_without_leaking_bodies() {
     let cases = [
         (401, "auth_required"),
-        (403, "access_denied"),
-        (404, "not_found_or_not_accessible"),
+        (403, "provider_access_denied"),
+        (404, "invalid_request"),
         (409, "invalid_request"),
         (422, "invalid_request"),
         (500, "provider_unavailable"),
@@ -62,6 +62,9 @@ fn maps_provider_statuses_without_leaking_bodies() {
             )],
         );
         assert_eq!(output["error"], expected);
+        if status == 404 {
+            assert_eq!(output["reason"], "not_found_or_not_accessible");
+        }
         assert!(!output.to_string().contains("private-secret-body"));
     }
 }
@@ -190,7 +193,7 @@ fn keeps_unknown_structured_forbidden_responses_as_access_denied() {
             json!({}),
             vec![response(403, body)],
         );
-        assert_eq!(output["error"], "access_denied");
+        assert_eq!(output["error"], "provider_access_denied");
     }
 }
 

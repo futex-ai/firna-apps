@@ -161,7 +161,8 @@ jobs:
             python3 scripts/plan-app-deploys.py \
               --catalog /tmp/remote-app-catalog.json \
               --local-manifests /tmp/local-app-manifests.jsonl \
-              --changed-apps /tmp/changed-apps > /tmp/deploy-apps
+              --changed-apps /tmp/changed-apps \
+              --apps-root apps > /tmp/deploy-apps
           fi
           {
             echo "apps<<EOF"

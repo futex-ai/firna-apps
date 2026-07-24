@@ -155,7 +155,7 @@ tools:
         minimum: 1
         maximum: 20
 - name: github_read_file
-  description: Read one exact regular UTF-8 file from a GitHub repository.
+  description: Read one exact regular UTF-8 file with at most 16 path segments from a GitHub repository.
   activity_verb: Reading
   auth: [github_installation]
   input_schema_ref: null

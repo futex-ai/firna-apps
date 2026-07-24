@@ -20,11 +20,12 @@ stable host `credential_not_found` response becomes `auth_required` for
 `github_installation`; provider, vault, network, malformed, and unknown host
 failures remain redacted provider-unavailable errors.
 
-Exact file reads first resolve the requested ref to a commit and walk
-non-recursive Git trees one path segment at a time. Only regular and executable
-blob modes are accepted; directories, symlinks, and submodules are rejected
-before the Contents API can dereference them. The final Contents request is
-pinned to the resolved commit and must return the verified blob SHA.
+Exact file reads accept at most 16 path segments, resolve the requested ref to a
+commit, and walk non-recursive Git trees one path segment at a time. Only
+regular and executable blob modes are accepted; directories, symlinks, and
+submodules are rejected before the Contents API can dereference them. The final
+Contents request is pinned to the resolved commit and must return the verified
+blob SHA.
 
 ## Quick Start
 

@@ -126,6 +126,7 @@ fn package_documentation_tracks_registration_contract() {
         "`client_secret`",
         "`private_key`",
         "`github_installation`",
+        "16 path segments",
         "https://firna.ai/apps/github/install/callback",
         "https://firna.ai/apps/github/authorize/callback",
     ] {

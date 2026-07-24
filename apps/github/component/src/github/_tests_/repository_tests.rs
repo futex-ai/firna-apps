@@ -164,7 +164,7 @@ fn reads_exact_text_file_and_rejects_missing_required_provider_fields() {
         json!({}),
         vec![response(200, installation_repositories(vec![incomplete]))],
     );
-    assert_eq!(error["error"], "invalid_provider_response");
+    assert_eq!(error["error"], "provider_contract_error");
 }
 
 #[test]
@@ -176,5 +176,5 @@ fn rejects_structurally_invalid_https_provider_urls() {
         json!({}),
         vec![response(200, installation_repositories(vec![invalid]))],
     );
-    assert_eq!(error["error"], "invalid_provider_response");
+    assert_eq!(error["error"], "provider_contract_error");
 }

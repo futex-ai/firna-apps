@@ -14,7 +14,8 @@ runtime. Depend on it only as a standalone integration-test package.
 The tests run the real component through `fna-apps-wasm` without live GitHub
 credentials or network calls. They cover package metadata, credential
 references, request construction, provider failures, all five tools, and the
-Git tree-mode guard that prevents symlinks from being read as regular files.
+runtime error contract. File tests cover the bounded Git tree walk and the
+tree-mode guard that prevents symlinks from being read as regular files.
 
 ## Quick Start
 

@@ -80,7 +80,7 @@ fn rejects_malformed_binary_and_oversized_file_content_without_truncation() {
             matches!(
                 output["reason"].as_str(),
                 Some("unsupported_content" | "file_too_large")
-            ) || output["error"] == "invalid_provider_response",
+            ) || output["error"] == "provider_contract_error",
             "unexpected output: {output}"
         );
         assert!(output.get("content").is_none());
@@ -106,10 +106,7 @@ fn rejects_missing_null_or_wrong_typed_required_file_fields() {
             }
         }
         let (output, _) = call("github_read_file", input(), file_responses("docs", body));
-        assert_eq!(
-            output["error"], "invalid_provider_response",
-            "field {field}"
-        );
+        assert_eq!(output["error"], "provider_contract_error", "field {field}");
     }
 }
 
@@ -171,7 +168,7 @@ fn pins_contents_to_the_resolved_commit_and_rejects_blob_sha_mismatches() {
     ));
     let (output, requests) = call("github_read_file", input(), responses);
 
-    assert_eq!(output["error"], "invalid_provider_response");
+    assert_eq!(output["error"], "provider_contract_error");
     assert_eq!(requests[2].query["ref"], FILE_COMMIT_SHA);
 }
 

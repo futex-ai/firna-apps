@@ -118,7 +118,8 @@ fn issue_pull_request_discriminator_fails_closed() {
         json!({ "owner": "octo", "repository": "repo", "number": 9 }),
         vec![response(200, pull_request)],
     );
-    assert_eq!(error["error"], "use_github_read_pr");
+    assert_eq!(error["error"], "invalid_request");
+    assert_eq!(error["reason"], "use_github_read_pr");
     assert_eq!(requests.len(), 1);
 
     let mut wrong = issue_detail();
@@ -128,7 +129,7 @@ fn issue_pull_request_discriminator_fails_closed() {
         json!({ "owner": "octo", "repository": "repo", "number": 9 }),
         vec![response(200, wrong)],
     );
-    assert_eq!(error["error"], "invalid_provider_response");
+    assert_eq!(error["error"], "provider_contract_error");
 }
 
 pub(super) fn pull_request_detail() -> Value {

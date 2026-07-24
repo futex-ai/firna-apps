@@ -62,6 +62,21 @@ fn enforces_string_byte_scalar_and_shape_boundaries() {
 }
 
 #[test]
+fn bounds_file_paths_to_sixteen_segments() {
+    assert!(path(&["a"; 16].join("/")).is_ok());
+    let too_deep = ["a"; 17].join("/");
+    assert!(path(&too_deep).is_err());
+
+    let (output, requests) = call(
+        "github_read_file",
+        json!({ "owner": "octo", "repository": "repo", "path": too_deep }),
+        vec![],
+    );
+    assert_eq!(output["reason"], "invalid_path");
+    assert!(requests.is_empty());
+}
+
+#[test]
 fn enforces_numeric_endpoints_and_checked_finite_windows() {
     assert_eq!(page(Some(2_147_483_647)).unwrap(), 2_147_483_647);
     assert!(page(Some(2_147_483_648)).is_err());

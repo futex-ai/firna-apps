@@ -18,6 +18,19 @@ class PlanAppDeploysTests(unittest.TestCase):
         self.assertEqual(result.stdout.strip(), "slack")
         self.assertIn("decision=deploy_missing", result.stderr)
 
+    def test_pending_provider_registration_is_skipped(self) -> None:
+        result = self.run_plan(
+            [],
+            manifest_contents=(
+                "id: slack\n"
+                "client_id: replace-with-registered-github-app-client-id\n"
+            ),
+        )
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("decision=skip_registration_pending", result.stderr)
+
     def test_matching_version_is_skipped(self) -> None:
         result = self.run_plan([self.catalog_app("1.1.3")])
 
@@ -55,13 +68,22 @@ class PlanAppDeploysTests(unittest.TestCase):
         self.assertEqual(result.stdout.strip(), "slack")
 
     def run_plan(
-        self, catalog_apps: list[dict[str, str]], local_version: str = "1.1.3"
+        self,
+        catalog_apps: list[dict[str, str]],
+        local_version: str = "1.1.3",
+        manifest_contents: str = "id: slack\n",
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             catalog = root / "catalog.json"
             manifests = root / "manifests.jsonl"
             changed = root / "changed"
+            app_root = root / "apps" / "slack"
+            app_root.mkdir(parents=True)
+            (app_root / "manifest.yaml").write_text(
+                manifest_contents,
+                encoding="utf-8",
+            )
             catalog.write_text(json.dumps({"apps": catalog_apps}), encoding="utf-8")
             manifests.write_text(
                 json.dumps(
@@ -85,6 +107,8 @@ class PlanAppDeploysTests(unittest.TestCase):
                     str(manifests),
                     "--changed-apps",
                     str(changed),
+                    "--apps-root",
+                    str(root / "apps"),
                 ],
                 check=False,
                 capture_output=True,

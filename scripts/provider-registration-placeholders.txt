@@ -1,0 +1,3 @@
+replace-with-registered-hosted-client-id
+replace-with-registered-github-app-client-id
+replace-with-registered-github-app-slug
