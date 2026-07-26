@@ -28,9 +28,10 @@ cargo xtask check
 ```
 
 The app platform integration tests use `fna-apps-interface` and
-`fna-apps-wasm` directly from the pinned Firna platform revision. Update the
-revision in `platform.toml` and every standalone runtime test manifest together;
-`cargo xtask check` rejects partial updates.
+`fna-apps-wasm` directly from the pinned Firna platform revision, and the
+deployment workflow installs its CLI from the same revision. Update
+`platform.toml`, every standalone runtime test manifest, and the deployment
+workflow together; `cargo xtask check` rejects partial updates.
 
 To install the matching `firna` CLI for local package validation:
 
