@@ -17,12 +17,12 @@ use crate::{component_bytes, manifest};
 mod slack_component_error_tests;
 
 #[test]
-fn slack_manifest_declares_v1_tools_and_ingress() {
+fn slack_manifest_declares_v1_tools_ingress_and_events() {
     let manifest = manifest();
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "slack");
-    assert_eq!(manifest.version, "1.1.14");
+    assert_eq!(manifest.version, "1.1.15");
     assert!(manifest.icon.is_some());
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
@@ -44,23 +44,55 @@ fn slack_manifest_declares_v1_tools_and_ingress() {
     assert_eq!(manifest.ingress[0].verify_export, "verify-webhook");
     assert_eq!(
         manifest
-            .event_subscriptions
+            .events
             .iter()
-            .map(|subscription| subscription.provider_type.as_str())
+            .map(|event| {
+                (
+                    event.id.as_str(),
+                    event.ingress_id.as_str(),
+                    event.provider_type.as_str(),
+                    event.description.as_str(),
+                    event.contract_version,
+                )
+            })
             .collect::<Vec<_>>(),
         vec![
-            "app_mention",
-            "message.channels",
-            "message.groups",
-            "message.im",
-            "message.mpim"
+            (
+                "app_mention",
+                "slack_events",
+                "app_mention",
+                "A Slack message mentions the workspace app bot.",
+                1,
+            ),
+            (
+                "message_channels",
+                "slack_events",
+                "message.channels",
+                "A public channel message is visible to the workspace app bot.",
+                1,
+            ),
+            (
+                "message_groups",
+                "slack_events",
+                "message.groups",
+                "A private channel message is visible to the workspace app bot.",
+                1,
+            ),
+            (
+                "message_im",
+                "slack_events",
+                "message.im",
+                "A direct message is visible to the workspace app bot.",
+                1,
+            ),
+            (
+                "message_mpim",
+                "slack_events",
+                "message.mpim",
+                "A group direct message is visible to the workspace app bot.",
+                1,
+            ),
         ]
-    );
-    assert!(
-        manifest
-            .event_subscriptions
-            .iter()
-            .all(|subscription| subscription.handler_role_id == "app-event-handler")
     );
 }
 

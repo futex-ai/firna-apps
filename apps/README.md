@@ -64,6 +64,12 @@ six-digit sRGB hex colours. Product surfaces use the package icon and these
 colours together—for example, the animated ring around an app icon while its
 tool runs. Choose a pair that remains distinct around the icon at small sizes.
 
+Webhook-capable packages declare provider events through the top-level
+`events` catalog. Each event owns a stable app-local id, ingress id, provider
+type, model-safe description, and positive contract version. Packages do not
+declare handlers or subscriptions: agents explicitly subscribe themselves
+after installation.
+
 Production secret IDs use:
 
 ```text

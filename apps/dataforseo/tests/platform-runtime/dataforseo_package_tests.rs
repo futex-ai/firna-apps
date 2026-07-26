@@ -9,7 +9,7 @@ fn dataforseo_manifest_is_explicit_built_in_and_credential_free_at_deploy() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "dataforseo");
-    assert_eq!(manifest.version, "1.0.3");
+    assert_eq!(manifest.version, "1.0.4");
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
         "#2563EB"
@@ -37,7 +37,7 @@ fn dataforseo_manifest_is_explicit_built_in_and_credential_free_at_deploy() {
     assert_eq!(manifest.auth_requirements[0].owner, AuthOwner::Workspace);
     assert_eq!(manifest.auth_requirements[0].required_for.len(), 16);
     assert!(manifest.ingress.is_empty());
-    assert!(manifest.event_subscriptions.is_empty());
+    assert!(manifest.events.is_empty());
     assert_eq!(
         manifest.capabilities.http.unwrap().allowed_hosts,
         vec![String::from("api.dataforseo.com")]

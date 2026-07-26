@@ -8,7 +8,7 @@ fn exa_manifest_declares_default_search_tool() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "exa");
-    assert_eq!(manifest.version, "1.0.10");
+    assert_eq!(manifest.version, "1.0.11");
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
         "#111111"
@@ -39,4 +39,5 @@ fn exa_manifest_declares_default_search_tool() {
         Some("Searching")
     );
     assert_eq!(manifest.tools[0].side_effect, ToolSideEffect::ExternalRead);
+    assert!(manifest.events.is_empty());
 }
