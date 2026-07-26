@@ -43,6 +43,13 @@ can be promoted live.
 | slack | `slack_send_message` | `channel_id`, `text`, `thread_ts?` | Send a Slack message as the workspace app bot. | Active Slack install with `slack_bot` workspace auth. |
 | slack | `slack_search_messages` | `query`, `cursor?`, `limit?`, `sort?`, `sort_dir?` | Search Slack messages using a user-authorized Slack grant. | Active Slack install with `slack_bot` workspace auth and `slack_user_search` user grant. |
 
+## Events
+
+Slack exposes `app_mention`, `message_channels`, `message_groups`,
+`message_im`, and `message_mpim` as stable native events. Installing Slack
+does not choose a handler or wake an agent automatically. Each agent explicitly
+subscribes to the events it needs after the workspace installation is active.
+
 ## Secrets
 
 The manifest declares:

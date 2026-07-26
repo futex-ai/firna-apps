@@ -8,6 +8,7 @@ fn http_manifest_declares_workspace_default_request_tool() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "http");
+    assert_eq!(manifest.version, "1.0.7");
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
         "#3266B8"
@@ -26,4 +27,5 @@ fn http_manifest_declares_workspace_default_request_tool() {
         Some("Requesting")
     );
     assert_eq!(manifest.tools[0].side_effect, ToolSideEffect::ExternalWrite);
+    assert!(manifest.events.is_empty());
 }

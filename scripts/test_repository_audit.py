@@ -69,6 +69,12 @@ class RepositoryAuditTests(unittest.TestCase):
                 manifest_root / "Cargo.lock",
                 f'source = "git+{repository}?rev={revision}#{revision}"\n',
             )
+            write(
+                root / ".github/workflows/deploy-apps.yml",
+                "env:\n"
+                f"  FIRNA_PLATFORM_REPOSITORY: {repository}\n"
+                f"  FIRNA_PLATFORM_REVISION: {revision}\n",
+            )
 
             self.assertEqual(repository_audit.audit_platform_pins(root), [])
 
@@ -81,6 +87,34 @@ class RepositoryAuditTests(unittest.TestCase):
             failures = repository_audit.audit_platform_pins(root)
             self.assertTrue(any("must match platform.toml" in item for item in failures))
             self.assertTrue(any("must not use a local path" in item for item in failures))
+
+    def test_deploy_workflow_must_match_canonical_pin(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = "https://github.com/futex-ai/firna.git"
+            revision = "1" * 40
+            write(
+                root / "platform.toml",
+                f'repository = "{repository}"\nrevision = "{revision}"\n',
+            )
+            write(
+                root / ".github/workflows/deploy-apps.yml",
+                "env:\n"
+                "  FIRNA_PLATFORM_REPOSITORY: https://github.com/futex-ai/other.git\n"
+                f'  FIRNA_PLATFORM_REVISION: {"2" * 40}\n',
+            )
+
+            failures = repository_audit.audit_platform_pins(root)
+
+            self.assertEqual(
+                failures,
+                [
+                    ".github/workflows/deploy-apps.yml FIRNA_PLATFORM_REPOSITORY "
+                    "must match platform.toml",
+                    ".github/workflows/deploy-apps.yml FIRNA_PLATFORM_REVISION "
+                    "must match platform.toml",
+                ],
+            )
 
     def test_markdown_links_must_resolve(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

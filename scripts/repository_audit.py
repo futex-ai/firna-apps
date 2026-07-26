@@ -116,6 +116,19 @@ def audit_platform_pins(root: Path) -> list[str]:
         failures.append("platform.toml revision must be a full Git commit")
     if failures:
         return failures
+    workflow_path = root / ".github/workflows/deploy-apps.yml"
+    try:
+        workflow = workflow_path.read_text(encoding="utf-8")
+    except OSError as error:
+        return [f"cannot read {workflow_path.relative_to(root)}: {error}"]
+    for name, expected in (
+        ("FIRNA_PLATFORM_REPOSITORY", repository),
+        ("FIRNA_PLATFORM_REVISION", revision),
+    ):
+        if workflow_environment_value(workflow, name) != expected:
+            failures.append(
+                f"{workflow_path.relative_to(root)} {name} must match platform.toml"
+            )
     for manifest_path in sorted(root.glob("apps/*/tests/platform-runtime/Cargo.toml")):
         manifest = manifest_path.read_text(encoding="utf-8")
         for name in PLATFORM_DEPENDENCIES:
@@ -134,6 +147,17 @@ def audit_platform_pins(root: Path) -> list[str]:
         if expected_source not in lock_text:
             failures.append(f"{lock_path.relative_to(root)} does not resolve platform.toml")
     return failures
+
+
+def workflow_environment_value(contents: str, name: str) -> str | None:
+    match = re.search(
+        rf"^  {re.escape(name)}:[ \t]*(.+?)[ \t]*$",
+        contents,
+        re.MULTILINE,
+    )
+    if match is None:
+        return None
+    return match.group(1).split(" #", maxsplit=1)[0].strip().strip("\"'")
 
 
 def audit_changed_versions(root: Path, base_ref: str) -> list[str]:
