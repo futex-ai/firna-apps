@@ -44,6 +44,8 @@ firna apps validate apps/slack
 ```
 
 See [`apps/README.md`](apps/README.md) for package commands and conventions.
+Active and completed implementation work is tracked in
+[`plans/README.md`](plans/README.md).
 
 ## Deployment
 
