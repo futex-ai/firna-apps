@@ -91,6 +91,7 @@ registered production client ID.
   version, source-layout, and file-length checks.
 - [`scripts/plan-app-deploys.py`](scripts/plan-app-deploys.py): catalog-aware
   production deployment planning.
+- [`plans/`](plans/README.md): active and completed implementation plans.
 - [`xtask/`](xtask/README.md): local and CI verification entrypoints.
 
 The platform-side manifest, runtime, and admin submission contracts remain in

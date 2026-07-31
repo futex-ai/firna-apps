@@ -88,6 +88,7 @@ do not call GitHub.
 
 ### Related Docs
 
+- [GitHub webhook events plan](../../plans/github-webhook-events.md)
 - [GitHub App protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/github-app.md)
 - [GitHub tool protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/github-app-tools.md)
 - [App platform protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md)
