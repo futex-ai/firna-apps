@@ -341,21 +341,75 @@ platform protocol text is aligned.
 Implement provider-neutral OAuth support in `futex-ai/firna`. No UI or
 mockup work belongs here.
 
-- [ ] Persist typed access/refresh expiry metadata and implement atomic
+- [x] Persist typed access/refresh expiry metadata and implement atomic
       single-use refresh-token rotation with one refresh in flight per grant.
-- [ ] Implement Xero refresh timing, the documented old-token ambiguity grace
+- [x] Implement Xero refresh timing, the documented old-token ambiguity grace
       behavior, inactivity expiry, stable terminal states, and redacted errors.
-- [ ] Persist the complete current `tenantType = ORGANISATION` connection
+- [x] Persist the complete current `tenantType = ORGANISATION` connection
       registry per grant revision and expose only its safe projection through
       `xero_organisations_list`, including empty and disconnected states.
-- [ ] Require `organisation_ref` on every tenant-scoped tool, resolve it only
+- [x] Require `organisation_ref` on every tenant-scoped tool, resolve it only
       inside the current workspace/install/grant registry, inject the trusted
       `xero-tenant-id`, and reject every raw-id or header override.
-- [ ] Put clocks, OAuth HTTP, discovery, vault, store, and transaction behavior
+- [x] Put clocks, OAuth HTTP, discovery, vault, store, and transaction behavior
       behind traits; add `unimock` concurrency, cross-tenant, refresh,
       redaction, expiry, revoke, reconnect, disable, and uninstall tests.
-- [ ] Update protocols and crate READMEs; run full platform checks, commit,
+- [x] Update the migration inventory contract and checksum lock for the new
+      forward-only OAuth lifecycle tables.
+- [x] Update protocols and crate READMEs; run full platform checks, commit,
       push, and review.
+
+Implementation evidence: the provider-neutral lifecycle was committed at
+`3380573db`, integrated path-by-path with `origin/main` at `613a4fadf`, and
+pushed on `calummoore/xero-platform-support`. The authoritative post-merge
+`cargo xtask check` passed, including 2,934 Rust tests, 1,427 universal-app unit
+tests, 104 universal-app smoke tests, web smoke tests, all target builds,
+Terraform validation, and Helm validation. The branch had no deletions relative
+to `origin/main`. The required post-push `cargo xtask review` completed and
+raised the unresolved findings below; repository policy requires an explicit
+user decision before any review-driven fix.
+
+#### Post-push implementation review findings
+
+- [ ] **Critical 1 — refresh error classification:** decide how to prevent a
+      Xero token-endpoint 429 or ordinary non-2xx response from being treated
+      as a rejected grant and destructively retiring otherwise valid local
+      credentials and connections. Doing nothing can force unnecessary
+      workspace reauthorization during transient throttling. Option A adds a
+      typed rate-limited failure and preserves bounded `Retry-After`; option B
+      makes only explicit `invalid_grant` terminal and maps all other 4xx
+      failures non-destructively. **Recommendation: implement A and B, with
+      terminal cleanup reserved for definitive invalid-grant semantics.**
+- [ ] **Important 2 — lifecycle mapping invariants:** decide whether lifecycle
+      token kinds must be distinct and mapped for every auth requirement using
+      the flow. Doing nothing lets a reviewed manifest pass validation but fail
+      OAuth completion or refresh, and can create ambiguous same-kind token
+      rows. Option A strengthens validation per requirement; option B moves the
+      lifecycle declaration under each auth requirement. **Recommendation: use
+      A unless the product needs different lifecycle policy per requirement.**
+- [ ] **Important 3 — uninstall transaction ordering:** decide how to keep a
+      stale installation revision from revoking local OAuth state before the
+      installation status CAS fails. Doing nothing can leave an installation
+      marked live without usable credentials. Option A changes status before
+      cleanup; option B atomically fences the installation revision and retires
+      local lifecycle state in one store transaction, leaving provider
+      revocation best-effort. **Recommendation: use B for durable local
+      consistency.**
+- [ ] **Important 4 — scoped-row normalization:** decide whether refresh and
+      connection-replacement transactions must overwrite caller-supplied
+      workspace, app, and installation fields from the locked grant and
+      installation. Doing nothing allows a future faulty caller to delete
+      current rows and then persist mismatched replacements or hit avoidable FK
+      failures. Option A normalizes only in the current service; option B
+      applies the initialization pattern inside every store transaction.
+      **Recommendation: use B so the persistence boundary enforces scope.**
+- [ ] **Minor 1 — connection field bounds:** decide explicit maximum lengths
+      for provider connection ids, tenant ids, and model-visible organisation
+      names. Doing nothing remains globally capped by the 1 MiB response limit
+      but permits one excessively large field into storage and model context.
+      Option A cap only the display name; option B bound every parsed field and
+      add oversized-provider fixtures. **Recommendation: use B for a reusable
+      provider-contract rule.**
 
 ### Milestone 3: Platform Financial Write Controls
 
