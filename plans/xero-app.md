@@ -575,22 +575,73 @@ Tags: mockup
 
 Specify product journeys before UI implementation.
 
-- [ ] Extend Installed Apps with mobile and desktop screens for Xero consent,
+- [x] Extend Installed Apps with mobile and desktop screens for Xero consent,
       authorised-organisation list/empty states, connected capability groups,
       missing scopes, reconnect-required, revoked, disabled, and uninstalled
       states.
-- [ ] Add standalone mobile/desktop screens for ordinary edits, destructive
+- [x] Add standalone mobile/desktop screens for ordinary edits, destructive
       transitions, immediately-authorised bank/payment records, Setup, invoice
       email, history note, attachment upload/replace, stale proposal, provider
       validation failure, success, and ambiguous reconciliation.
-- [ ] Keep screens in the existing hierarchy, use shared components, render no
+- [x] Keep screens in the existing hierarchy, use shared components, render no
       more than five screens per screen-spec page, and compose flows only from
       linked standalone screen components.
-- [ ] Use plain product language and real-shaped empty/error states; never show
+- [x] Use plain product language and real-shaped empty/error states; never show
       tenant ids, OAuth tokens/scopes as engineering jargon, raw provider
       errors, test labels, or invented business data.
-- [ ] Run mockup build/check/test/typecheck and direct-file visual smoke tests;
-      commit generated HTML with its React source.
+- [x] Run mockup build/check/test/typecheck and commit generated HTML with its
+      React source.
+- [ ] Run direct-file visual smoke tests for every changed mockup page. The
+      required Conductor in-app Browser currently reports that no browser is
+      available; retry as soon as a Browser tab is attached to this workspace.
+
+Implementation evidence: the Xero connection, lifecycle, approval, attachment,
+and outcome mockups were committed and pushed at `4772db5d6` on
+`calummoore/xero-platform-support`. All 40 generated mobile/desktop HTML
+artifacts were committed with their React screen components. Mockup build,
+check, typecheck, and all 28 mockup tests passed. The authoritative
+`cargo xtask check` also passed, including 2,984 Rust workspace tests, 1,436
+universal-app unit tests, 104 universal-app smoke tests, 148 public-app tests,
+148 web tests, 18 web browser smoke tests with two expected skips, every target
+build/export, Terraform validation, and Helm validation. The post-push
+`cargo xtask review` completed and raised the unresolved findings below; none
+was in the mockup implementation. Repository policy requires an explicit user
+decision before any review-driven fix.
+
+#### Post-push implementation review findings
+
+- [ ] **Critical 1 — approved OAuth organisation binding (repeat of Milestone
+      3 Critical 1):** exact commit matching excludes the private OAuth auth-
+      requirement and organisation-ref headers, while credential injection
+      still trusts the component-supplied header values. This applies to normal
+      mutations and artifact uploads. Doing nothing can dispatch an approved
+      financial write to a different currently connected Xero organisation
+      while the proposal and audit name the approved organisation. Option A
+      carries the stored `auth_requirement_id` and `organisation_ref` in the
+      trusted commit policy, rejects component mismatches, and uses those
+      values for host credential injection; option B relies on component
+      conventions and adds only component-level comparisons.
+      **Recommendation: use A across preflight, commit, reconciliation, and
+      artifact transfer, with cross-organisation adversarial tests.**
+- [ ] **Important 1 — deterministic approval replay safety:** deterministic
+      mutation approval publication performs a read followed by the ordinary
+      prompt and approval upserts, whose conflict paths can overwrite status,
+      response, and identity fields. Doing nothing lets concurrent first
+      publication or a retry racing a human response reopen an approved or
+      rejected request as pending. Option A adds an insert-only deterministic
+      prompt/approval transaction that reloads and compares immutable identity
+      on conflict; option B makes every ordinary prompt/approval upsert globally
+      insert-only. **Recommendation: use A so deterministic mutation approvals
+      gain atomic idempotency without changing unrelated prompt update
+      semantics, and add concurrent publication plus resolved-replay tests.**
+- [ ] **Minor 1 — proposer identity omitted from approval replay check:** the
+      existing deterministic prompt comparison checks type, owner, task, title,
+      and details but not the stored requesting/proposer agent. Doing nothing
+      leaves one identity dimension outside the fail-closed replay contract.
+      Option A compare `requesting_agent_id` in the adapter; option B define one
+      typed immutable prompt-identity value shared by the adapter and the new
+      atomic store path. **Recommendation: use B together with Important 1 so
+      future identity fields cannot silently diverge between layers.**
 
 ### Milestone 6: Connection and Approval UI
 
