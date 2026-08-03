@@ -64,6 +64,12 @@ six-digit sRGB hex colours. Product surfaces use the package icon and these
 colours together—for example, the animated ring around an app icon while its
 tool runs. Choose a pair that remains distinct around the icon at small sizes.
 
+Every tool declares a public-safe, task-specific `activity_label` for the
+compact chat status shown while that exact tool runs. Labels use two or more
+single-space-separated printable ASCII words, contain no more than 80 bytes,
+and start with a capitalized ASCII action word. The platform rejects the
+removed `activity_verb` key; there is no compatibility alias or fallback.
+
 Webhook-capable packages declare provider events through the top-level
 `events` catalog. Each event owns a stable app-local id, ingress id, provider
 type, model-safe description, and positive contract version. Packages do not

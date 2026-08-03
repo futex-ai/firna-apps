@@ -22,7 +22,7 @@ fn slack_manifest_declares_v1_tools_ingress_and_events() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "slack");
-    assert_eq!(manifest.version, "1.1.15");
+    assert_eq!(manifest.version, "1.1.16");
     assert!(manifest.icon.is_some());
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
@@ -41,6 +41,19 @@ fn slack_manifest_declares_v1_tools_ingress_and_events() {
             .all(|requirement| requirement.credential_flow.as_deref() == Some("slack"))
     );
     assert_eq!(manifest.tools.len(), 4);
+    assert_eq!(
+        manifest
+            .tools
+            .iter()
+            .map(|tool| tool.activity_label.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "Listing Slack channels",
+            "Reading Slack channel history",
+            "Sending Slack message",
+            "Searching Slack messages",
+        ]
+    );
     assert_eq!(manifest.ingress[0].verify_export, "verify-webhook");
     assert_eq!(
         manifest

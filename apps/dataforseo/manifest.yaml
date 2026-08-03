@@ -1,6 +1,6 @@
 id: dataforseo
 name: DataForSEO
-version: 1.0.4
+version: 1.0.5
 icon:
   media_type: image/png
   data_base64: iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAJFBMVEUAAAAxbOwkY+smY+s/hPBfmfN80vzT4fv9/v+o0fqhvPaSsfWD8ygwAAAAAXRSTlMAQObYZgAAAWVJREFUWMO9l+uygyAMhKUkRsj7v2+tlzagUJL0nP3TmTr7uQSNZJqEwiOOKITpTmHIfOhxYYzdu8hhvvs7hdMvCEb/qgNg9h8Z9PWrIjj8WwRPgC2C0gEAVQSVHeeXJEK3h7u/IKgCwHyqDaDlENFC+y+lzAgygIxQA5aGKDHEt39GNeDFyOxIsCl9rwF0AZQuK2gXsUcQfiVgJaRjR0w12BmF3wBY0iiAeFdOFQEHAfzZG6RmhE4RWf7PrQijgILAFkAUlSBtDTahuAQWgIyAJkD2Avj20ngR/wvwh0UEEa69jdAGiBWYHiQZIHUArSJKv+VlKt7noid1APm8OXLZKYtovabaaLDkbKplRzMAqt1VfZlkZawJ6udb+2nD6AJkiA4A8Y19tAbr+QTjvWoAX4UIsS3HUf1XANdZewP4DtvBM6/sAXxrCL6R6Rya7FWwT51iAQ6CnF0tBOfwfDPBaxAf+xPvtkO5yaE2RwAAAABJRU5ErkJggg==
@@ -72,7 +72,7 @@ credential_flows:
 tools:
 - name: dataforseo_google_serp
   description: Search the first ten Google organic results for one bounded query.
-  activity_verb: Searching
+  activity_label: Searching Google results
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.google_serp
@@ -102,7 +102,7 @@ tools:
       timeout_seconds: &timeout { type: integer, minimum: 1, maximum: 300 }
 - name: dataforseo_keyword_overview
   description: Return compact Google search metrics for up to one hundred keywords.
-  activity_verb: Researching
+  activity_label: Analyzing keyword metrics
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.keyword_overview
@@ -127,7 +127,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_keyword_suggestions
   description: Discover up to fifty bounded Google keyword suggestions with typed filters.
-  activity_verb: Researching
+  activity_label: Finding keyword suggestions
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.keyword_suggestions
@@ -152,7 +152,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_ranked_keywords
   description: Inspect up to fifty organic keywords currently ranking for a domain or page.
-  activity_verb: Researching
+  activity_label: Inspecting ranked keywords
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.ranked_keywords
@@ -177,7 +177,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_backlinks_summary
   description: Summarize a bounded live or lost backlink profile.
-  activity_verb: Researching
+  activity_label: Summarizing backlink profile
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.backlinks_summary
@@ -195,7 +195,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_backlinks
   description: Return the strongest bounded external backlinks for a domain or page.
-  activity_verb: Researching
+  activity_label: Finding backlinks
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.backlinks
@@ -216,7 +216,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_referring_domains
   description: Return the strongest bounded referring domains for a domain or page.
-  activity_verb: Researching
+  activity_label: Finding referring domains
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.referring_domains
@@ -237,7 +237,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_instant_page_audit
   description: Audit one public HTTPS page without crawling or browser rendering.
-  activity_verb: Auditing
+  activity_label: Auditing web page
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.instant_page_audit
@@ -252,7 +252,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_business_search
   description: Search bounded local business listings around one coordinate and radius.
-  activity_verb: Searching
+  activity_label: Searching local businesses
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.business_search
@@ -283,7 +283,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_business_info
   description: Return compact identity, contact, hours, attributes, and popularity data for one business.
-  activity_verb: Researching
+  activity_label: Retrieving business information
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.business_info
@@ -314,7 +314,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_content_search
   description: Search bounded web citations with typed country, language, rank, and sentiment filters.
-  activity_verb: Searching
+  activity_label: Searching web citations
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.content_search
@@ -342,7 +342,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_content_sentiment
   description: Summarize bounded sentiment and connotation distributions for one topic.
-  activity_verb: Analyzing
+  activity_label: Analyzing content sentiment
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.content_sentiment
@@ -366,7 +366,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_domain_technologies
   description: Return bounded technology detections for one hostname without contact data.
-  activity_verb: Researching
+  activity_label: Detecting domain technologies
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.domain_technologies
@@ -381,7 +381,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_domain_whois
   description: Return registration and aggregate traffic metadata for one exact hostname without contact data.
-  activity_verb: Researching
+  activity_label: Inspecting domain registration
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.domain_whois
@@ -390,7 +390,7 @@ tools:
   input_schema: *hostname_schema
 - name: dataforseo_ai_keyword_volume
   description: Return current and twelve-month AI search demand for up to one hundred keywords.
-  activity_verb: Researching
+  activity_label: Analyzing AI keyword demand
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.ai_keyword_volume
@@ -415,7 +415,7 @@ tools:
       timeout_seconds: *timeout
 - name: dataforseo_llm_mentions
   description: Return bounded Google or ChatGPT target mention aggregates in one Live request.
-  activity_verb: Researching
+  activity_label: Analyzing LLM mentions
   auth: [dataforseo_account]
   export: call-tool
   operation: dataforseo.llm_mentions
