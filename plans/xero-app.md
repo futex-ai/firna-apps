@@ -541,7 +541,7 @@ Implement the reviewed VAT-specific experience; no backend work belongs here.
 - [ ] Scaffold `apps/xero` as a standalone component and runtime-test workspace
       with committed lockfiles, required READMEs, and an approved Xero brand
       asset.
-- [ ] Write manifest `1.0.0` with `source.kind: community`, explicit install,
+- [ ] Write manifest `1.0.0` with `source.kind: built_in`, explicit install,
       Xero and optional HMRC auth requirements, reviewed hosts, all
       read/write/VAT tools, protected account bindings, human-required writes,
       response limits, and no ingress/events.
