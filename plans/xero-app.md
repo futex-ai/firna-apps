@@ -45,7 +45,7 @@ wrapper or raw `where` expression.
 | Invoices | Credit Notes, Invoices, Linked Transactions, Quotes, Purchase Orders, Repeating Invoices |
 | Payments | Batch Payments, Overpayments, Payments, Prepayments |
 | Banking records | Bank Transactions and Bank Transfers |
-| Journals | Manual Journals and read-only Journals |
+| Journals | Manual Journals |
 | Files on records | Accounting API attachment list/download/upload/replace operations for every supported parent type |
 | Collaboration | History retrieval and note creation wherever the Accounting API exposes them |
 | Documents | Invoice, credit-note, quote, and purchase-order PDF retrieval; online-invoice lookup; invoice email |
@@ -68,6 +68,8 @@ through the ordinary public Accounting API boundary:
   reconciliation. Xero does not expose them through the Accounting API.
 - Bank Feeds, Payment Services, Finance API, and Practice Manager operations,
   which require separate certification or commercial access.
+- Provider-generated Journals, which require Xero Advanced tier, a security
+  assessment, and use-case approval.
 - Deprecated Expense Claims and Receipts.
 - Payroll, Projects, Files-library, Assets, eInvoicing, and other separate Xero
   APIs.
@@ -114,8 +116,7 @@ The manifest uses `offline_access` and the current granular scopes:
 - `accounting.settings`, `accounting.contacts`,
   `accounting.invoices`, `accounting.payments`,
   `accounting.banktransactions`, and `accounting.manualjournals`
-- `accounting.attachments`, `accounting.budgets.read`, and
-  `accounting.journals.read`
+- `accounting.attachments` and `accounting.budgets.read`
 - `accounting.reports.aged.read`,
   `accounting.reports.balancesheet.read`,
   `accounting.reports.banksummary.read`,
@@ -236,8 +237,9 @@ escape hatch:
 - one Setup mutation isolated behind the strongest approval treatment.
 
 Each action maps to one classified path/method/operation id in the generated
-registry. Tests prove every included provider operation is reachable and every
-excluded operation is unreachable.
+registry. Multiple semantic actions may share an operation only through an
+explicit policy row. Tests prove every included provider operation is reachable
+and every excluded operation is unreachable.
 
 ## Milestones
 
@@ -252,7 +254,8 @@ Create the implementable Accounting API contracts before code.
       schema-generation, read, write, attachment, history, document, OAuth,
       redaction, and error contracts, keeping each protocol near 250 lines.
 - [x] Classify all 235 OpenAPI operations and explicitly override deprecated
-      Expense Claims/Receipts and certification-only Payment Services.
+      Expense Claims/Receipts, gated Journals, and certification-only Payment
+      Services.
 - [ ] Specify every included action's method/path, scope, region/role
       restriction, input/output schema source, pagination, response cap,
       preflight, approval, idempotency, reconciliation, and audit behavior.
@@ -266,7 +269,7 @@ Create the implementable Accounting API contracts before code.
 Protocol evidence: the replacement contracts were committed and pushed on
 `calummoore/xero-platform-support` at `f925cab8a`. Markdown, link, diff, and
 235-operation coverage validation passed. The required post-push review
-completed successfully and confirmed the 214 included plus 21 excluded
+completed successfully and confirmed the original 214 included plus 21 excluded
 operation inventory, while raising the unresolved items below. The
 user-selected organisation-routing revision was committed and pushed at
 `748064d89`; its follow-up post-push review no longer reported the missing
@@ -275,13 +278,15 @@ items recorded below. The user-selected app-level-access revision was committed
 at `6be368dca`, merged with the latest platform main, and pushed at
 `9d82a1395`; its follow-up review no longer reported the financial-write
 permission finding, repeated Important 6, Important 7, and Minor 1, and raised
-Important 8, Important 9, and Minor 2 below.
+Important 8, Important 9, and Minor 2 below. The complete recommended
+resolution set was applied in platform commit `ddb8865f4`, merged with the
+latest target branch, and pushed at `7fc5ceb15` before implementation began.
 
 #### Post-push protocol review findings
 
-Unresolved findings must be resolved by a user-selected option before
-implementation can begin. They remain unticked because repository policy
-forbids silently fixing post-push review findings.
+The user's instruction to implement the complete plan authorises the recorded
+recommended resolutions. Each item is checked only after the corresponding
+platform protocol text is aligned.
 
 - [x] **Important 1 — authorised organisation routing:** apply the user's
       selected resolution: keep OAuth as the authority boundary, add the
@@ -300,41 +305,36 @@ forbids silently fixing post-push review findings.
       public `provider_account_id`; expose only a reviewed display label and an
       opaque organisation ref. The follow-up review did not re-report the
       original exposure finding.
-- [ ] **Important 4 — operation/action mapping:** reconcile the one-operation-id
-      to one-action invariant with semantic write actions such as archive,
-      status transitions, apply, and refund, either as typed sub-modes or an
-      explicitly relaxed and tested coverage invariant.
-- [ ] **Important 5 — token versus authorization revisions:** separate routine
+- [x] **Important 4 — operation/action mapping:** use a tested many-to-one
+      mapping: every semantic action maps to exactly one provider operation,
+      every included operation maps to at least one classified action, and
+      multiple actions may share an operation only through explicit policy.
+- [x] **Important 5 — token versus authorization revisions:** separate routine
       access/refresh-token rotation from the authorization revision so a
       30-minute token refresh does not retire organisation refs or invalidate a
       valid 15-minute write proposal. Bump authorization only for reconnect,
       scope, identity, or authorised-connection-set changes.
-- [ ] **Important 6 — gated Journals access:** decide whether to reclassify the
-      three `accounting.journals.read` operations as
-      `certification_required`, reducing the ordinary V1 inventory to 211
-      included and 24 excluded, or retain them only behind documented Xero
-      Advanced-tier, security-assessment, and use-case approval prerequisites.
-- [ ] **Important 7 — artifact result envelopes:** add
+- [x] **Important 6 — gated Journals access:** classify the three
+      `accounting.journals.read` operations as `certification_required`,
+      reducing the ordinary V1 inventory to 211 included and 24 excluded until
+      Xero grants Advanced-tier, security-assessment, and use-case approval.
+- [x] **Important 7 — artifact result envelopes:** add
       `organisation: { organisation_ref, name }` to the exact attachment and
       PDF artifact results so they satisfy the shared tenant-scoped output
       contract and generated schemas cannot diverge.
-- [ ] **Important 8 — disconnected-organisation error precedence:** choose and
-      document one stable result when the authorised set is empty and a
-      tenant-scoped call supplies a now-stale ref: installation-level
-      `auth_required` or ref-level `organisation_disconnected`. Align the
-      top-level and read-tool contracts and test the chosen precedence.
-- [ ] **Important 9 — action discriminant casing:** choose the exact JSON
-      spelling for generated action enums and use it consistently in common
-      enums, tool tables, schemas, examples, fixtures, and dispatch. Current
-      host enum examples are screaming snake case while tool actions are lower
-      snake case.
-- [ ] **Minor 1 — planned-page lifecycle:** link every planned Xero protocol
+- [x] **Important 8 — disconnected-organisation error precedence:** return
+      installation-level `auth_required` when no authorised organisation
+      remains; when at least one remains, return `organisation_disconnected`
+      for stale, disconnected, foreign, or invented refs.
+- [x] **Important 9 — action discriminant casing:** use lower snake case for
+      every JSON action discriminant while retaining provider enum casing for
+      non-action values.
+- [x] **Minor 1 — planned-page lifecycle:** link every planned Xero protocol
       page to this active plan and state concrete criteria for changing its
-      status from planned to current. The follow-up review reconfirmed this
-      finding because the platform repository still has no linked Xero plan.
-- [ ] **Minor 2 — online-invoice handoff hosts:** name and validate the exact
-      provider host allowlist for authenticated online-invoice client handoff;
-      the component runtime allowlist currently names only `api.xero.com`.
+      status from planned to current.
+- [x] **Minor 2 — online-invoice handoff hosts:** allow authenticated
+      online-invoice handoff only to HTTPS `in.xero.com`, with no userinfo,
+      non-default port, IP literal, or alternative host.
 
 ### Milestone 2: Platform OAuth and Tenant Binding
 
@@ -453,8 +453,8 @@ Implement the approved designs using real backend state.
 
 - [ ] Create the production confidential Xero Web App named `Firna` with the
       exact callback `https://firna.ai/oauth/xero/callback`.
-- [ ] Request only the reviewed granular scopes, obtain any required journal or
-      tax-write approval, and confirm the connection tier needed for rollout.
+- [ ] Request only the reviewed generally available granular scopes and confirm
+      the connection tier needed for rollout; do not request gated Journals.
 - [ ] Put the public client id in manifest environment and transfer the client
       secret directly to `firna-prod-app-xero-client-secret` in Google Secret
       Manager; never place it in Git, `.context`, shell history, logs,
@@ -485,7 +485,7 @@ Implement the approved designs using real backend state.
       stable errors for every included GET operation.
 - [ ] Implement authenticated artifact results for supported PDFs and
       attachments, plus typed online-invoice, CIS, organisation-action,
-      budget, journal, history, and regional-report reads.
+      budget, manual-journal, history, and regional-report reads.
 - [ ] Put provider HTTP, clock, and artifact behavior behind traits and keep
       production Rust files below 300 lines.
 - [ ] Add external `_tests_` modules with `unimock`, conformance fixtures,
@@ -536,7 +536,7 @@ Implement the approved designs using real backend state.
       stale proposal, duplicate invocation, ambiguous response, refresh, and
       audit receipt.
 - [ ] Confirm unsupported, deprecated, certification-only, and separate-API
-      operations are unreachable.
+      operations, including gated Journals, are unreachable.
 - [ ] Record only redacted outcomes and current provider-limit usage in the PR.
 
 ### Milestone 14: Complete Repository Gate
@@ -581,9 +581,9 @@ Implement the approved designs using real backend state.
 - Attachments and PDFs use authenticated artifacts rather than model-visible
   binary data; sensitive provider, bank, tax, and credential values stay behind
   trusted boundaries.
-- Deprecated Expense Claims/Receipts, certification-only Payment Services and
-  Bank Feeds, bank reconciliation, VAT submission, and separate Xero APIs are
-  neither advertised nor callable.
+- Deprecated Expense Claims/Receipts, gated Journals, certification-only
+  Payment Services and Bank Feeds, bank reconciliation, VAT submission, and
+  separate Xero APIs are neither advertised nor callable.
 - Generated artifacts match the pinned OpenAPI and policy exactly; all unit,
   runtime, platform, UI, package, demo-company, and repository checks pass.
 - Checked work is committed and pushed, and post-push review findings are
