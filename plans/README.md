@@ -6,8 +6,8 @@ post-push review has been completed.
 
 ## Active
 
-- [Xero accounting app](xero-app.md): add an explicitly installed, read-only
-  Xero app bound to one workspace-selected organisation.
+- [Xero accounting and VAT app](xero-app.md): add an explicitly installed,
+  approval-gated read-write Xero app with optional HMRC VAT filing.
 
 ## Completed
 
