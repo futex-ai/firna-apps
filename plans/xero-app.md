@@ -2,7 +2,7 @@
 
 - Status: Active
 - Target branch: `origin/main`
-- Last updated: 2026-08-03
+- Last updated: 2026-08-04
 
 ## Outcome
 
@@ -504,17 +504,70 @@ review-driven fix.
 Support Accounting API file operations without placing binary data in agent
 context. No UI or mockup work belongs here.
 
-- [ ] Add a capability-scoped app import that streams one authenticated Firna
+- [x] Add a capability-scoped app import that streams one authenticated Firna
       attachment artifact to a reviewed provider request with exact byte,
       filename, media-type, timeout, and destination limits.
-- [ ] Add a provider-response path that stores an allowed binary response as a
+- [x] Add a provider-response path that stores an allowed binary response as a
       workspace-scoped Firna artifact and returns only safe metadata plus an
       authenticated artifact reference.
-- [ ] Reject redirects, content-type confusion, oversized files, cross-workspace
+- [x] Reject redirects, content-type confusion, oversized files, cross-workspace
       ids, credential/header overrides, and component-selected hosts.
-- [ ] Cover upload, replace, download, cancellation, failure cleanup,
+- [x] Cover upload, replace, download, cancellation, failure cleanup,
       redaction, and authorization with unit and integration tests.
-- [ ] Update protocols/READMEs, run full checks, commit, push, and review.
+- [x] Update protocols/READMEs, run full checks, commit, push, and review.
+
+Implementation evidence: the capability-gated attachment artifact bridge was
+committed at `1b9998b64`, integrated path-by-path with `origin/main` at
+`8eb1f325b`, and pushed on `calummoore/xero-platform-support`. The authoritative
+post-merge `cargo xtask check` passed, including 2,984 Rust workspace tests,
+1,436 universal-app unit tests, 104 universal-app smoke tests, 148 public-app
+tests, 148 web tests, 18 web browser smoke tests with two expected skips, every
+target build/export, mockup checks, Terraform validation, and Helm validation.
+The only deletion relative to `origin/main` is the earlier Milestone 3
+replacement of the monolithic RPC app-error module with its split module tree.
+The required post-push `cargo xtask review` completed and raised the unresolved
+findings below; repository policy requires an explicit user decision before any
+review-driven fix.
+
+#### Post-push implementation review findings
+
+- [ ] **Important 1 — recovery queue starvation (repeat of Milestone 3
+      Important 2):** the provider-neutral mutation store includes every
+      undecided `pending` proposal in the oldest-first, limit-100 recovery page,
+      while the worker ignores proposals whose human decision is still pending.
+      Doing nothing allows more than 100 old undecided approvals to prevent
+      approved, ambiguous, abandoned-executing, or newly expired proposals from
+      advancing. Option A selects pending proposals only when expired or already
+      backed by a resolved approval and prioritises actionable states; option B
+      creates independent state-specific recovery queues and limits.
+      **Recommendation: implement A at the persistence boundary and add a
+      regression test with more than one page of undecided rows plus an approved
+      row.**
+- [ ] **Important 2 — approval-time tool restriction replay (repeat of
+      Milestone 3 Important 3):** initial platform tool discovery enforces
+      existing non-Xero `allowed_agent_roles` and agent-permission restrictions,
+      but the durable mutation claim fence rechecks only installation visibility,
+      agent liveness, resolver workspace access, and OAuth binding. The proposal
+      does not retain enough context to replay the tool-level decision. Doing
+      nothing lets a non-Xero restricted mutation dispatch after its proposer
+      loses the required role, workspace-root status, or secret-management
+      permission; Xero itself still declares no per-tool permission concept.
+      Option A persists the relevant access context and invokes one shared
+      tool-visibility evaluator at discovery and claim time; option B rejects
+      `human_required` mutation tools that declare legacy tool restrictions until
+      a shared fence exists. **Recommendation: implement A as a provider-neutral
+      platform rule and stale the proposal when the shared result changes.**
+- [ ] **Important 3 — approval policy missing from publishing contract:** the
+      manifest now makes `tools[].approval.mode = human_required` security-
+      relevant execution metadata, but the Rust publishing projection and
+      public TypeScript contract omit it. Doing nothing prevents app reviewers
+      and review UI from distinguishing a merely `external_write` tool from one
+      whose host-enforced approval policy is present. Option A exposes a typed
+      optional approval-mode enum in the Rust and TypeScript publishing
+      contracts; option B exposes only a derived `human_required_approval`
+      boolean. **Recommendation: use A so future reviewed approval modes remain
+      explicit, add projection/serialization tests, and have review UI render
+      the value.**
 
 ### Milestone 5: Connection and Approval Mockups
 
