@@ -415,23 +415,89 @@ user decision before any review-driven fix.
 
 Add the reusable mutation boundary required by Xero.
 
-- [ ] Add manifest-declared `human_required` approval for
+- [x] Add manifest-declared `human_required` approval for
       `external_write`, with no automatic policy path and no separate
       tool/action permission layer.
-- [ ] Add preflight/commit component exports and durable canonical proposals
+- [x] Add preflight/commit component exports and durable canonical proposals
       bound to tool/version, workspace, organisation ref, private tenant
       fingerprint, authorization revision, payload, current provider versions,
       proposer, resolver, and expiry.
-- [ ] Inject and atomically consume a single-use approval receipt and provider
+- [x] Inject and atomically consume a single-use approval receipt and provider
       idempotency key; reject replay, payload changes, stale state, and
       app-access or resolver-access changes.
-- [ ] Add pending, approved, executing, succeeded, rejected, expired, stale,
+- [x] Add pending, approved, executing, succeeded, rejected, expired, stale,
       ambiguous, reconciled, and failed mutation states that survive restarts
       and concurrent workers.
-- [ ] Add provider read-after-timeout reconciliation and immutable redacted
+- [x] Add provider read-after-timeout reconciliation and immutable redacted
       financial audit events.
-- [ ] Add service, store, migration, RPC, agent-tool, and adversarial tests;
+- [x] Add service, store, migration, RPC, agent-tool, and adversarial tests;
       update protocols/READMEs, run full checks, commit, push, and review.
+
+Implementation evidence: the provider-neutral mutation boundary was committed
+at `16bb9302c`, integrated path-by-path with `origin/main` at `473aae629`, and
+pushed on `calummoore/xero-platform-support`. The authoritative post-merge
+`cargo xtask check` passed, including 2,957 Rust tests, 1,429 universal-app unit
+tests, 104 universal-app smoke tests, 148 public-app tests, 148 web tests, 18
+web browser smoke tests, every target build/export, Terraform validation, and
+Helm validation. The only deletion relative to `origin/main` was the intentional
+replacement of the monolithic RPC app-error module with its split module tree.
+The required post-push `cargo xtask review` completed and raised the unresolved
+findings below; repository policy requires an explicit user decision before any
+review-driven fix.
+
+#### Post-push implementation review findings
+
+- [ ] **Critical 1 — approved OAuth organisation binding:** decide how the
+      mutation host must prove that preflight, commit, and reconciliation use
+      the proposal's exact `auth_requirement_id` and `organisation_ref`.
+      Currently the exact provider request comparison ignores the private
+      binding headers while the component may select any current organisation,
+      so doing nothing could execute an approved financial write against a
+      different connected organisation while the audit still names the
+      original. Option A binds both values into the host mutation policy and
+      requires exact headers before credential injection; option B relies on
+      component request conventions and adds only component-level checks.
+      **Recommendation: use A, share the binding contract across all three
+      mutation exports, reject alternate or missing bindings, and add
+      cross-organisation adversarial tests.**
+- [ ] **Important 2 — bounded recovery starvation:** decide how recovery should
+      exclude live undecided proposals from its oldest-first page. Doing
+      nothing allows the oldest 100 pending approvals to occupy every recovery
+      cycle and delay approved, abandoned-executing, or ambiguous financial
+      writes. Option A selects pending rows only when expired or backed by an
+      already-resolved approval; option B uses separate prioritized recovery
+      queues with independent limits. **Recommendation: implement A at the
+      store boundary and order actionable states ahead of expiry cleanup, with
+      an integration test containing more than one page of undecided rows.**
+- [ ] **Important 3 — existing tool visibility at commit:** decide how the
+      provider-neutral mutation fence replays the platform's existing role and
+      permission constraints for non-Xero apps. Doing nothing means a tool
+      restriction revoked after proposal can still permit dispatch; Xero
+      itself continues to declare no per-tool roles or permissions, as required
+      by this plan. Option A invoke one shared visibility evaluator from both
+      discovery and commit fencing; option B reject `human_required` on tools
+      that use those legacy constraints. **Recommendation: use A without adding
+      any Xero-specific permission concept, and stale the proposal when the
+      shared app/tool visibility result changes.**
+- [ ] **Important 4 — retryable pre-dispatch failures:** decide how to
+      distinguish component/provider contract failures from infrastructure
+      errors that occur before any provider dispatch. Doing nothing converts
+      database, artifact, cache, or compile failures into a terminal
+      `provider_contract_error`, permanently failing an otherwise valid
+      approved mutation. Option A propagate a typed dispatch phase/outcome and
+      leave `NotDispatched` infrastructure failures retryable; option B add a
+      new persisted retryable-failure state and scheduler. **Recommendation:
+      use A now, retaining the approved claim for safe retry only when the host
+      proves no dispatch began, while preserving ambiguous handling once a
+      network attempt may have started.**
+- [ ] **Minor 1 — OAuth connection display-name bound:** decide the provider
+      display-name limit before storage and model projection. This duplicates
+      Milestone 2 Minor 1's broader connection-field finding; doing nothing can
+      place an excessively large organisation name in storage and model
+      context. Option A cap only display names at 255 UTF-8 bytes; option B
+      apply explicit bounds to every parsed connection field. **Recommendation:
+      resolve both findings together with Milestone 2's Option B and oversized
+      provider fixtures.**
 
 ### Milestone 4: Platform Attachment Artifact Bridge
 
