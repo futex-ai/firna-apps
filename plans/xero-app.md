@@ -322,7 +322,7 @@ can expose write or VAT tools.
 
 Create the implementable contracts in the platform repository before code.
 
-- [ ] Add concise `docs/protocol/xero-app.md`,
+- [x] Add concise `docs/protocol/xero-app.md`,
       `docs/protocol/xero-app-read-tools.md`,
       `docs/protocol/xero-app-write-tools.md`, and
       `docs/protocol/xero-vat-filing.md`, splitting further if any protocol
@@ -331,12 +331,26 @@ Create the implementable contracts in the platform repository before code.
       status transition, permission, scope, response, error, redaction,
       preflight, approval, idempotency, reconciliation, and audit rule against
       the current official documentation and OpenAPI files.
-- [ ] Specify Xero/HMRC credential disable, reconnect, expiry, revocation, and
+- [x] Specify Xero/HMRC credential disable, reconnect, expiry, revocation, and
       uninstall behavior without disconnecting unrelated provider grants.
-- [ ] Record the exact supported VAT schemes and every explicit exclusion as
+- [x] Record the exact supported VAT schemes and every explicit exclusion as
       normative behavior, not implementation TODOs.
-- [ ] Validate Markdown and links, commit, push, and run the platform's
+- [x] Validate Markdown and links, commit, push, and run the platform's
       post-push review without automatically fixing findings.
+- [ ] Resolve the important review finding that HMRC's filed-return response
+      does not contain `finalised`: remove it from the provider-decoded DTO or
+      specify an explicit host-derived field.
+- [ ] Resolve the important review finding that `fraud_context_required` is
+      absent from the stable VAT and parent Xero error surfaces.
+- [ ] Resolve the minor review finding by adding a per-array bound to
+      `ReportRow.children` while retaining the whole-tree 2,000-node cap.
+- [ ] Resolve the minor review finding by clarifying whether the Xero app host
+      list covers component runtime hosts or every OAuth/provider host.
+
+Platform protocol work is committed and pushed as `685476b83` on
+`calummoore/xero-platform-support`. The post-push review completed successfully
+and produced the four open findings above; repository policy requires them to
+be reported for a user decision rather than fixed automatically.
 
 ### Milestone 2: Validate the UK VAT Calculation Contract
 
