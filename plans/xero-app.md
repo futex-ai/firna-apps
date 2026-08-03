@@ -8,10 +8,11 @@
 
 Add `apps/xero`, an explicitly installed first-party app that mirrors the
 capabilities available to an ordinary Xero Web app through the supported public
-Accounting API. A workspace admin connects and selects one Xero organisation.
-Agents can read its accounting data and prepare any supported mutation, but a
-provider write happens only after an authorised human approves the exact,
-immutable proposal.
+Accounting API. A workspace admin connects a workspace-owned Xero OAuth grant.
+OAuth determines the organisations the app can access. Agents list that
+authorised set and select one opaque organisation reference on each Accounting
+tool call. A provider write happens only after an authorised human approves
+the exact, immutable proposal for the selected organisation.
 
 The app is generated and tested against a pinned official Xero OpenAPI
 revision. When Xero adds, removes, deprecates, or changes an Accounting API
@@ -28,10 +29,11 @@ The initial contract is pinned to the official **Xero Accounting API OpenAPI
 `dc231cafd8de7d93a1c0c8cc26944724a8af5f1e59cc54b684187ee22df36318`.
 
 “Supported” means an active Accounting API operation documented for ordinary
-OAuth Web apps and reachable with generally available Accounting API scopes.
-The app covers the capability even when Firna deliberately exposes a safer
-single-record or typed-filter interface instead of Xero's bulk wrapper or raw
-`where` expression.
+OAuth Web apps and reachable with generally available Accounting API scopes,
+plus the official `/connections` endpoint required to list the organisations
+authorised by OAuth. The app covers the capability even when Firna deliberately
+exposes a safer single-record or typed-filter interface instead of Xero's bulk
+wrapper or raw `where` expression.
 
 ### Included resource families
 
@@ -68,16 +70,18 @@ through the ordinary public Accounting API boundary:
 - Deprecated Expense Claims and Receipts.
 - Payroll, Projects, Files-library, Assets, eInvoicing, and other separate Xero
   APIs.
-- Webhooks, marketplace billing, custom connections, and non-tenanted APIs.
+- Webhooks, marketplace billing, custom connections, and non-tenanted APIs
+  other than the `/connections` discovery required for organisation routing.
 - Browser automation, undocumented endpoints, arbitrary provider URLs,
-  arbitrary HTTP methods, raw OAuth credentials, and model-selected tenants.
+  arbitrary HTTP methods, raw OAuth credentials, and caller-supplied Xero
+  tenant or connection ids.
 
 These exclusions are product behavior, not deferred implementation TODOs. A
 future expansion requires its own protocol and plan.
 
 ## Product Contract
 
-### Installation and organisation binding
+### Installation and organisation routing
 
 - Install policy is `explicit`.
 - Xero uses a confidential authorization-code Web App with `offline_access`.
@@ -85,13 +89,16 @@ future expansion requires its own protocol and plan.
   tool families; deprecated broad transaction/report scopes are forbidden.
 - After token exchange, trusted host code calls
   `GET https://api.xero.com/connections`, retains
-  `tenantType = ORGANISATION`, and lets the workspace admin select exactly
-  one organisation.
-- Firna stores the selected connection id and tenant id. Only trusted host code
-  may inject `xero-tenant-id`; it is never a tool input or component-visible
-  setting.
-- Changing organisations requires a fresh installation selection and
-  invalidates every pending proposal.
+  `tenantType = ORGANISATION`, and stores the authorised set in a private
+  connection registry for the current OAuth revision.
+- `xero_organisations_list` returns the authorised organisations with only an
+  opaque installation-scoped `organisation_ref`, display name, and safe
+  connection timestamps. It never returns raw tenant or connection ids.
+- Every tenant-scoped tool requires `organisation_ref`. Trusted host code
+  validates it against the current grant, resolves the private tenant id, and
+  injects `xero-tenant-id`; callers and the component cannot override it.
+- Reconnect rebuilds the authorised set and invalidates every pending proposal.
+  A removed or stale organisation ref fails before Accounting API dispatch.
 - Access tokens, rotating refresh tokens, client secrets, tenant ids, and raw
   connection payloads never enter agent context, browser JSON, analytics,
   traces, logs, or app storage.
@@ -122,6 +129,9 @@ connection and requires reconnect when Xero did not grant a required scope.
 
 - Every model-visible input and output is a closed JSON Schema generated from
   the pinned provider contract plus Firna overrides.
+- The host-backed `xero_organisations_list` tool is handwritten because
+  `/connections` is outside the Accounting OpenAPI; coverage requires exactly
+  this one additional discovery tool.
 - Reads use a typed operation and typed parameters; tools never accept raw
   `where`, `order`, URL, path, method, headers, or provider JSON.
 - Lists fetch exactly one bounded page. Unpaged provider operations fail rather
@@ -145,7 +155,8 @@ connection and requires reconnect when Xero did not grant a required scope.
 - A read-only preflight resolves current Xero state, provider names, lock dates,
   references, totals, validation rules, and the exact provider operation.
 - Firna stores a canonical proposal bound to the workspace, installation,
-  tenant, app/tool version, normalized payload, provider ids and versions,
+  organisation ref, private tenant-binding fingerprint, authorization
+  revision, app/tool version, normalized payload, provider ids and versions,
   proposer, expiry, and authorised resolver. Approval expires after 15 minutes.
 - Editing any field or observing changed provider state creates a new proposal.
 - Trusted host code injects a single-use approval receipt and
@@ -185,10 +196,10 @@ The pinned Firna platform revision cannot yet provide the complete contract:
 1. `standard_oauth2` does not persist expiry metadata, execute rotating-token
    refresh safely, serialize concurrent refresh, or maintain Xero's inactivity
    window.
-2. OAuth completion cannot perform constrained `/connections` discovery and
-   bind one selected organisation.
-3. Tool invocation cannot inject an installation-bound tenant header while
-   rejecting component/model overrides.
+2. OAuth completion cannot persist the complete authorised `/connections`
+   registry or expose its safe projection as `xero_organisations_list`.
+3. Tool invocation cannot resolve an installation-scoped `organisation_ref`
+   and inject its tenant header while rejecting component/model overrides.
 4. `external_write` is descriptive metadata rather than an immutable
    preflight/approval/commit boundary.
 5. There is no durable proposal, idempotency, reconciliation, or financial
@@ -205,6 +216,8 @@ The app groups related provider operations without exposing a generic HTTP
 escape hatch:
 
 - one typed read tool per resource family;
+- one host-backed `xero_organisations_list` tool for OAuth-authorised
+  organisation discovery;
 - one typed mutation tool per resource family with a discriminated action
   schema;
 - shared typed attachment and history tools whose parent-kind enum contains
@@ -246,7 +259,11 @@ Protocol evidence: the replacement contracts were committed and pushed on
 `calummoore/xero-platform-support` at `f925cab8a`. Markdown, link, diff, and
 235-operation coverage validation passed. The required post-push review
 completed successfully and confirmed the 214 included plus 21 excluded
-operation inventory, while raising the unresolved items below.
+operation inventory, while raising the unresolved items below. The
+user-selected organisation-routing revision was committed and pushed at
+`748064d89`; its follow-up post-push review no longer reported the missing
+selection continuation or tenant-id exposure findings and raised three new
+items recorded below.
 
 #### Post-push protocol review findings
 
@@ -254,25 +271,44 @@ These findings must be resolved by a user-selected option before implementation
 can begin. They are deliberately unticked because repository policy forbids
 silently fixing post-push review findings.
 
-- [ ] **Important 1 — tenant-selection continuation:** extend the shared closed
-      app-install continuation with organisation selection, including the
-      selection route, expiry, revalidation, and activation timing.
+- [x] **Important 1 — authorised organisation routing:** apply the user's
+      selected resolution: keep OAuth as the authority boundary, add the
+      model-visible `xero_organisations_list` tool, and require its opaque
+      `organisation_ref` on every tenant-scoped tool without adding an
+      install-time selection continuation. The follow-up post-push review did
+      not re-report the original continuation finding.
 - [ ] **Important 2 — financial-write approval contract:** define shared
       `human_required` manifest metadata, the
       `apps.financial_writes.approve` permission, REST/client behavior, and the
       durable approval ledger, or explicitly define the same boundary as
       Xero-private platform work.
-- [ ] **Important 3 — tenant-id confidentiality:** keep raw Xero connection and
+- [x] **Important 3 — tenant-id confidentiality:** keep raw Xero connection and
       tenant ids in private credential/install metadata instead of the existing
       public `provider_account_id`; expose only a reviewed display label and an
-      opaque selection id.
+      opaque organisation ref. The follow-up review did not re-report the
+      original exposure finding.
 - [ ] **Important 4 — operation/action mapping:** reconcile the one-operation-id
       to one-action invariant with semantic write actions such as archive,
       status transitions, apply, and refund, either as typed sub-modes or an
       explicitly relaxed and tested coverage invariant.
+- [ ] **Important 5 — token versus authorization revisions:** separate routine
+      access/refresh-token rotation from the authorization revision so a
+      30-minute token refresh does not retire organisation refs or invalidate a
+      valid 15-minute write proposal. Bump authorization only for reconnect,
+      scope, identity, or authorised-connection-set changes.
+- [ ] **Important 6 — gated Journals access:** decide whether to reclassify the
+      three `accounting.journals.read` operations as
+      `certification_required`, reducing the ordinary V1 inventory to 211
+      included and 24 excluded, or retain them only behind documented Xero
+      Advanced-tier, security-assessment, and use-case approval prerequisites.
+- [ ] **Important 7 — artifact result envelopes:** add
+      `organisation: { organisation_ref, name }` to the exact attachment and
+      PDF artifact results so they satisfy the shared tenant-scoped output
+      contract and generated schemas cannot diverge.
 - [ ] **Minor 1 — planned-page lifecycle:** link every planned Xero protocol
       page to this active plan and state concrete criteria for changing its
-      status from planned to current.
+      status from planned to current. The follow-up review reconfirmed this
+      finding because the platform repository still has no linked Xero plan.
 
 ### Milestone 2: Platform OAuth and Tenant Binding
 
@@ -283,10 +319,12 @@ mockup work belongs here.
       single-use refresh-token rotation with one refresh in flight per grant.
 - [ ] Implement Xero refresh timing, the documented old-token ambiguity grace
       behavior, inactivity expiry, stable terminal states, and redacted errors.
-- [ ] Add constrained post-token account discovery and explicit account
-      selection for `tenantType = ORGANISATION`.
-- [ ] Carry the bound provider account into tool scope and inject the trusted
-      `xero-tenant-id` header while rejecting every caller override.
+- [ ] Persist the complete current `tenantType = ORGANISATION` connection
+      registry per grant revision and expose only its safe projection through
+      `xero_organisations_list`, including empty and disconnected states.
+- [ ] Require `organisation_ref` on every tenant-scoped tool, resolve it only
+      inside the current workspace/install/grant registry, inject the trusted
+      `xero-tenant-id`, and reject every raw-id or header override.
 - [ ] Put clocks, OAuth HTTP, discovery, vault, store, and transaction behavior
       behind traits; add `unimock` concurrency, cross-tenant, refresh,
       redaction, expiry, revoke, reconnect, disable, and uninstall tests.
@@ -300,8 +338,9 @@ Add the reusable mutation boundary required by Xero.
 - [ ] Add manifest-declared `human_required` approval for
       `external_write`, with no automatic policy path.
 - [ ] Add preflight/commit component exports and durable canonical proposals
-      bound to tool/version, workspace, tenant, payload, current provider
-      versions, proposer, resolver, and expiry.
+      bound to tool/version, workspace, organisation ref, private tenant
+      fingerprint, authorization revision, payload, current provider versions,
+      proposer, resolver, and expiry.
 - [ ] Inject and atomically consume a single-use approval receipt and provider
       idempotency key; reject replay, payload changes, stale state, and
       privilege changes.
@@ -337,8 +376,9 @@ Tags: mockup
 Specify product journeys before UI implementation.
 
 - [ ] Extend Installed Apps with mobile and desktop screens for Xero consent,
-      organisation selection, connected capability groups, missing scopes,
-      reconnect-required, revoked, disabled, and uninstalled states.
+      authorised-organisation list/empty states, connected capability groups,
+      missing scopes, reconnect-required, revoked, disabled, and uninstalled
+      states.
 - [ ] Add standalone mobile/desktop screens for ordinary edits, destructive
       transitions, immediately-authorised bank/payment records, Setup, invoice
       email, history note, attachment upload/replace, stale proposal, provider
@@ -358,8 +398,9 @@ Tags: ui
 
 Implement the approved designs using real backend state.
 
-- [ ] Render OAuth, organisation selection, granted-capability, reconnect,
-      disable, and uninstall states with accessible loading/empty/error paths.
+- [ ] Render OAuth, authorised-organisation inventory, granted-capability,
+      reconnect, disable, and uninstall states with accessible
+      loading/empty/error paths.
 - [ ] Render server-owned immutable proposal details and provider-resolved
       names; the client cannot alter hidden payloads or manufacture receipts.
 - [ ] Require a freshly authenticated finance-authorised user for every write
@@ -445,9 +486,10 @@ Implement the approved designs using real backend state.
 ### Milestone 12: Repository and Runtime Integration
 
 - [ ] Exercise every tool family through the real Wasm component with
-      `WasmHostMock`, asserting exact provider traffic, tenant injection,
-      side-effect count, proposal hash, idempotency, output, and redaction.
-- [ ] Add package tests for identity, scopes, OAuth, tenant binding,
+      `WasmHostMock`, asserting exact provider traffic, organisation-ref
+      resolution, tenant injection, side-effect count, proposal hash,
+      idempotency, output, and redaction.
+- [ ] Add package tests for identity, scopes, OAuth, organisation routing,
       permissions, tool schemas, approval policy, host allowlists, limits,
       operation inventory, exclusions, assets, and docs.
 - [ ] Add Xero component/runtime manifests to `xtask/src/check.rs` and make
@@ -459,8 +501,8 @@ Implement the approved designs using real backend state.
 ### Milestone 13: Authorised Xero Demo-Company Smoke Tests
 
 - [ ] Connect a nominated Xero Demo Company in a non-production Firna workspace
-      and verify organisation selection with one and multiple authorised
-      tenants plus cross-tenant denial.
+      and verify `xero_organisations_list` plus per-tool routing with one and
+      multiple authorised organisations, stale refs, and cross-tenant denial.
 - [ ] Smoke every read family and every applicable regional/role unavailable
       path without using or copying a real ledger.
 - [ ] Smoke every write action with disposable records, including approval,
@@ -500,8 +542,10 @@ Implement the approved designs using real backend state.
 
 ## Completion Criteria
 
-- A workspace admin can connect and bind one Xero organisation with the current
-  granular Accounting API scopes and reconnect, disable, or uninstall safely.
+- A workspace admin can connect Xero with the current granular Accounting API
+  scopes; agents can list only OAuth-authorised organisations and select one
+  validated opaque reference per tool; reconnect, disable, and uninstall are
+  safe.
 - Every active, ordinary-Web-app Accounting API capability classified in the
   pinned contract is reachable through a closed typed Firna tool, and every
   excluded capability is unreachable.
