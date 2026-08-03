@@ -6,8 +6,8 @@ post-push review has been completed.
 
 ## Active
 
-- [Xero accounting and VAT app](xero-app.md): add an explicitly installed,
-  approval-gated read-write Xero app with optional HMRC VAT filing.
+- [Xero accounting app](xero-app.md): mirror the supported public Xero
+  Accounting API with tenant binding and approval-gated writes.
 
 ## Completed
 
