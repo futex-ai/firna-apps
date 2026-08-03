@@ -83,6 +83,7 @@ reading the production bootstrap password plus manifest-declared app secrets.
 - [`scripts/plan-app-deploys.py`](scripts/plan-app-deploys.py): catalog-aware
   production deployment planning.
 - [`xtask/`](xtask/README.md): local and CI verification entrypoints.
+- [`plans/`](plans/README.md): active and completed implementation plans.
 
 The platform-side manifest, runtime, and admin submission contracts remain in
 the [Firna platform app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md).
