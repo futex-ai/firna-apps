@@ -35,9 +35,10 @@ that production release.
 - OAuth scopes are `tweet.read`, `tweet.write`, `users.read`, and
   `offline.access`. The offline scope returns a refresh token; X's user access
   token flow requires refresh-token rotation for a durable connection.
-- The canonical Firna platform revision is `dbcc678a`, which contains the
+- The canonical Firna platform revision is `90d4c13f`, which contains the
   merged OAuth refresh lifecycle, usage-based app charging, and task-specific
-  activity-label contracts required by this package.
+  activity-label contracts required by this package, plus the canonical
+  `required_agent_permissions.top_level` manifest contract.
 - X does not document an idempotency key for `POST /2/tweets`. Firna's existing
   durable tool ledger replays completed results and fails crash-ambiguous
   installed-app calls closed without redispatch. X must reuse and verify that
@@ -50,8 +51,9 @@ that production release.
 - Platform PR [futex-ai/firna#1012](https://github.com/futex-ai/firna/pull/1012)
   merged as `ad4072fc` on 2026-08-04 after ten review invocations, 23 valid
   findings fixed with regressions, and two invalid plan-bookkeeping findings.
-  The repository was then pinned to current platform `main` at `dbcc678a`,
-  which also contains native usage-based app billing and activity labels.
+  The repository was initially pinned to platform `main` at `dbcc678a`, which
+  also contains native usage-based app billing and activity labels, and was
+  later compatibility-repinned to `90d4c13f`.
 - This Conductor session has no controllable signed-in X console connector, so
   the human operator must confirm the production app type, callback, and OAuth
   settings. On 2026-08-04, the public client id was recorded in the manifest
@@ -384,7 +386,7 @@ immediately before it occurs.
 - [ ] Let the successful `main` CI run trigger the standard production app
   deployment workflow. Do not deploy from the feature branch or use a test or
   preproduction environment.
-- [ ] Verify production catalog version `1.0.0`, install it in the nominated
+- [ ] Verify production catalog version `1.0.1`, install it in the nominated
   production workspace, and complete OAuth with the intended production X
   account.
 - [ ] Read one known Post and one 10-result recent-search page; verify compact
