@@ -46,6 +46,33 @@ fn provider_statuses_map_without_exposing_provider_bodies() {
 }
 
 #[test]
+fn unknown_provider_4xx_responses_are_non_retryable_and_redacted() {
+    let cases = [
+        (
+            "x_search_recent_posts",
+            json!({"query": "invalid:query", "max_results": 10}),
+            400,
+        ),
+        ("x_create_post", json!({"text": "Hello X"}), 422),
+    ];
+    for (tool, input, status) in cases {
+        let output = call_with_response(
+            tool,
+            input,
+            response(
+                status,
+                Some(json!({"detail": "provider-secret-detail", "token": "never-leak"})),
+            ),
+        );
+        assert_error(&output, "invalid_request");
+        assert_eq!(output["reason"], "provider_rejected_request");
+        let encoded = output.to_string();
+        assert!(!encoded.contains("provider-secret-detail"));
+        assert!(!encoded.contains("never-leak"));
+    }
+}
+
+#[test]
 fn rate_limit_and_usage_cap_are_distinct_stable_errors() {
     let limited = call_with_response(
         "x_search_recent_posts",

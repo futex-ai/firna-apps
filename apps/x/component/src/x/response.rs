@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
-use crate::x::errors::ToolError;
+use crate::x::errors::{InvalidInputReason, ToolError};
 use crate::x::host::HostHttpResponse;
 use crate::x::types::{ProviderCreateResponse, ProviderErrorResponse, ProviderReadResponse};
 
@@ -94,8 +94,10 @@ fn provider_failure(
         429 => ToolError::RateLimited {
             retry_after_seconds: retry_after_seconds(&headers),
         },
+        400..=499 => ToolError::InvalidInput(InvalidInputReason::ProviderRejectedRequest),
         500..=599 if is_write => ToolError::WriteOutcomeUnknown,
-        _ => ToolError::ProviderUnavailable,
+        500..=599 => ToolError::ProviderUnavailable,
+        _ => response_contract_failure(is_write),
     }
 }
 

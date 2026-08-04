@@ -92,15 +92,20 @@ The stable raw component codes and host results are:
 | `provider_contract_error` | typed provider contract failure |
 | `write_outcome_unknown` | stable fail-closed runtime rejection |
 
-`invalid_request` includes one of the documented stable validation reason
-codes, and `rate_limited` may add `retry_after_seconds` derived from an X
-response header.
+`invalid_request` includes a stable reason: `malformed_tool_call`,
+`unknown_tool`, `invalid_post_ids`, `invalid_search_query`,
+`invalid_search_page_size`, `invalid_pagination_token`, `invalid_post_text`,
+`invalid_reply_target`, `link_acknowledgement_required`, or
+`provider_rejected_request`. The last reason represents an otherwise-unmapped
+provider 4xx and is non-retryable. `rate_limited` may add
+`retry_after_seconds` derived from an X response header.
 No handled failure includes a raw provider body, token, request signature,
-developer account id, or billing identifier. Unknown 4xx responses become a
-stable handled failure without provider text; timeouts and 5xx responses become
-`provider_unavailable` for reads. A create timeout, transport loss, missing HTTP
-status, 5xx response, or malformed, missing, or truncated success body after
-dispatch becomes `write_outcome_unknown`.
+developer account id, or billing identifier. Unknown 4xx responses become
+`invalid_request` with `provider_rejected_request` and no provider text;
+timeouts and 5xx responses become `provider_unavailable` for reads. A create
+timeout, transport loss, missing HTTP status, 5xx response, or malformed,
+missing, or truncated success body after dispatch becomes
+`write_outcome_unknown`.
 
 ## `x_get_posts`
 

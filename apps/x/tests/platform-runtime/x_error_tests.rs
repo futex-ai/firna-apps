@@ -36,6 +36,25 @@ async fn x_component_maps_missing_credentials_and_provider_statuses() {
 }
 
 #[tokio::test]
+async fn x_component_maps_unknown_4xx_to_non_retryable_rejections() {
+    let errors = [
+        call_search(provider_failure(400)).await,
+        call_create(provider_failure(422)).await,
+    ];
+
+    for error in errors {
+        let encoded = format!("{error:?}");
+        assert!(matches!(
+            error,
+            Error::InvalidRequest { app_id, reason }
+                if app_id == "x" && reason == "provider_rejected_request"
+        ));
+        assert!(!encoded.contains("provider-secret-detail"));
+        assert!(!encoded.contains("never-leak-token"));
+    }
+}
+
+#[tokio::test]
 async fn x_component_distinguishes_rate_limits_from_credit_exhaustion() {
     let limited = call_search(provider_response_with_headers(
         429,

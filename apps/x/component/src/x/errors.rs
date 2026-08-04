@@ -45,6 +45,8 @@ pub(crate) enum InvalidInputReason {
     ReplyTarget,
     #[error("link acknowledgement required")]
     LinkAcknowledgementRequired,
+    #[error("provider rejected request")]
+    ProviderRejectedRequest,
 }
 
 #[derive(Serialize)]
@@ -131,6 +133,7 @@ impl InvalidInputReason {
             Self::PostText => "invalid_post_text",
             Self::ReplyTarget => "invalid_reply_target",
             Self::LinkAcknowledgementRequired => "link_acknowledgement_required",
+            Self::ProviderRejectedRequest => "provider_rejected_request",
         }
     }
 }
