@@ -12,8 +12,9 @@ Accounting API. A workspace admin connects a workspace-owned Xero OAuth grant.
 OAuth determines the organisations the app can access. Agents list that
 authorised set and select one opaque organisation reference on each Accounting
 tool call. The installation's app-level access decision governs the complete
-Xero tool set. A provider write happens only after a human approves the exact,
-immutable proposal for the selected organisation.
+Xero tool set. Read and write tools use the platform's ordinary app-execution
+path: an authorised call executes without a Xero-specific confirmation prompt,
+approval proposal, or action-level permission.
 
 The app is generated and tested against a pinned official Xero OpenAPI
 revision. When Xero adds, removes, deprecates, or changes an Accounting API
@@ -100,8 +101,9 @@ future expansion requires its own protocol and plan.
 - Every tenant-scoped tool requires `organisation_ref`. Trusted host code
   validates it against the current grant, resolves the private tenant id, and
   injects `xero-tenant-id`; callers and the component cannot override it.
-- Reconnect rebuilds the authorised set and invalidates every pending proposal.
-  A removed or stale organisation ref fails before Accounting API dispatch.
+- Reconnect rebuilds the authorised set and invalidates prior organisation
+  references. A removed or stale organisation ref fails before Accounting API
+  dispatch.
 - Access tokens, rotating refresh tokens, client secrets, tenant ids, and raw
   connection payloads never enter agent context, browser JSON, analytics,
   traces, logs, or app storage.
@@ -159,33 +161,33 @@ connection and requires reconnect when Xero did not grant a required scope.
 - Region-specific reports return a typed unavailable result when the connected
   organisation is ineligible; Firna never fabricates report data.
 
-### Write and approval contract
+### Write contract
 
-- Every Xero mutation is `external_write` with
-  `approval.mode = human_required`. No amount, schedule, agent role, prior
-  approval, or workspace policy can auto-approve it.
-- `human_required` is an execution policy, not a permission. The ordinary
-  human-prompt access rules determine who may resolve a proposal; Xero adds no
-  owner/admin gate or separate financial-write grant.
-- A read-only preflight resolves current Xero state, provider names, lock dates,
-  references, totals, validation rules, and the exact provider operation.
-- Firna stores a canonical proposal bound to the workspace, installation,
-  organisation ref, private tenant-binding fingerprint, authorization
-  revision, app/tool version, normalized payload, provider ids and versions,
-  proposer, expiry, and resolver context. Approval expires after 15 minutes.
-- Editing any field or observing changed provider state creates a new proposal.
-- Trusted host code injects a single-use approval receipt and
-  `Idempotency-Key` only for commit. Neither is a model/component input.
+- Xero mutations use the same execution path as mutations in an ordinary
+  installed app. They do not declare `approval.mode = human_required` and do
+  not create a human prompt, approval proposal, or approval receipt.
+- OAuth scopes, the live installation, the platform's app-level access
+  decision, and Xero's own organisation/role/state checks are the complete
+  authority boundary. Xero adds no owner/admin gate or tool/action-specific
+  permission.
+- Each invocation validates its typed input, resolves current Xero state when
+  required by the provider operation, validates `organisation_ref` immediately
+  before dispatch, and executes the selected operation directly.
+- Trusted host code owns credential and tenant-header injection. Neither raw
+  OAuth credentials nor raw tenant/header values are model or component inputs.
 - Provider bulk endpoints are invoked with one logical record unless the
   provider resource is itself a batch object, such as Batch Payment.
 - Destructive transitions, Setup, invoice email, notes, attachment replacement,
-  and immediately-authorised banking/payment operations clearly state their
-  consequence in approval UI.
+  and immediately effective banking/payment operations clearly state their
+  consequence in tool descriptions and results, without adding a confirmation
+  step.
+- A trusted idempotency key is stable across transport retries of one
+  invocation and is never accepted as model input.
 - Ambiguous timeouts are reconciled by exact provider reads before any retry.
   Firna never changes an idempotency key merely because the response was lost.
-- Proposal, decision, request fingerprint, provider result, reconciliation,
-  actor, app-access checks, and approval checks are immutable redacted audit
-  records.
+- Tool invocation, request fingerprint, selected organisation, provider result,
+  reconciliation outcome, actor, and app-access checks use the platform's
+  ordinary redacted audit path.
 
 ### API drift and generation
 
@@ -197,7 +199,7 @@ connection and requires reconnect when Xero did not grant a required scope.
   unsupported schema construct, missing bound, or changed enum.
 - Generated Rust models, operation registry, manifest schema fragments, and
   conformance fixtures are committed. Handwritten code owns normalization,
-  redaction, approval summaries, provider-state validation, and error mapping.
+  redaction, provider-state validation, and error mapping.
 - CI compares the vendored source metadata and generated outputs. Updating the
   OpenAPI file without regenerating, or changing generated output by hand,
   fails the repository audit.
@@ -216,11 +218,10 @@ The pinned Firna platform revision cannot yet provide the complete contract:
    registry or expose its safe projection as `xero_organisations_list`.
 3. Tool invocation cannot resolve an installation-scoped `organisation_ref`
    and inject its tenant header while rejecting component/model overrides.
-4. `external_write` is descriptive metadata rather than an immutable
-   preflight/approval/commit boundary.
-5. There is no durable proposal, idempotency, reconciliation, or financial
-   audit ledger.
-6. Binary Accounting API attachments need an authenticated artifact bridge
+4. Standard direct-write execution must preserve a trusted organisation
+   binding, idempotency across transport retry, reconciliation, and redacted
+   audit behavior without introducing a human-approval boundary.
+5. Binary Accounting API attachments need an authenticated artifact bridge
    rather than model-visible base64 payloads.
 
 These provider-neutral capabilities must land in the platform before the Xero
@@ -241,7 +242,8 @@ escape hatch:
 - one typed report tool with a closed report-kind union;
 - one document tool for supported PDF and online-invoice reads;
 - one invoice-email mutation;
-- one Setup mutation isolated behind the strongest approval treatment.
+- one typed Setup mutation using the same direct execution contract as other
+  writes.
 
 Each action maps to one classified path/method/operation id in the generated
 registry. Multiple semantic actions may share an operation only through an
@@ -265,7 +267,7 @@ Create the implementable Accounting API contracts before code.
       Services.
 - [ ] Specify every included action's method/path, scope, region/role
       restriction, input/output schema source, pagination, response cap,
-      preflight, approval, idempotency, reconciliation, and audit behavior.
+      validation, execution, idempotency, reconciliation, and audit behavior.
 - [x] Resolve the prior review by removing the withdrawn HMRC findings,
       bounding every recursive array, and distinguishing component runtime
       hosts from trusted OAuth endpoints.
@@ -301,12 +303,11 @@ platform protocol text is aligned.
       `organisation_ref` on every tenant-scoped tool without adding an
       install-time selection continuation. The follow-up post-push review did
       not re-report the original continuation finding.
-- [x] **Important 2 — financial-write approval contract:** apply the user's
-      selected resolution: keep `human_required` as a mutation-execution
-      policy, use ordinary human-prompt resolution, and make app-level access
-      the sole Xero tool-access boundary. Do not add an owner/admin gate, a
-      financial-write grant, or any tool/action-specific permission. The
-      follow-up review did not re-report this finding.
+- [x] **Important 2 — standard write execution:** superseded on 2026-08-04 by
+      the user's explicit product decision that Xero is a normal app. Xero does
+      not declare `human_required`, publish approval prompts, or add an
+      owner/admin, financial-write, tool, or action-specific permission. OAuth
+      and app-level access remain the authority boundary.
 - [x] **Important 3 — tenant-id confidentiality:** keep raw Xero connection and
       tenant ids in private credential/install metadata instead of the existing
       public `provider_account_id`; expose only a reviewed display label and an
@@ -318,9 +319,9 @@ platform protocol text is aligned.
       multiple actions may share an operation only through explicit policy.
 - [x] **Important 5 — token versus authorization revisions:** separate routine
       access/refresh-token rotation from the authorization revision so a
-      30-minute token refresh does not retire organisation refs or invalidate a
-      valid 15-minute write proposal. Bump authorization only for reconnect,
-      scope, identity, or authorised-connection-set changes.
+      30-minute token refresh does not retire organisation refs or disrupt an
+      in-flight provider request. Bump authorization only for reconnect, scope,
+      identity, or authorised-connection-set changes.
 - [x] **Important 6 — gated Journals access:** classify the three
       `accounting.journals.read` operations as `certification_required`,
       reducing the ordinary V1 inventory to 211 included and 24 excluded until
@@ -418,103 +419,18 @@ user decision before any review-driven fix.
       add oversized-provider fixtures. **Recommendation: use B for a reusable
       provider-contract rule.**
 
-### Milestone 3: Platform Financial Write Controls
+### Former Milestone 3: Superseded Platform Approval Work
 
-Add the reusable mutation boundary required by Xero.
+The provider-neutral `human_required` mutation boundary was implemented on the
+platform branch before the 2026-08-04 product correction. It is not part of the
+Xero contract, is not a prerequisite for this app, and must not be declared by
+the Xero manifest or invoked by Xero tools. Approval-only branch changes must
+be excluded when integrating the platform work for Xero, without deleting or
+overriding any capability already present on `origin/main`.
 
-- [x] Add manifest-declared `human_required` approval for
-      `external_write`, with no automatic policy path and no separate
-      tool/action permission layer.
-- [x] Add preflight/commit component exports and durable canonical proposals
-      bound to tool/version, workspace, organisation ref, private tenant
-      fingerprint, authorization revision, payload, current provider versions,
-      proposer, resolver, and expiry.
-- [x] Inject and atomically consume a single-use approval receipt and provider
-      idempotency key; reject replay, payload changes, stale state, and
-      app-access or resolver-access changes.
-- [x] Add pending, approved, executing, succeeded, rejected, expired, stale,
-      ambiguous, reconciled, and failed mutation states that survive restarts
-      and concurrent workers.
-- [x] Add provider read-after-timeout reconciliation and immutable redacted
-      financial audit events.
-- [x] Add service, store, migration, RPC, agent-tool, and adversarial tests;
-      update protocols/READMEs, run full checks, commit, push, and review.
-
-Implementation evidence: the provider-neutral mutation boundary was committed
-at `16bb9302c`, integrated path-by-path with `origin/main` at `473aae629`, and
-pushed on `calummoore/xero-platform-support`. The authoritative post-merge
-`cargo xtask check` passed, including 2,957 Rust tests, 1,429 universal-app unit
-tests, 104 universal-app smoke tests, 148 public-app tests, 148 web tests, 18
-web browser smoke tests, every target build/export, Terraform validation, and
-Helm validation. The only deletion relative to `origin/main` was the intentional
-replacement of the monolithic RPC app-error module with its split module tree.
-The required post-push `cargo xtask review` completed and raised the unresolved
-findings below; repository policy requires an explicit user decision before any
-review-driven fix.
-
-#### Post-push implementation review findings
-
-- [ ] **Critical 1 — approved OAuth organisation binding:** decide how the
-      mutation host must prove that preflight, commit, and reconciliation use
-      the proposal's exact `auth_requirement_id` and `organisation_ref`.
-      Currently the exact provider request comparison ignores the private
-      binding headers while the component may select any current organisation,
-      so doing nothing could execute an approved financial write against a
-      different connected organisation while the audit still names the
-      original. Option A binds both values into the host mutation policy and
-      requires exact headers before credential injection; option B relies on
-      component request conventions and adds only component-level checks.
-      **Recommendation: use A, share the binding contract across all three
-      mutation exports, reject alternate or missing bindings, and add
-      cross-organisation adversarial tests.**
-      **Revalidated 2026-08-04:** this remains valid against platform
-      `origin/main` at `dbcc678ad`, including merged OAuth refresh PR #1012 at
-      `ad4072fc4`. That PR makes installation access-token refresh and
-      credential rotation durable, but it contains no organisation-ref or
-      mutation-policy binding. The Xero branch still excludes the private OAuth
-      binding headers from exact commit comparison and then resolves the final
-      organisation from component-supplied values. A dry-run merge reports an
-      add/add conflict in `host_oauth.rs`; resolving that conflict must compose
-      upstream token refresh with Option A rather than choosing either OAuth
-      implementation wholesale.
-- [ ] **Important 2 — bounded recovery starvation:** decide how recovery should
-      exclude live undecided proposals from its oldest-first page. Doing
-      nothing allows the oldest 100 pending approvals to occupy every recovery
-      cycle and delay approved, abandoned-executing, or ambiguous financial
-      writes. Option A selects pending rows only when expired or backed by an
-      already-resolved approval; option B uses separate prioritized recovery
-      queues with independent limits. **Recommendation: implement A at the
-      store boundary and order actionable states ahead of expiry cleanup, with
-      an integration test containing more than one page of undecided rows.**
-- [ ] **Important 3 — existing tool visibility at commit:** decide how the
-      provider-neutral mutation fence replays the platform's existing role and
-      permission constraints for non-Xero apps. Doing nothing means a tool
-      restriction revoked after proposal can still permit dispatch; Xero
-      itself continues to declare no per-tool roles or permissions, as required
-      by this plan. Option A invoke one shared visibility evaluator from both
-      discovery and commit fencing; option B reject `human_required` on tools
-      that use those legacy constraints. **Recommendation: use A without adding
-      any Xero-specific permission concept, and stale the proposal when the
-      shared app/tool visibility result changes.**
-- [ ] **Important 4 — retryable pre-dispatch failures:** decide how to
-      distinguish component/provider contract failures from infrastructure
-      errors that occur before any provider dispatch. Doing nothing converts
-      database, artifact, cache, or compile failures into a terminal
-      `provider_contract_error`, permanently failing an otherwise valid
-      approved mutation. Option A propagate a typed dispatch phase/outcome and
-      leave `NotDispatched` infrastructure failures retryable; option B add a
-      new persisted retryable-failure state and scheduler. **Recommendation:
-      use A now, retaining the approved claim for safe retry only when the host
-      proves no dispatch began, while preserving ambiguous handling once a
-      network attempt may have started.**
-- [ ] **Minor 1 — OAuth connection display-name bound:** decide the provider
-      display-name limit before storage and model projection. This duplicates
-      Milestone 2 Minor 1's broader connection-field finding; doing nothing can
-      place an excessively large organisation name in storage and model
-      context. Option A cap only display names at 255 UTF-8 bytes; option B
-      apply explicit bounds to every parsed connection field. **Recommendation:
-      resolve both findings together with Milestone 2's Option B and oversized
-      provider fixtures.**
+Historical evidence: the optional boundary was committed at `16bb9302c`,
+integrated at `473aae629`, checked, pushed, and reviewed. Its approval-queue,
+proposal-binding, publishing, and approval-UI findings are not Xero work.
 
 ### Milestone 4: Platform Attachment Artifact Bridge
 
@@ -540,127 +456,50 @@ post-merge `cargo xtask check` passed, including 2,984 Rust workspace tests,
 1,436 universal-app unit tests, 104 universal-app smoke tests, 148 public-app
 tests, 148 web tests, 18 web browser smoke tests with two expected skips, every
 target build/export, mockup checks, Terraform validation, and Helm validation.
-The only deletion relative to `origin/main` is the earlier Milestone 3
-replacement of the monolithic RPC app-error module with its split module tree.
-The required post-push `cargo xtask review` completed and raised the unresolved
-findings below; repository policy requires an explicit user decision before any
-review-driven fix.
+The required post-push `cargo xtask review` also reported findings in the
+optional approval infrastructure included in the branch diff. Those findings
+do not apply to Xero's standard direct-write path and are tracked outside this
+plan.
 
-#### Post-push implementation review findings
-
-- [ ] **Important 1 — recovery queue starvation (repeat of Milestone 3
-      Important 2):** the provider-neutral mutation store includes every
-      undecided `pending` proposal in the oldest-first, limit-100 recovery page,
-      while the worker ignores proposals whose human decision is still pending.
-      Doing nothing allows more than 100 old undecided approvals to prevent
-      approved, ambiguous, abandoned-executing, or newly expired proposals from
-      advancing. Option A selects pending proposals only when expired or already
-      backed by a resolved approval and prioritises actionable states; option B
-      creates independent state-specific recovery queues and limits.
-      **Recommendation: implement A at the persistence boundary and add a
-      regression test with more than one page of undecided rows plus an approved
-      row.**
-- [ ] **Important 2 — approval-time tool restriction replay (repeat of
-      Milestone 3 Important 3):** initial platform tool discovery enforces
-      existing non-Xero `allowed_agent_roles` and agent-permission restrictions,
-      but the durable mutation claim fence rechecks only installation visibility,
-      agent liveness, resolver workspace access, and OAuth binding. The proposal
-      does not retain enough context to replay the tool-level decision. Doing
-      nothing lets a non-Xero restricted mutation dispatch after its proposer
-      loses the required role, workspace-root status, or secret-management
-      permission; Xero itself still declares no per-tool permission concept.
-      Option A persists the relevant access context and invokes one shared
-      tool-visibility evaluator at discovery and claim time; option B rejects
-      `human_required` mutation tools that declare legacy tool restrictions until
-      a shared fence exists. **Recommendation: implement A as a provider-neutral
-      platform rule and stale the proposal when the shared result changes.**
-- [ ] **Important 3 — approval policy missing from publishing contract:** the
-      manifest now makes `tools[].approval.mode = human_required` security-
-      relevant execution metadata, but the Rust publishing projection and
-      public TypeScript contract omit it. Doing nothing prevents app reviewers
-      and review UI from distinguishing a merely `external_write` tool from one
-      whose host-enforced approval policy is present. Option A exposes a typed
-      optional approval-mode enum in the Rust and TypeScript publishing
-      contracts; option B exposes only a derived `human_required_approval`
-      boolean. **Recommendation: use A so future reviewed approval modes remain
-      explicit, add projection/serialization tests, and have review UI render
-      the value.**
-
-### Milestone 5: Connection and Approval Mockups
+### Milestone 5: Xero Connection Mockups
 
 Tags: mockup
 
-Specify product journeys before UI implementation.
+Specify the normal installed-app connection journey before UI implementation.
 
 - [x] Extend Installed Apps with mobile and desktop screens for Xero consent,
       authorised-organisation list/empty states, connected capability groups,
       missing scopes, reconnect-required, revoked, disabled, and uninstalled
       states.
-- [x] Add standalone mobile/desktop screens for ordinary edits, destructive
-      transitions, immediately-authorised bank/payment records, Setup, invoice
-      email, history note, attachment upload/replace, stale proposal, provider
-      validation failure, success, and ambiguous reconciliation.
-- [x] Keep screens in the existing hierarchy, use shared components, render no
-      more than five screens per screen-spec page, and compose flows only from
-      linked standalone screen components.
-- [x] Use plain product language and real-shaped empty/error states; never show
+- [ ] Remove the superseded Xero approval, proposal, confirmation, and
+      write-outcome screens and flows from React mockup source and generated
+      HTML. Xero write tools use the ordinary agent tool experience and do not
+      introduce app-specific write UI.
+- [ ] Keep the remaining connection screens in the existing hierarchy, use
+      shared components, render no more than five screens per screen-spec page,
+      and compose flows only from linked standalone screen components.
+- [ ] Use plain product language and real-shaped empty/error states; never show
       tenant ids, OAuth tokens/scopes as engineering jargon, raw provider
       errors, test labels, or invented business data.
-- [x] Run mockup build/check/test/typecheck and commit generated HTML with its
+- [ ] Run mockup build/check/test/typecheck and commit generated HTML with its
       React source.
 - [ ] Run direct-file visual smoke tests for every changed mockup page. The
       required Conductor in-app Browser currently reports that no browser is
       available; retry as soon as a Browser tab is attached to this workspace.
 
-Implementation evidence: the Xero connection, lifecycle, approval, attachment,
-and outcome mockups were committed and pushed at `4772db5d6` on
+Historical implementation evidence: the initial Xero connection, lifecycle,
+approval, attachment, and outcome mockups were committed at `4772db5d6` on
 `calummoore/xero-platform-support`. All 40 generated mobile/desktop HTML
 artifacts were committed with their React screen components. Mockup build,
 check, typecheck, and all 28 mockup tests passed. The authoritative
 `cargo xtask check` also passed, including 2,984 Rust workspace tests, 1,436
 universal-app unit tests, 104 universal-app smoke tests, 148 public-app tests,
 148 web tests, 18 web browser smoke tests with two expected skips, every target
-build/export, Terraform validation, and Helm validation. The post-push
-`cargo xtask review` completed and raised the unresolved findings below; none
-was in the mockup implementation. Repository policy requires an explicit user
-decision before any review-driven fix.
+build/export, Terraform validation, and Helm validation. The approval-specific
+artifacts are now superseded and must be removed before this milestone is
+complete.
 
-#### Post-push implementation review findings
-
-- [ ] **Critical 1 — approved OAuth organisation binding (repeat of Milestone
-      3 Critical 1):** exact commit matching excludes the private OAuth auth-
-      requirement and organisation-ref headers, while credential injection
-      still trusts the component-supplied header values. This applies to normal
-      mutations and artifact uploads. Doing nothing can dispatch an approved
-      financial write to a different currently connected Xero organisation
-      while the proposal and audit name the approved organisation. Option A
-      carries the stored `auth_requirement_id` and `organisation_ref` in the
-      trusted commit policy, rejects component mismatches, and uses those
-      values for host credential injection; option B relies on component
-      conventions and adds only component-level comparisons.
-      **Recommendation: use A across preflight, commit, reconciliation, and
-      artifact transfer, with cross-organisation adversarial tests.**
-- [ ] **Important 1 — deterministic approval replay safety:** deterministic
-      mutation approval publication performs a read followed by the ordinary
-      prompt and approval upserts, whose conflict paths can overwrite status,
-      response, and identity fields. Doing nothing lets concurrent first
-      publication or a retry racing a human response reopen an approved or
-      rejected request as pending. Option A adds an insert-only deterministic
-      prompt/approval transaction that reloads and compares immutable identity
-      on conflict; option B makes every ordinary prompt/approval upsert globally
-      insert-only. **Recommendation: use A so deterministic mutation approvals
-      gain atomic idempotency without changing unrelated prompt update
-      semantics, and add concurrent publication plus resolved-replay tests.**
-- [ ] **Minor 1 — proposer identity omitted from approval replay check:** the
-      existing deterministic prompt comparison checks type, owner, task, title,
-      and details but not the stored requesting/proposer agent. Doing nothing
-      leaves one identity dimension outside the fail-closed replay contract.
-      Option A compare `requesting_agent_id` in the adapter; option B define one
-      typed immutable prompt-identity value shared by the adapter and the new
-      atomic store path. **Recommendation: use B together with Important 1 so
-      future identity fields cannot silently diverge between layers.**
-
-### Milestone 5A: Integrate OAuth Refresh and Bind Mutations
+### Milestone 5A: Integrate OAuth and Standard Writes
 
 Reconcile the merged provider-neutral OAuth refresh foundation with Xero's
 multi-organisation routing before UI implementation. No UI or mockup work
@@ -677,41 +516,42 @@ belongs here. Milestone 6 cannot begin until this milestone is complete.
       credential lifecycle without exposing raw connection or tenant ids.
 - [ ] Keep authorization revision independent from ordinary access/refresh
       token rotation: reconnect, scope, identity, or authorised-connection-set
-      changes invalidate organisation refs and proposals, while routine token
-      refresh does not.
-- [ ] Carry the stored proposal's `auth_requirement_id` and
-      `organisation_ref` in trusted preflight, commit, and reconciliation host
-      policy. Reject missing or alternate component bindings before credential
-      resolution, and inject the Xero tenant header only from the trusted
-      connection registry.
-- [ ] Apply the same trusted binding to normal JSON mutations and attachment
-      uploads/replacements; a refreshed access token must not change the
-      approved organisation, request fingerprint, or audit identity.
+      changes invalidate organisation refs, while routine token refresh does
+      not.
+- [ ] Exclude the Xero-driven `human_required`, durable-proposal,
+      preflight/commit, approval-receipt, and human-prompt changes from the
+      platform integration. Preserve all corresponding behavior already on
+      `origin/main`; do not ship the branch-only approval framework for Xero.
+- [ ] Validate the call's current `organisation_ref` inside the trusted host for
+      every direct read, write, and attachment request, then inject the Xero
+      tenant header from the private connection registry. Reject raw ids,
+      headers, stale refs, and refs from another workspace or installation.
+- [ ] Preserve the selected organisation across token refresh and transport
+      retry, and preserve one trusted idempotency key across retries of the same
+      direct write without creating an approval proposal.
 - [ ] Add adversarial tests for changed, missing, duplicated, and foreign
-      organisation/auth bindings, including mutation commit, reconciliation,
-      artifact upload, proactive refresh, and exact 401 replay paths.
+      organisation/auth bindings, including direct writes, reconciliation,
+      artifact upload, proactive refresh, and exact 401 replay paths. Confirm
+      that Xero writes dispatch without a human-prompt record.
 - [ ] Update OAuth, mutation, artifact, and Xero protocols plus affected crate
       READMEs; run full platform checks, commit and push the integrated branch,
       then run the required post-push review.
 
-### Milestone 6: Connection and Approval UI
+### Milestone 6: Xero Connection and Organisations UI
 
 Tags: ui
 
-Implement the approved designs using real backend state.
+Implement the connection designs using real backend state.
 
 - [ ] Render OAuth, authorised-organisation inventory, granted-capability,
       reconnect, disable, and uninstall states with accessible
       loading/empty/error paths.
-- [ ] Render server-owned immutable proposal details and provider-resolved
-      names; the client cannot alter hidden payloads or manufacture receipts.
-- [ ] Use the ordinary authenticated human-prompt resolver for every write and
-      support reject, cancel, expiry, stale, ambiguous, reconciled, and failed
-      states on mobile and web.
+- [ ] Do not add Xero-specific approval, proposal, or write-confirmation UI;
+      direct writes use the ordinary agent tool flow and ordinary tool results.
 - [ ] Add authenticated attachment upload/download handoff without exposing
       raw provider credentials or binary content to agent messages.
-- [ ] Cover callback restoration, cross-workspace isolation, revoked roles,
-      double clicks, stale tabs, accessibility, and resumed agent turns.
+- [ ] Cover callback restoration, cross-workspace isolation, revoked app access,
+      double clicks, stale tabs, reconnect, and accessibility.
 - [ ] Run relevant format, lint, type, test, build, and smoke checks; commit,
       push, and review in the platform repository.
 
@@ -735,7 +575,7 @@ Implement the approved designs using real backend state.
       Manager; never place it in Git, `.context`, shell history, logs,
       screenshots, fixtures, or chat.
 - [ ] Record only redacted app id, callback, scopes, tier, collaborators,
-      approvals, and secret version in the implementation handoff.
+      provider-review status, and secret version in the implementation handoff.
 
 ### Milestone 9: Generate the Xero Package Contract
 
@@ -746,8 +586,9 @@ Implement the approved designs using real backend state.
       policy and deterministic generator for Rust models, operation registry,
       manifest schemas, and conformance fixtures.
 - [ ] Generate a `1.0.0` manifest with explicit install, reviewed granular
-      scopes, runtime/OAuth hosts, read/write approval metadata, limits, and no
-      ingress/events or restricted APIs.
+      scopes, runtime/OAuth hosts, read/write effect metadata, limits, no
+      `human_required` approval declaration, and no ingress/events or restricted
+      APIs.
 - [ ] Add drift, determinism, operation reachability, schema closure, enum,
       scope, exclusion, and generated-file audit tests.
 - [ ] Build and test the generator and generated package on host and
@@ -770,8 +611,9 @@ Implement the approved designs using real backend state.
 
 ### Milestone 11: Implement Supported Write Operations
 
-- [ ] Implement preflight and commit mappings for every included POST, PUT,
-      PATCH, and DELETE operation using one logical record per invocation.
+- [ ] Implement direct execution mappings for every included POST, PUT, PATCH,
+      and DELETE operation using one logical record per invocation and no
+      approval continuation.
 - [ ] Implement provider status/role/region/lock-date validation, decimal
       handling, live tax/account/tracking references, and provider-calculated
       total verification.
@@ -780,20 +622,21 @@ Implement the approved designs using real backend state.
       supported action unions.
 - [ ] Implement idempotency and exact read-after-timeout reconciliation for
       each mutation family.
-- [ ] Add `unimock`, conformance, proposal-summary, stale-state, app-access,
-      replay, timeout, redaction, and full operation-coverage tests.
+- [ ] Add `unimock`, conformance, validation, organisation-binding, app-access,
+      duplicate-call, timeout, redaction, and full operation-coverage tests.
 - [ ] Run component format, clippy, host tests, Wasm build, and runtime
-      preflight/commit smoke tests.
+      direct-write smoke tests.
 
 ### Milestone 12: Repository and Runtime Integration
 
 - [ ] Exercise every tool family through the real Wasm component with
       `WasmHostMock`, asserting exact provider traffic, organisation-ref
-      resolution, tenant injection, side-effect count, proposal hash,
-      idempotency, output, and redaction.
+      resolution, tenant injection, side-effect count, idempotency, output, and
+      redaction.
 - [ ] Add package tests for identity, scopes, OAuth, organisation routing,
-      app-level access, tool schemas, approval policy, host allowlists, limits,
-      operation inventory, exclusions, assets, and docs.
+      app-level access, tool schemas, direct-write behavior, absence of
+      Xero-specific approval, host allowlists, limits, operation inventory,
+      exclusions, assets, and docs.
 - [ ] Add Xero component/runtime manifests to `xtask/src/check.rs` and make
       app inventory auditing reject silently omitted packages.
 - [ ] Update root and `apps/README.md` catalog documentation, commands, and
@@ -807,9 +650,9 @@ Implement the approved designs using real backend state.
       multiple authorised organisations, stale refs, and cross-tenant denial.
 - [ ] Smoke every read family and every applicable regional/role unavailable
       path without using or copying a real ledger.
-- [ ] Smoke every write action with disposable records, including approval,
-      stale proposal, duplicate invocation, ambiguous response, refresh, and
-      audit receipt.
+- [ ] Smoke every write action with disposable records, including direct
+      execution, duplicate invocation, ambiguous response, refresh,
+      organisation removal, and the standard audit record.
 - [ ] Confirm unsupported, deprecated, certification-only, and separate-API
       operations, including gated Journals, are unreachable.
 - [ ] Record only redacted outcomes and current provider-limit usage in the PR.
@@ -851,8 +694,9 @@ Implement the approved designs using real backend state.
 - Every active, ordinary-Web-app Accounting API capability classified in the
   pinned contract is reachable through a closed typed Firna tool, and every
   excluded capability is unreachable.
-- Every provider mutation requires approval of an immutable preflight, uses
-  durable idempotency and reconciliation, and produces a redacted audit trail.
+- Every provider mutation executes through the ordinary app tool path without a
+  mandatory human prompt, uses trusted idempotency and reconciliation, and
+  produces a standard redacted audit record.
 - Attachments and PDFs use authenticated artifacts rather than model-visible
   binary data; sensitive provider, bank, tax, and credential values stay behind
   trusted boundaries.
