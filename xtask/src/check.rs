@@ -1,26 +1,53 @@
 //! Complete verification plan for app packages and repository automation.
 
-use std::path::Path;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 use crate::command::{CommandRunner, CommandSpec};
-use crate::error::Result;
+use crate::error::{Error, Result};
 
-const COMPONENT_MANIFESTS: &[&str] = &[
-    "apps/dataforseo/component/Cargo.toml",
-    "apps/exa/component/Cargo.toml",
-    "apps/http/component/Cargo.toml",
-    "apps/slack/component/Cargo.toml",
-];
-const RUNTIME_TEST_MANIFESTS: &[&str] = &[
-    "apps/dataforseo/tests/platform-runtime/Cargo.toml",
-    "apps/exa/tests/platform-runtime/Cargo.toml",
-    "apps/http/tests/platform-runtime/Cargo.toml",
-    "apps/slack/tests/platform-runtime/Cargo.toml",
-];
+struct StandaloneManifests {
+    components: Vec<String>,
+    runtime_tests: Vec<String>,
+}
+
+trait ManifestInventory {
+    fn discover(&self, workspace_root: &Path) -> Result<StandaloneManifests>;
+}
+
+struct FilesystemManifestInventory;
+
+impl ManifestInventory for FilesystemManifestInventory {
+    fn discover(&self, workspace_root: &Path) -> Result<StandaloneManifests> {
+        let apps_root = workspace_root.join("apps");
+        let app_directories = read_app_directories(&apps_root)?;
+        let mut components = Vec::new();
+        let mut runtime_tests = Vec::new();
+        for app_directory in app_directories {
+            add_manifest(
+                workspace_root,
+                app_directory.join("component/Cargo.toml"),
+                &mut components,
+            );
+            add_manifest(
+                workspace_root,
+                app_directory.join("tests/platform-runtime/Cargo.toml"),
+                &mut runtime_tests,
+            );
+        }
+        components.sort();
+        runtime_tests.sort();
+        Ok(StandaloneManifests {
+            components,
+            runtime_tests,
+        })
+    }
+}
 
 /// Runs the complete repository verification plan.
 pub(crate) fn run_check(runner: &dyn CommandRunner, workspace_root: &Path) -> Result<()> {
-    for command in check_commands() {
+    let inventory = FilesystemManifestInventory;
+    for command in check_commands(workspace_root, &inventory)? {
         runner.run(workspace_root, &command)?;
     }
     Ok(())
@@ -39,7 +66,11 @@ pub(crate) fn run_repository_audit(
     )
 }
 
-fn check_commands() -> Vec<CommandSpec> {
+fn check_commands(
+    workspace_root: &Path,
+    inventory: &dyn ManifestInventory,
+) -> Result<Vec<CommandSpec>> {
+    let manifests = inventory.discover(workspace_root)?;
     let mut commands = vec![
         CommandSpec::new(
             "python3",
@@ -85,7 +116,7 @@ fn check_commands() -> Vec<CommandSpec> {
         ),
         CommandSpec::new("cargo", ["test", "--workspace", "--locked"]),
     ];
-    for manifest in COMPONENT_MANIFESTS {
+    for manifest in &manifests.components {
         commands.push(cargo_manifest_command("fmt", manifest, &["--", "--check"]));
         commands.push(cargo_manifest_command(
             "clippy",
@@ -106,7 +137,7 @@ fn check_commands() -> Vec<CommandSpec> {
             &["--target", "wasm32-unknown-unknown", "--locked"],
         ));
     }
-    for manifest in RUNTIME_TEST_MANIFESTS {
+    for manifest in &manifests.runtime_tests {
         commands.push(cargo_manifest_command("fmt", manifest, &["--", "--check"]));
         commands.push(cargo_manifest_command(
             "clippy",
@@ -114,13 +145,13 @@ fn check_commands() -> Vec<CommandSpec> {
             &["--all-targets", "--locked", "--", "-D", "warnings"],
         ));
     }
-    for manifest in COMPONENT_MANIFESTS {
+    for manifest in &manifests.components {
         commands.push(cargo_manifest_command("test", manifest, &["--locked"]));
     }
-    for manifest in RUNTIME_TEST_MANIFESTS {
+    for manifest in &manifests.runtime_tests {
         commands.push(cargo_manifest_command("test", manifest, &["--locked"]));
     }
-    commands
+    Ok(commands)
 }
 
 fn cargo_manifest_command(command: &str, manifest: &str, suffix: &[&str]) -> CommandSpec {
@@ -131,6 +162,44 @@ fn cargo_manifest_command(command: &str, manifest: &str, suffix: &[&str]) -> Com
         .with_environment("CARGO_INCREMENTAL", "0")
         .with_environment("CARGO_PROFILE_DEV_DEBUG", "0")
         .with_environment("CARGO_PROFILE_TEST_DEBUG", "0")
+}
+
+fn read_app_directories(apps_root: &Path) -> Result<Vec<PathBuf>> {
+    let entries = match fs::read_dir(apps_root) {
+        Ok(entries) => entries,
+        Err(source) => {
+            return Err(Error::ManifestInventory {
+                path: apps_root.to_path_buf(),
+                source,
+            });
+        }
+    };
+    let mut directories = Vec::new();
+    for entry in entries {
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(source) => {
+                return Err(Error::ManifestInventory {
+                    path: apps_root.to_path_buf(),
+                    source,
+                });
+            }
+        };
+        let path = entry.path();
+        if path.is_dir() {
+            directories.push(path);
+        }
+    }
+    directories.sort();
+    Ok(directories)
+}
+
+fn add_manifest(workspace_root: &Path, path: PathBuf, manifests: &mut Vec<String>) {
+    if !path.is_file() {
+        return;
+    }
+    let relative = path.strip_prefix(workspace_root).unwrap_or(path.as_path());
+    manifests.push(relative.to_string_lossy().replace('\\', "/"));
 }
 
 #[cfg(test)]

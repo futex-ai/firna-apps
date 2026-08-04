@@ -15,7 +15,9 @@ Use it when validating packages locally or running the same checks as CI.
 
 The binary orchestrates existing tools and stops on the first failed command.
 App logic remains in `apps/`; repository-specific structural checks remain in
-`scripts/repository_audit.py`.
+`scripts/repository_audit.py`. Each check run discovers component and runtime
+test manifests from the current `apps/*` directories, so a new app cannot be
+silently omitted from the standalone Rust checks.
 
 ## Quick Start
 

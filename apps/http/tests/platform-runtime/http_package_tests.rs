@@ -8,7 +8,7 @@ fn http_manifest_declares_workspace_default_request_tool() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "http");
-    assert_eq!(manifest.version, "1.0.8");
+    assert_eq!(manifest.version, "1.0.9");
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
         "#3266B8"

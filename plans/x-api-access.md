@@ -2,7 +2,7 @@
 
 - Status: Active
 - Target branch: `origin/main`
-- Last updated: 2026-07-31
+- Last updated: 2026-08-04
 
 ## Outcome
 
@@ -17,13 +17,16 @@ Creating the X Developer Console app, purchasing credits, and publishing a
 live smoke-test post are external actions. The app creation is in scope, but
 the exact credit purchase, billing-cycle spending limit, and public smoke post
 each require a human confirmation at the milestone that performs the action.
+Local builds and runtime tests never deploy the app. The only live deployment
+is the normal production release from `main`; smoke validation happens after
+that production release.
 
 ## Current Constraints
 
 - The X API currently uses prepaid credits and per-resource/per-action charges.
   Rates must be rechecked in the Developer Console immediately before purchase;
   the console is authoritative when it differs from documentation.
-- As of 2026-07-31, X documents Post reads at $0.005 per returned resource,
+- As rechecked on 2026-08-02, X documents Post reads at $0.005 per returned resource,
   User reads at $0.010 per returned resource, text Post creation at $0.015 per
   request, and Post creation with a URL at $0.200 per request. Owned Reads are
   $0.001 per resource only when the authenticated X user is also the owner of
@@ -32,16 +35,33 @@ each require a human confirmation at the milestone that performs the action.
 - OAuth scopes are `tweet.read`, `tweet.write`, `users.read`, and
   `offline.access`. The offline scope returns a refresh token; X's user access
   token flow requires refresh-token rotation for a durable connection.
-- The Firna platform revision currently pinned by this repository can map and
-  store an OAuth refresh token, but it cannot refresh an expired access token.
-  This is a release blocker rather than a reason to ship short-lived auth.
-- X does not document an idempotency key for `POST /2/tweets`. A durable tool
-  retry after an ambiguous provider outcome could therefore publish a duplicate
-  unless Firna supplies an at-most-once operation guard.
-- Pay-per-use charges accrue to the X developer account that owns the app, not
-  to the Firna workspace that authorizes an X account. V1 must launch with a
-  console spending limit and bounded tool calls; broader catalog availability
-  remains an explicit product/billing decision.
+- The canonical Firna platform revision is `dbcc678a`, which contains the
+  merged OAuth refresh lifecycle, usage-based app charging, and task-specific
+  activity-label contracts required by this package.
+- X does not document an idempotency key for `POST /2/tweets`. Firna's existing
+  durable tool ledger replays completed results and fails crash-ambiguous
+  installed-app calls closed without redispatch. X must reuse and verify that
+  policy rather than add a second operation journal.
+- Firna prepays X through the developer account and charges successful app
+  calls to the authorizing workspace's Firna credit wallet at declared X list
+  rates. X's daily resource deduplication is not observable per call, so Firna
+  charges each returned resource at the declared app rate. Failed calls remain
+  uncharged and their provider cost is borne by Firna.
+- Platform PR [futex-ai/firna#1012](https://github.com/futex-ai/firna/pull/1012)
+  merged as `ad4072fc` on 2026-08-04 after ten review invocations, 23 valid
+  findings fixed with regressions, and two invalid plan-bookkeeping findings.
+  The repository was then pinned to current platform `main` at `dbcc678a`,
+  which also contains native usage-based app billing and activity labels.
+- This Conductor session has no controllable signed-in X console connector, so
+  the human operator must confirm the production app type, callback, and OAuth
+  settings. On 2026-08-04, the public client id was recorded in the manifest
+  and the copied client secret was transferred directly from the clipboard
+  into enabled Google Secret Manager version 1 of
+  `firna-prod-app-x-client-secret`; the production apps deployment service
+  account has secret-accessor permission, and no secret value was recorded.
+  The user approved and funded a $10 one-time balance reserved for initial
+  production validation, with a $10 billing-cycle cap and auto-recharge
+  disabled.
 
 Official references:
 
@@ -88,22 +108,22 @@ Official references:
 Document the exact contract before implementation. The repository remains
 fully functional at the end of this documentation-only milestone.
 
-- [ ] Add `docs/protocol/x-app.md`, kept below 250 lines, covering manifest
+- [x] Add `docs/protocol/x-app.md`, kept below 250 lines, covering manifest
   auth, tool schemas, provider endpoints, bounded outputs, pagination, error
   mapping, credential refresh, operation idempotency, and cost controls.
-- [ ] Record the V1 choice of one workspace-owned X account and the three-tool
+- [x] Record the V1 choice of one workspace-owned X account and the three-tool
   surface; do not silently widen the app to per-user grants or extra write
   actions during implementation.
-- [ ] Specify the stable behavior for an ambiguous create-Post result: never
+- [x] Specify the stable behavior for an ambiguous create-Post result: never
   retry automatically, return `write_outcome_unknown`, and direct the caller to
   inspect X before issuing a new operation.
-- [ ] Specify how author expansion changes billed resources and ensure it is
+- [x] Specify how author expansion changes billed resources and ensure it is
   opt-in in both the manifest schema and component request.
-- [ ] Confirm whether public catalog availability is acceptable while the X
-  developer account pays all usage. If it is not, define and land the required
-  catalog allowlist or workspace-private distribution contract before coding.
-- [ ] Link the protocol from the root and app documentation where relevant.
-- [ ] Validate Markdown links and review the documentation diff.
+- [x] Confirm public catalog availability with workspace app charging. The app
+  remains explicit-install and moves to first-party `built_in` distribution in
+  Milestone 6 because V1 rejects pricing on community manifests.
+- [x] Link the protocol from the root and app documentation where relevant.
+- [x] Validate Markdown links and review the documentation diff.
 
 ## Milestone 2: Land Firna Platform Prerequisites
 
@@ -112,31 +132,50 @@ repository. Do not point this repository at an unmerged or unreviewed platform
 revision. The platform must remain green and independently usable after this
 milestone.
 
-- [ ] Extend the app protocol's `standard_oauth2` contract with typed access
+- [x] Extend the app protocol's `standard_oauth2` contract with typed access
   token expiry and refresh behavior, including access-token and refresh-token
   credential kinds, `expires_in` mapping, and reuse of the reviewed token URL
   and client-auth method.
-- [ ] Persist token expiry metadata without exposing token values; refresh
+- [x] Persist token expiry metadata without exposing token values; refresh
   proactively near expiry and atomically rotate both tokens when X returns a
   new refresh token.
-- [ ] Serialize concurrent refreshes per installation, retry a provider request
+- [x] Serialize concurrent refreshes per installation, retry a provider request
   at most once after a successful refresh, and turn terminal `invalid_grant`
   into `auth_required` without leaking the provider response.
-- [ ] Add a general at-most-once guard for provider writes that lack provider
-  idempotency. Key it by app, installation, tool, and durable `operation_id`;
-  persist a successful compact result, and fail closed as
-  `write_outcome_unknown` when a claimed operation has an ambiguous outcome.
-- [ ] Put refresh, credential vault, operation journal, clock, and provider HTTP
-  behavior behind traits and use `unimock` at unit-test boundaries.
-- [ ] Add protocol, store, migration, service, runtime, concurrency, redaction,
-  and failure-injection tests, including refresh-token rotation and a crash
-  immediately before and after provider dispatch.
-- [ ] Update all affected Firna protocol docs and crate READMEs, then run the
+- [x] Verify the existing installed-app write recovery contract: completed
+  durable results are replayed, while a crash-ambiguous pending operation fails
+  closed without component or provider redispatch. Preserve the operation id in
+  the interruption result so callers can reconcile it.
+- [x] Put refresh, credential vault, clock, and provider HTTP behavior behind
+  traits and use `unimock` at unit-test boundaries.
+- [x] Add protocol, store, migration, service, runtime, concurrency, redaction,
+  and failure-injection tests, including refresh-token rotation plus existing
+  fail-closed coverage immediately before and after provider dispatch.
+- [x] Update all affected Firna protocol docs and crate READMEs, then run the
   platform's complete checks, commit, push, and review workflow.
-- [ ] After the platform change lands, update `platform.toml`, the workflow
+- [x] Inject OAuth refresh into task-reconciliation runtimes and fail closed
+  when lifecycle-managed credentials cannot refresh.
+- [x] Resolve refresh-time secrets with the workspace-internal storage app id.
+- [x] Reject custom OAuth parameters that duplicate host-owned grant fields.
+- [x] Make each lifecycle owner unambiguous across OAuth flows and credential
+  kinds.
+- [x] Reject empty initial lifecycle access and refresh token values before an
+  installation can activate.
+- [x] Omit refresh-claim coordination fields from store DTO serialization.
+- [x] Bind lifecycle auth requirements explicitly to their standard OAuth flow.
+- [x] Resolve later review findings covering claim fencing, terminal
+  invalidation, reserved authorization parameters, provider error mapping,
+  credential-pair validation, concurrent metadata replacement, migration
+  compatibility, lifecycle reconciliation, and versioned single-credential
+  KMS publication.
+- [x] After the platform change lands, update `platform.toml`, the workflow
   pin, every standalone runtime-test manifest, and every lockfile together.
-- [ ] Add or update repository-audit tests so a partial platform pin update is
+- [x] Preserve the latest mainline activity-label changes and advance each
+  affected existing app version for its canonical platform repin.
+- [x] Add or update repository-audit tests so a partial platform pin update is
   rejected.
+- [x] Audit every declared `fna-*` runtime dependency, not only the required
+  interface and Wasm pair, so host/store dependencies cannot retain stale pins.
 
 ## Milestone 3: Create and Secure the X Developer App
 
@@ -145,26 +184,37 @@ fixed. At the end of this milestone the X app exists and its credential is in
 the production secret store, but no secret appears in Git, shell history,
 screenshots, logs, `.context`, or chat.
 
-- [ ] In `console.x.com`, create one production confidential Web App named
+- [x] In `console.x.com`, create one production confidential Web App named
   `Firna`, using `https://firna.ai` as the website and plain-language copy that
   says Firna reads and publishes X posts only after workspace authorization.
-- [ ] Register the exact production callback
+- [x] Register the exact production callback
   `https://firna.ai/oauth/x/callback` with no trailing-slash variation.
-- [ ] Enable OAuth 2.0 Authorization Code with PKCE. Request scopes from the
+- [x] Enable OAuth 2.0 Authorization Code with PKCE. Request scopes from the
   Firna manifest at authorization time rather than enabling unrelated X
   permissions.
-- [ ] Capture the public client ID for the manifest and transfer the one-time
-  client secret directly into Google Secret Manager as
-  `firna-prod-app-x-client-secret`. The human operator performs the secret
-  transfer if the available tooling cannot do it without exposing the value.
-- [ ] Before purchasing credits, ask the user to approve the exact initial
+- [x] Capture the public client ID for the manifest.
+- [x] Transfer the one-time client secret directly into Google Secret Manager
+      as `firna-prod-app-x-client-secret` without exposing the value, and grant
+      the production apps deployment service account secret-accessor permission.
+- [x] Before purchasing credits, ask the user to approve the exact initial
   credit amount and billing-cycle spending limit. Keep auto-recharge disabled
   unless the user explicitly approves an amount and trigger threshold.
-- [ ] Save a redacted record of the app id, callback, app type, approved budget,
+- [x] Fund the production X developer account with the approved $10 one-time
+  credit for initial live validation, set the billing-cycle spending limit to
+  $10, and leave auto-recharge disabled.
+- [x] Save a redacted record of the app id, callback, app type, approved budget,
   and secret version—not the secret value—in the implementation handoff.
-- [ ] Do not add development callbacks to the production app. If a live
-  preproduction callback is required, create a separate development app only
-  after explicit approval.
+- [x] Keep the production callback as the only callback. Do not create a
+  development X app, add a development callback, or deploy this Firna app to a
+  test or preproduction environment.
+
+Operator-confirmed handoff on 2026-08-04: production confidential Web App
+`Firna`; website `https://firna.ai`; sole callback
+`https://firna.ai/oauth/x/callback`; OAuth 2.0 Authorization Code with required
+S256 PKCE and manifest-owned scopes; public client id recorded in the manifest;
+Google Secret Manager secret `firna-prod-app-x-client-secret` version 1; $10
+one-time balance and $10 billing-cycle cap; auto-recharge disabled. No secret
+value or provider billing identifier is recorded.
 
 ## Milestone 4: Build the X App Package
 
@@ -172,35 +222,38 @@ Add a complete standalone package that can build and run through the pinned
 Firna Wasm host. All provider data remains live or explicitly unavailable; no
 reachable product path contains sample posts or metrics.
 
-- [ ] Create `apps/x/manifest.yaml` with id/name `x`/`X`, version `1.0.0`,
-  `source.kind: community`, explicit installation, `api.x.com` as the only
-  HTTP host, the public client ID, the app-owned `client_secret` declaration,
-  and workspace-owned OAuth using `client_secret_basic` plus required S256
-  PKCE.
-- [ ] Map `access_token`, `refresh_token`, granted scopes, and expiry through
+- [x] Create the initial `apps/x/manifest.yaml` with id/name `x`/`X`, version
+  `1.0.0`, explicit installation, `api.x.com` as the only HTTP host, the
+  app-owned `client_secret` declaration, and workspace-owned OAuth using
+  `client_secret_basic` plus required S256 PKCE. Milestone 6 promotes its
+  initial community source to priced first-party `built_in` distribution.
+- [x] After console provisioning, put the real public client id in manifest
+  environment key `client_id`; do not use a placeholder or secret value.
+- [x] Map `access_token`, `refresh_token`, granted scopes, and expiry through
   the platform's reviewed refresh contract. Store and inject tokens only by
   opaque credential reference.
-- [ ] Add an official X brand asset as SVG source, a PNG catalog icon under the
+- [x] Add an official X brand asset as SVG source, a PNG catalog icon under the
   manifest size limit, matching base64 source, and a legible color pair. Do not
   generate or redraw the X trademark.
-- [ ] Create the standalone Rust component and lockfile. Keep module roots thin,
+- [x] Create the standalone Rust component and lockfile. Keep module roots thin,
   production and test files under 300 lines, public APIs documented, imports
   ordered, and all impure HTTP/runtime behavior behind trait objects.
-- [ ] Model requests, successful responses, pagination metadata, and provider
+- [x] Model requests, successful responses, pagination metadata, and provider
   errors with typed structs/enums. Do not retain or pass through arbitrary
   provider JSON beyond the HTTP boundary.
-- [ ] Implement the three V1 tools with strict input validation, bounded
+- [x] Implement the three V1 tools with strict input validation, bounded
   provider response reads, explicit pagination, compact outputs, stable error
   mapping, rate-limit metadata, and no implicit retries.
-- [ ] Apply the at-most-once operation guard to `x_create_post` before provider
-  dispatch and return a stored success for a repeated completed operation.
-- [ ] Add source-adjacent unit tests under `_tests_` using `unimock` for HTTP and
-  operation-guard boundaries. Cover malformed calls, URL acknowledgement,
-  provider errors, truncation, pagination, auth loss, and repeated writes.
-- [ ] Add package, component, and platform-runtime READMEs with the required
+- [x] Make `x_create_post` issue at most one provider request per component
+  invocation, never retry it in component code, and rely on the durable runtime
+  ledger for completed-result replay and fail-closed crash recovery.
+- [x] Add source-adjacent unit tests under `_tests_` using `unimock` for HTTP
+  boundaries. Cover malformed calls, URL acknowledgement, provider errors,
+  truncation, pagination, auth loss, and the no-retry write contract.
+- [x] Add package, component, and platform-runtime READMEs with the required
   responsibilities, quick-start commands, key code, related docs, tool table,
   OAuth setup, cost behavior, secret name, and non-goals.
-- [ ] Update the root and `apps/README.md` catalog summaries and local command
+- [x] Update the root and `apps/README.md` catalog summaries and local command
   examples without turning them into exhaustive feature lists.
 
 ## Milestone 5: Add Runtime and Repository Verification
@@ -208,35 +261,129 @@ reachable product path contains sample posts or metrics.
 Exercise the real built Wasm component through the pinned platform host. The
 new package and all existing packages must be green together.
 
-- [ ] Add `apps/x/tests/platform-runtime` as a standalone test crate with its
-  own lockfile and publishable-quality README.
-- [ ] Validate the manifest id, version, icon, host allowlist, explicit install,
+The tracked runtime crate passes all 18 tests against the canonical merged
+platform revision. On 2026-08-04, the pinned platform's completed-result store,
+reclaimed-history, and fail-closed installed-app recovery regressions also
+passed individually, composing with X's one-request component regression to
+prove that recovery cannot issue a second create-Post request.
+
+- [x] Add the `apps/x/tests/platform-runtime` source suite and
+  publishable-quality README, and prove it locally against the reviewed
+  platform branch.
+- [x] Align the X manifest and local runtime OAuth lifecycle smoke with the
+      final reviewed platform manifest, constructor, storage-identity, and
+      credential-vault contracts, then rerun the complete local runtime harness.
+- [x] After the platform change lands, add the standalone runtime
+  `Cargo.toml` and lockfile using the canonical merged revision.
+- [x] Validate the manifest id, version, icon, host allowlist, explicit install,
   OAuth owner/scopes/client method/PKCE/refresh mapping, tool names, schemas,
   side effects, and response limits.
-- [ ] Smoke every tool through the real Wasm component and a `WasmHostMock`;
+- [x] Smoke every tool through the real Wasm component and a `WasmHostMock`;
   assert exact method, URL, query/body shape, opaque credential scope, output,
   and the absence of null or undeclared fields.
-- [ ] Test missing credentials, expired-token refresh, rotated refresh tokens,
+- [x] Test missing credentials, expired-token refresh, rotated refresh tokens,
   missing scopes, 401/403/404/429/credit exhaustion/5xx responses, malformed or
   truncated JSON, and redaction of provider details.
-- [ ] Prove a repeated completed create operation returns its journaled result
-  without a second X request and an ambiguous claimed operation never sends a
-  second Post.
-- [ ] Add both X manifests to `xtask/src/check.rs` and strengthen its inventory
-  test so every discovered component and runtime-test manifest is covered,
-  preventing future packages from being omitted by a hard-coded list.
-- [ ] Run targeted component format, clippy, build, and unit tests; runtime
-  format, clippy, and tests; `firna apps validate apps/x`; and
-  `firna apps package apps/x`.
+- [x] Prove at the platform runtime boundary that a repeated completed create
+  operation returns its durable result without a second X request and an
+  ambiguous pending operation never sends a second Post.
+- [x] Treat malformed, missing, truncated, statusless, and 5xx create results
+  as `write_outcome_unknown`, with component and real Wasm-runtime regressions,
+  because X may already have accepted the Post.
+- [x] Replace `xtask`'s hard-coded standalone manifest lists with filesystem
+  discovery and test future component/runtime manifests plus the X component.
+- [x] Make platform-pin auditing report a missing runtime lockfile cleanly
+  instead of crashing, with a regression test for the partial-package state.
+- [x] Once the tracked X runtime manifest exists, assert it is discovered by
+  the real filesystem inventory.
+- [x] Run targeted component format, native/wasm clippy, wasm build, and unit
+  tests; local-harness runtime format, clippy, and 18 tests; refreshed-CLI
+  `firna apps validate apps/x`; and `firna apps package apps/x`.
+- [x] Rerun the runtime checks through the tracked canonical-pin manifest and
+  lockfile.
 
-## Milestone 6: Perform an Authorized Live Smoke Test
+## Milestone 6: Add Workspace App Charging
 
-Verify the real provider boundary without broadening the release. The user must
-approve the public write immediately before it occurs.
+Align the X package with the usage-based app billing contract now available on
+the Firna platform. The package remains independently buildable and its agent-
+visible success payloads do not expose billing metadata.
 
-- [ ] Deploy the reviewed X package and app secret to the intended environment,
-  install it in the nominated smoke-test workspace, and complete OAuth with the
-  intended X account.
+- [x] Recheck the merged platform pricing protocol and X's current published
+  list rates, then document the retail schedule, caps, failure behavior, daily
+  deduplication limitation, and version-bound consent contract.
+- [x] Change the manifest to `source.kind: built_in` and declare metered Post
+  and User reads plus a capped usage-reported create charge.
+- [x] Return the strict priced-result envelope for every successful call while
+  preserving stable top-level typed app errors for failed calls.
+- [x] Report actual returned Post and expanded User counts, and report $0.015
+  for text creation or $0.200 for URL-bearing creation after provider success.
+- [x] Add component and platform-runtime tests for exact usage reports, cap
+  bounds, zero-result reads, agent-visible usage stripping, and uncharged typed
+  failures.
+- [x] Update package and runtime documentation, validate the priced built-in
+  manifest through the merged platform CLI, and rerun all X package checks.
+
+## Milestone 7: Run the Complete Repository Gate
+
+On 2026-08-04, the complete verifier passed end to end under both the production
+Rust 1.89 toolchain and the literal default-toolchain `cargo xtask check`,
+including all repository audits, five components, and five platform-runtime
+suites.
+
+- [x] Run `cargo fmt --all -- --check`; if it fails, format and rerun it before
+  treating any later Rust check as complete.
+- [x] Run `cargo xtask rust-file-length-lint --all` if the command is available
+  in the pinned workspace, plus the repository's structural audit.
+- [x] Run `cargo xtask check` and require a 100% pass rate across existing and X
+  package builds, lints, tests, workflow checks, and documentation links.
+- [x] Inspect `git diff --check`, the full diff, `git diff --name-status
+  origin/main`, and `git diff --diff-filter=D --name-status origin/main`.
+- [x] Resolve every compile, lint, test, package, documentation, or smoke-test
+  failure before proceeding. If an external service prevents a live check,
+  record the exact blocker and all successful local checks.
+
+## Milestone 8: Commit and Push the Checked Work
+
+- [x] Fetch `origin/main`, preserve the pre-integration source tip, audit all
+  mainline additions from the merge base, and resolve overlaps path by path.
+- [x] Run `git add -A` so every new package, asset, lockfile, protocol document,
+  test, and README is tracked.
+- [ ] Commit the completed implementation with a Conventional Commit title of
+  at most 50 characters and a body describing OAuth, cost safety, tests, and
+  any approved external setup. A suitable title is
+  `feat(x): add read and posting tools`.
+- [ ] Push the current branch without renaming it.
+- [ ] Recheck the committed name-status and deletion diff against `origin/main`;
+  stop if any mainline feature removal was not explicitly approved.
+
+## Milestone 9: Run Post-Push Review
+
+- [ ] After the push, run the explicitly requested `codex-review` workflow so
+  `cargo xtask review` evaluates the committed branch against `origin/main` for
+  up to ten cycles.
+- [ ] Independently investigate every review finding, fix every valid finding
+  with regression coverage, rerun the relevant checks, commit and push the
+  fix, then review again. Record every finding and disposition for the final
+  report.
+- [ ] If the final review has no valid findings, report that explicitly and
+  proceed to the production-release milestone. Do not complete the plan before
+  the production smoke validation is finished.
+
+## Milestone 10: Release and Validate in Production
+
+Release through the normal production path only after the checked branch has
+been reviewed and merged. There is no test/preproduction deployment, catalog,
+callback, or X developer app. The user must approve the public write
+immediately before it occurs.
+
+- [ ] Open the reviewed change against `main`, require CI and maintainer/user
+  approval, and merge it without bypassing branch protection.
+- [ ] Let the successful `main` CI run trigger the standard production app
+  deployment workflow. Do not deploy from the feature branch or use a test or
+  preproduction environment.
+- [ ] Verify production catalog version `1.0.0`, install it in the nominated
+  production workspace, and complete OAuth with the intended production X
+  account.
 - [ ] Read one known Post and one 10-result recent-search page; verify compact
   outputs, explicit pagination, and the expected usage entries in the X
   Developer Console.
@@ -249,45 +396,8 @@ approve the public write immediately before it occurs.
   deletion is not added to the app merely for cleanup.
 - [ ] Confirm the spending limit, credit balance, and auto-recharge state after
   the smoke test, then record only redacted usage/cost evidence.
-
-## Milestone 7: Run the Complete Repository Gate
-
-- [ ] Run `cargo fmt --all -- --check`; if it fails, format and rerun it before
-  treating any later Rust check as complete.
-- [ ] Run `cargo xtask rust-file-length-lint --all` if the command is available
-  in the pinned workspace, plus the repository's structural audit.
-- [ ] Run `cargo xtask check` and require a 100% pass rate across existing and X
-  package builds, lints, tests, workflow checks, and documentation links.
-- [ ] Inspect `git diff --check`, the full diff, `git diff --name-status
-  origin/main`, and `git diff --diff-filter=D --name-status origin/main`.
-- [ ] Resolve every compile, lint, test, package, documentation, or smoke-test
-  failure before proceeding. If an external service prevents a live check,
-  record the exact blocker and all successful local checks.
-
-## Milestone 8: Commit and Push the Checked Work
-
-- [ ] Fetch `origin/main`, preserve the pre-integration source tip, audit all
-  mainline additions from the merge base, and resolve overlaps path by path.
-- [ ] Run `git add -A` so every new package, asset, lockfile, protocol document,
-  test, and README is tracked.
-- [ ] Commit the completed implementation with a Conventional Commit title of
-  at most 50 characters and a body describing OAuth, cost safety, tests, and
-  any approved external setup. A suitable title is
-  `feat(x): add read and posting tools`.
-- [ ] Push the current branch without renaming it.
-- [ ] Recheck the committed name-status and deletion diff against `origin/main`;
-  stop if any mainline feature removal was not explicitly approved.
-
-## Milestone 9: Run Post-Push Review
-
-- [ ] After the push, run `cargo xtask review` so the reviewer evaluates the
-  committed branch against `origin/main`.
-- [ ] Do not automatically fix review findings in this change. Report every
-  finding as a numbered item with severity, codebase and feature context,
-  impact of doing nothing, lettered solution options, and a recommended option.
-- [ ] If the review has no findings, report that explicitly and move this plan
-  from Active to Completed in `plans/README.md` only after every preceding TODO
-  is checked.
+- [ ] Move this plan from Active to Completed in `plans/README.md` after every
+  milestone and production validation task is complete.
 
 ## Completion Criteria
 
@@ -299,5 +409,8 @@ approve the public write immediately before it occurs.
 - All three X tools return only real provider data, honor their bounded schemas,
   and are covered by unit, Wasm runtime, error, redaction, and smoke tests.
 - All repository checks pass, documentation matches behavior, the committed
-  branch is pushed, and the post-push review is reported without silently
-  applying findings.
+  branch is pushed, and every post-push review finding is investigated with
+  valid findings fixed and re-reviewed.
+- The reviewed change is merged and deployed only through the standard
+  production workflow, then verified in the nominated production workspace;
+  no test or preproduction deployment exists.

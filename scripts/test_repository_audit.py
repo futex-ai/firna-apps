@@ -116,6 +116,89 @@ class RepositoryAuditTests(unittest.TestCase):
                 ],
             )
 
+    def test_missing_runtime_lockfile_is_reported_without_crashing(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = "https://github.com/futex-ai/firna.git"
+            revision = "1" * 40
+            write(
+                root / "platform.toml",
+                f'repository = "{repository}"\nrevision = "{revision}"\n',
+            )
+            write(
+                root / ".github/workflows/deploy-apps.yml",
+                "env:\n"
+                f"  FIRNA_PLATFORM_REPOSITORY: {repository}\n"
+                f"  FIRNA_PLATFORM_REVISION: {revision}\n",
+            )
+            write(
+                root / "apps/x/tests/platform-runtime/Cargo.toml",
+                "[dependencies]\n"
+                f'fna-apps-interface = {{ git = "{repository}", rev = "{revision}" }}\n'
+                f'fna-apps-wasm = {{ git = "{repository}", rev = "{revision}" }}\n',
+            )
+
+            failures = repository_audit.audit_platform_pins(root)
+
+            self.assertEqual(
+                failures,
+                ["apps/x/tests/platform-runtime/Cargo.lock is required"],
+            )
+
+    def test_partial_platform_revision_update_rejects_every_stale_surface(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = "https://github.com/futex-ai/firna.git"
+            old_revision = "1" * 40
+            new_revision = "2" * 40
+            write(
+                root / "platform.toml",
+                f'repository = "{repository}"\nrevision = "{new_revision}"\n',
+            )
+            write(
+                root / ".github/workflows/deploy-apps.yml",
+                "env:\n"
+                f"  FIRNA_PLATFORM_REPOSITORY: {repository}\n"
+                f"  FIRNA_PLATFORM_REVISION: {old_revision}\n",
+            )
+            for app_id in ("slack", "x"):
+                manifest_root = root / f"apps/{app_id}/tests/platform-runtime"
+                extra_dependencies = ""
+                if app_id == "x":
+                    extra_dependencies = (
+                        f'fna-apps = {{ git = "{repository}", rev = "{old_revision}" }}\n'
+                        f'fna-apps-store-interface = {{ git = "{repository}", '
+                        f'rev = "{old_revision}" }}\n'
+                    )
+                write(
+                    manifest_root / "Cargo.toml",
+                    "[dependencies]\n"
+                    f"{extra_dependencies}"
+                    f'fna-apps-interface = {{ git = "{repository}", rev = "{old_revision}" }}\n'
+                    f'fna-apps-wasm = {{ git = "{repository}", rev = "{old_revision}" }}\n',
+                )
+                write(
+                    manifest_root / "Cargo.lock",
+                    f'source = "git+{repository}?rev={old_revision}#{old_revision}"\n',
+                )
+
+            failures = repository_audit.audit_platform_pins(root)
+
+            self.assertEqual(len(failures), 9)
+            self.assertTrue(any("FIRNA_PLATFORM_REVISION" in item for item in failures))
+            self.assertEqual(
+                sum("apps/slack/tests/platform-runtime" in failure for failure in failures),
+                3,
+            )
+            self.assertEqual(
+                sum("apps/x/tests/platform-runtime" in failure for failure in failures),
+                5,
+            )
+            self.assertTrue(any("fna-apps must match" in item for item in failures))
+            self.assertTrue(
+                any("fna-apps-store-interface must match" in item for item in failures)
+            )
+
     def test_markdown_links_must_resolve(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

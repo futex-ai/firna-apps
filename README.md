@@ -11,6 +11,8 @@ The current catalog packages are:
 - Exa: workspace-default web search backed by a Firna-managed API key.
 - HTTP: workspace-default, first-party arbitrary-host HTTP requests.
 - Slack: explicitly installed Slack tools, OAuth, webhooks, and event handling.
+- X: explicitly installed, workspace-authorized, usage-priced Post reads,
+  recent search, and single-Post publishing.
 
 Each package is an isolated Rust WebAssembly component under
 [`apps/`](apps/README.md). Production deployment uploads source bundles to the
@@ -38,10 +40,14 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev 0305499123aab0876f86ebf23fadfc9d566d216d \
+  --rev dbcc678ade538537f0b17b56103ae27f291910da \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```
+
+The X manifest uses the platform's merged usage-based app pricing and OAuth
+refresh lifecycle. Its validation, packaging, and runtime tests are part of the
+canonical repository checks.
 
 See [`apps/README.md`](apps/README.md) for package commands and conventions.
 Active and completed implementation work is tracked in
@@ -88,3 +94,5 @@ reading the production bootstrap password plus manifest-declared app secrets.
 
 The platform-side manifest, runtime, and admin submission contracts remain in
 the [Firna platform app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md).
+The repository-specific [X app protocol](docs/protocol/x-app.md) defines its
+OAuth, read, publishing, recovery, and cost-control contract.

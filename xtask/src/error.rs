@@ -1,6 +1,7 @@
 //! Typed errors returned by repository automation.
 
 use std::io;
+use std::path::PathBuf;
 use std::process::ExitStatus;
 
 use thiserror::Error;
@@ -16,6 +17,14 @@ pub(crate) enum Error {
     /// The workspace root cannot be derived from the xtask manifest directory.
     #[error("[xtask/error] workspace root is unavailable")]
     WorkspaceRootUnavailable,
+    /// Standalone package manifests could not be inventoried.
+    #[error("[xtask/error] failed to inspect standalone manifests in `{path}`: {source}")]
+    ManifestInventory {
+        /// Directory that could not be inspected.
+        path: PathBuf,
+        /// Underlying operating-system failure.
+        source: io::Error,
+    },
     /// A subprocess could not be started.
     #[error("[xtask/error] failed to start `{command}`: {source}")]
     CommandStart {
