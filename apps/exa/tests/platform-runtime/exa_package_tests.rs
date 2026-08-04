@@ -8,7 +8,7 @@ fn exa_manifest_declares_default_search_tool() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "exa");
-    assert_eq!(manifest.version, "1.0.11");
+    assert_eq!(manifest.version, "1.0.12");
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
         "#111111"
@@ -34,10 +34,7 @@ fn exa_manifest_declares_default_search_tool() {
     assert_eq!(manifest.secrets[0].name, "api_key");
     assert_eq!(manifest.tools.len(), 1);
     assert_eq!(manifest.tools[0].name, "exa_web_search");
-    assert_eq!(
-        manifest.tools[0].activity_verb.as_deref(),
-        Some("Searching")
-    );
+    assert_eq!(manifest.tools[0].activity_label, "Searching the web");
     assert_eq!(manifest.tools[0].side_effect, ToolSideEffect::ExternalRead);
     assert!(manifest.events.is_empty());
 }

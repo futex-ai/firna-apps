@@ -9,7 +9,7 @@ fn dataforseo_manifest_is_explicit_built_in_and_credential_free_at_deploy() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "dataforseo");
-    assert_eq!(manifest.version, "1.0.4");
+    assert_eq!(manifest.version, "1.0.5");
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
         "#2563EB"
@@ -28,6 +28,31 @@ fn dataforseo_manifest_is_explicit_built_in_and_credential_free_at_deploy() {
             .tools
             .iter()
             .all(|tool| tool.name.starts_with("dataforseo_"))
+    );
+    assert_eq!(
+        manifest
+            .tools
+            .iter()
+            .map(|tool| tool.activity_label.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "Searching Google results",
+            "Analyzing keyword metrics",
+            "Finding keyword suggestions",
+            "Inspecting ranked keywords",
+            "Summarizing backlink profile",
+            "Finding backlinks",
+            "Finding referring domains",
+            "Auditing web page",
+            "Searching local businesses",
+            "Retrieving business information",
+            "Searching web citations",
+            "Analyzing content sentiment",
+            "Detecting domain technologies",
+            "Inspecting domain registration",
+            "Analyzing AI keyword demand",
+            "Analyzing LLM mentions",
+        ]
     );
     assert_eq!(manifest.auth_requirements.len(), 1);
     assert_eq!(
