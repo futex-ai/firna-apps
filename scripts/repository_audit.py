@@ -12,7 +12,7 @@ from pathlib import Path
 
 APP_MANIFEST_NAMES = ("manifest.yaml", "manifest.json")
 APPS_REPOSITORY = "https://github.com/futex-ai/firna-apps.git"
-PLATFORM_DEPENDENCIES = ("fna-apps-interface", "fna-apps-wasm")
+REQUIRED_PLATFORM_DEPENDENCIES = ("fna-apps-interface", "fna-apps-wasm")
 SEMVER_RE = re.compile(
     r"^(0|[1-9][0-9]*)\."
     r"(0|[1-9][0-9]*)\."
@@ -131,7 +131,9 @@ def audit_platform_pins(root: Path) -> list[str]:
             )
     for manifest_path in sorted(root.glob("apps/*/tests/platform-runtime/Cargo.toml")):
         manifest = manifest_path.read_text(encoding="utf-8")
-        for name in PLATFORM_DEPENDENCIES:
+        dependency_names = set(REQUIRED_PLATFORM_DEPENDENCIES)
+        dependency_names.update(platform_dependency_names(manifest))
+        for name in sorted(dependency_names):
             dependency = inline_dependency_fields(manifest, name)
             relative = manifest_path.relative_to(root)
             if not isinstance(dependency, dict):
@@ -142,10 +144,18 @@ def audit_platform_pins(root: Path) -> list[str]:
             if "path" in dependency:
                 failures.append(f"{relative} {name} must not use a local path")
         lock_path = manifest_path.with_name("Cargo.lock")
-        lock_text = lock_path.read_text(encoding="utf-8")
+        lock_relative = lock_path.relative_to(root)
+        if not lock_path.is_file():
+            failures.append(f"{lock_relative} is required")
+            continue
+        try:
+            lock_text = lock_path.read_text(encoding="utf-8")
+        except OSError as error:
+            failures.append(f"cannot read {lock_relative}: {error}")
+            continue
         expected_source = f"git+{repository}?rev={revision}#{revision}"
         if expected_source not in lock_text:
-            failures.append(f"{lock_path.relative_to(root)} does not resolve platform.toml")
+            failures.append(f"{lock_relative} does not resolve platform.toml")
     return failures
 
 
@@ -271,6 +281,10 @@ def inline_dependency_fields(contents: str, name: str) -> dict[str, str] | None:
     if match is None:
         return None
     return dict(re.findall(r'([a-z]+)\s*=\s*"([^"]*)"', match.group(1)))
+
+
+def platform_dependency_names(contents: str) -> set[str]:
+    return set(re.findall(r"^(fna-[a-z0-9-]+)\s*=", contents, re.MULTILINE))
 
 
 def current_manifest(app_root: Path) -> Path | None:

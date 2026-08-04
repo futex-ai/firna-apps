@@ -33,11 +33,13 @@ firna apps validate apps/slack
 firna apps validate apps/exa
 firna apps validate apps/http
 firna apps validate apps/dataforseo
+firna apps validate apps/x
 firna apps package apps/slack
 cargo test --manifest-path apps/slack/tests/platform-runtime/Cargo.toml --locked
 cargo test --manifest-path apps/exa/tests/platform-runtime/Cargo.toml --locked
 cargo test --manifest-path apps/http/tests/platform-runtime/Cargo.toml --locked
 cargo test --manifest-path apps/dataforseo/tests/platform-runtime/Cargo.toml --locked
+cargo test --manifest-path apps/x/tests/platform-runtime/Cargo.toml --locked
 ```
 
 Install the compatible CLI revision documented in the
@@ -100,3 +102,7 @@ For example, `apps/slack` secret `client_secret` maps to
   AI visibility tools. The installer supplies the workspace's DataForSEO API
   login/password pair through Settings; the package declares no app-owned or
   deployment secret.
+- `apps/x`: explicit-install X integration with workspace-owned OAuth, bounded
+  Post lookup and recent search, single-Post publishing, workspace-wallet usage
+  charging, and operator spending controls defined by the
+  [X app protocol](../docs/protocol/x-app.md).
