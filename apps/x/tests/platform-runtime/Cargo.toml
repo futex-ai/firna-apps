@@ -11,10 +11,10 @@ authors = ["Polybase"]
 doctest = false
 
 [dependencies]
-fna-apps = { git = "https://github.com/futex-ai/firna.git", rev = "dbcc678ade538537f0b17b56103ae27f291910da" }
-fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "dbcc678ade538537f0b17b56103ae27f291910da" }
-fna-apps-store-interface = { git = "https://github.com/futex-ai/firna.git", rev = "dbcc678ade538537f0b17b56103ae27f291910da" }
-fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "dbcc678ade538537f0b17b56103ae27f291910da" }
+fna-apps = { git = "https://github.com/futex-ai/firna.git", rev = "90d4c13f25a9176a43d2b9bce9177622191416cb" }
+fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "90d4c13f25a9176a43d2b9bce9177622191416cb" }
+fna-apps-store-interface = { git = "https://github.com/futex-ai/firna.git", rev = "90d4c13f25a9176a43d2b9bce9177622191416cb" }
+fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "90d4c13f25a9176a43d2b9bce9177622191416cb" }
 serde_json = "1.0.150"
 tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread"] }
 unimock = "0.6.8"

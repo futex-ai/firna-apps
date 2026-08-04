@@ -72,6 +72,11 @@ single-space-separated printable ASCII words, contain no more than 80 bytes,
 and start with a capitalized ASCII action word. The platform rejects the
 removed `activity_verb` key; there is no compatibility alias or fallback.
 
+Tool visibility uses `required_agent_permissions.top_level` when a tool must
+be restricted by caller ancestry. The removed `workspace_root` spelling is
+accepted only when the platform reads legacy stored manifests, not in new app
+packages.
+
 Webhook-capable packages declare provider events through the top-level
 `events` catalog. Each event owns a stable app-local id, ingress id, provider
 type, model-safe description, and positive contract version. Packages do not
