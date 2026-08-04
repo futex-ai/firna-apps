@@ -348,12 +348,12 @@ suites.
   mainline additions from the merge base, and resolve overlaps path by path.
 - [x] Run `git add -A` so every new package, asset, lockfile, protocol document,
   test, and README is tracked.
-- [ ] Commit the completed implementation with a Conventional Commit title of
+- [x] Commit the completed implementation with a Conventional Commit title of
   at most 50 characters and a body describing OAuth, cost safety, tests, and
   any approved external setup. A suitable title is
   `feat(x): add read and posting tools`.
-- [ ] Push the current branch without renaming it.
-- [ ] Recheck the committed name-status and deletion diff against `origin/main`;
+- [x] Push the current branch without renaming it.
+- [x] Recheck the committed name-status and deletion diff against `origin/main`;
   stop if any mainline feature removal was not explicitly approved.
 
 ## Milestone 9: Run Post-Push Review
