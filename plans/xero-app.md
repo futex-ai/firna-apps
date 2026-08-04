@@ -127,6 +127,13 @@ The manifest uses `offline_access` and the current granular scopes:
   `accounting.reports.taxreports.read`, and
   `accounting.reports.tenninetynine.read`
 
+Xero's [official scope guide](https://developer.xero.com/documentation/guides/oauth2/scopes/)
+states that every new and existing Web or PKCE app has been assigned granular
+scopes since March 2026. The replaced broad transaction and report scopes are
+deprecated and remain only for legacy connections until September 2027. Firna
+is a new Web app created after the granular-scope rollout, so its manifest must
+use the granular scopes above and must not request the deprecated broad scopes.
+
 Scopes are additive in Xero. Firna shows the complete requested set before
 connection and requires reconnect when Xero did not grant a required scope.
 
