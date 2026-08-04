@@ -460,6 +460,16 @@ review-driven fix.
       **Recommendation: use A, share the binding contract across all three
       mutation exports, reject alternate or missing bindings, and add
       cross-organisation adversarial tests.**
+      **Revalidated 2026-08-04:** this remains valid against platform
+      `origin/main` at `dbcc678ad`, including merged OAuth refresh PR #1012 at
+      `ad4072fc4`. That PR makes installation access-token refresh and
+      credential rotation durable, but it contains no organisation-ref or
+      mutation-policy binding. The Xero branch still excludes the private OAuth
+      binding headers from exact commit comparison and then resolves the final
+      organisation from component-supplied values. A dry-run merge reports an
+      add/add conflict in `host_oauth.rs`; resolving that conflict must compose
+      upstream token refresh with Option A rather than choosing either OAuth
+      implementation wholesale.
 - [ ] **Important 2 — bounded recovery starvation:** decide how recovery should
       exclude live undecided proposals from its oldest-first page. Doing
       nothing allows the oldest 100 pending approvals to occupy every recovery
@@ -642,6 +652,40 @@ decision before any review-driven fix.
       typed immutable prompt-identity value shared by the adapter and the new
       atomic store path. **Recommendation: use B together with Important 1 so
       future identity fields cannot silently diverge between layers.**
+
+### Milestone 5A: Integrate OAuth Refresh and Bind Mutations
+
+Reconcile the merged provider-neutral OAuth refresh foundation with Xero's
+multi-organisation routing before UI implementation. No UI or mockup work
+belongs here. Milestone 6 cannot begin until this milestone is complete.
+
+- [ ] Fetch and audit the latest platform `origin/main`, starting with OAuth
+      refresh PR #1012 (`ad4072fc4`), and resolve every conflict path-by-path;
+      preserve all upstream behavior, migrations, tests, and documentation.
+- [ ] Use the merged platform token service as the sole owner of access-token
+      refresh, rotating refresh credentials, proactive refresh, and exact-once
+      401 replay; do not retain a parallel Xero token-refresh implementation.
+- [ ] Retain the private Xero connection registry and opaque
+      `organisation_ref` projection, adapting it to the merged installation
+      credential lifecycle without exposing raw connection or tenant ids.
+- [ ] Keep authorization revision independent from ordinary access/refresh
+      token rotation: reconnect, scope, identity, or authorised-connection-set
+      changes invalidate organisation refs and proposals, while routine token
+      refresh does not.
+- [ ] Carry the stored proposal's `auth_requirement_id` and
+      `organisation_ref` in trusted preflight, commit, and reconciliation host
+      policy. Reject missing or alternate component bindings before credential
+      resolution, and inject the Xero tenant header only from the trusted
+      connection registry.
+- [ ] Apply the same trusted binding to normal JSON mutations and attachment
+      uploads/replacements; a refreshed access token must not change the
+      approved organisation, request fingerprint, or audit identity.
+- [ ] Add adversarial tests for changed, missing, duplicated, and foreign
+      organisation/auth bindings, including mutation commit, reconciliation,
+      artifact upload, proactive refresh, and exact 401 replay paths.
+- [ ] Update OAuth, mutation, artifact, and Xero protocols plus affected crate
+      READMEs; run full platform checks, commit and push the integrated branch,
+      then run the required post-push review.
 
 ### Milestone 6: Connection and Approval UI
 
