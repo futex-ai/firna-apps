@@ -361,14 +361,14 @@ suites.
 - [x] After the push, run the explicitly requested `codex-review` workflow so
   `cargo xtask review` evaluates the committed branch against `origin/main` for
   up to ten cycles.
-- [ ] Independently investigate every review finding, fix every valid finding
+- [x] Independently investigate every review finding, fix every valid finding
   with regression coverage, rerun the relevant checks, commit and push the
   fix, then review again. Record every finding and disposition for the final
   report.
 - [x] Map otherwise-unrecognized provider 4xx responses to the stable,
   non-retryable `provider_rejected_request` contract, with component and real
   Wasm-runtime regression coverage for both reads and writes.
-- [ ] If the final review has no valid findings, report that explicitly and
+- [x] If the final review has no valid findings, report that explicitly and
   proceed to the production-release milestone. Do not complete the plan before
   the production smoke validation is finished.
 
