@@ -26,6 +26,32 @@ env:
   WASM_TOOLS_VERSION: 1.248.0
 
 jobs:
+  app-secrets:
+    name: Verify app secret provisioning
+    if: >-
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.APPS_GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.APPS_CI_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Check app secret provisioning
+        run: python3 scripts/check_app_secrets.py
+
   verify:
     name: Verify app packages
     runs-on: ubuntu-latest-m

@@ -49,6 +49,14 @@ The X manifest uses the platform's merged usage-based app pricing and OAuth
 refresh lifecycle. Its validation, packaging, and runtime tests are part of the
 canonical repository checks.
 
+CI also runs a secret-provisioning merge gate
+(`scripts/check_app_secrets.py`): for every environment class an app targets
+(root and per-app [`deploy.toml`](deploy.toml)), each manifest-declared
+secret must have an enabled value in the `firna-apps` Google Cloud project.
+The gate creates missing containers itself and fails the pull request with
+the exact `gcloud secrets versions add` command for every missing value, so
+provisioning happens before merge, never after.
+
 See [`apps/README.md`](apps/README.md) for package commands and conventions.
 Active and completed implementation work is tracked in
 [`plans/README.md`](plans/README.md).

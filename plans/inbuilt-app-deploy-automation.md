@@ -163,22 +163,23 @@ milestone ends at commit and push.
 Block merging any app change whose declared secrets lack values. Deployment
 paths are untouched.
 
-- [ ] Add `scripts/check_app_secrets.py`: read `apps/*/manifest.yaml`
+- [x] Add `scripts/check_app_secrets.py`: read `apps/*/manifest.yaml`
       `secrets[].name` and per-app classes via `deploy_config`; for each
       targeted class and secret, ensure container
       `<prefix>-<app_id>-<kebab>` exists (create with label `app=<app_id>`
       when missing) and has an enabled latest version (metadata only, no
       value reads); on failure list every missing value with its exact
       `gcloud secrets versions add` remediation command and exit non-zero.
-- [ ] Add `scripts/test_check_app_secrets.py` with a mocked command runner:
+- [x] Add `scripts/test_check_app_secrets.py` with a mocked command runner:
       all-present, missing-container-created, missing-value-fails,
       production-only app skips preview, secretless app passes.
-- [ ] Add `ci.yml` job `app-secrets` (pull requests from this repository and
+- [x] Add `ci.yml` job `app-secrets` (pull requests from this repository and
       `main` pushes only; `id-token: write`): authenticate with
       `google-github-actions/auth` against repository variables
       `APPS_GCP_WORKLOAD_IDENTITY_PROVIDER` and `APPS_CI_SERVICE_ACCOUNT`,
       then run `python3 scripts/check_app_secrets.py`.
-- [ ] Operator: set those two repository variables from Terraform outputs.
+- [x] Operator: set those two repository variables from Terraform outputs
+      (set 2026-08-05 during Milestone 2).
 - [ ] Verify actionlint still passes via `cargo xtask check`; open a
       scratch PR touching `apps/exa` to watch the job pass, and confirm the
       failure message by temporarily pointing the script at a bogus secret
