@@ -75,8 +75,9 @@ and on manual dispatch with optional `app` and `instance` inputs to force
 resubmission.
 
 Apps target environment classes through per-app `deploy.toml` files; `x`
-deploys to production only because its provider registers only the
-production OAuth callback. Deployment authenticates per instance as that
+deploys to production and the stable `br-main` preview, whose fixed OAuth
+callbacks its provider registers, while ephemeral `pr-N` previews exclude
+it. Deployment authenticates per instance as that
 instance's admin and uses `firna admin apps submit`. That operator-controlled
 route builds, approves, and promotes these trusted packages in one operation;
 it deliberately does not use the community submission/review path. App secret
