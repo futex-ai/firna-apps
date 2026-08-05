@@ -134,8 +134,11 @@ repository gate stays green.
 - [x] Update `README.md` and `infra/gcp/apps/README.md` for the new
       directory; keep the Deployment section describing live behavior.
 - [x] `git add -A`, Conventional Commit, push.
-- [ ] Run `cargo xtask review`; report findings with recommendations, do not
-      auto-fix.
+- [x] Run `cargo xtask review`; report findings with recommendations, do not
+      auto-fix. Ran 2026-08-05: two P2 findings (Terraform IAM resources
+      missing `depends_on` API enablement; `deploy_config` duplicate check
+      can raise `TypeError` on non-string class entries) reported to the
+      user for a fix decision.
 
 ## Milestone 3: Merge Gate
 
