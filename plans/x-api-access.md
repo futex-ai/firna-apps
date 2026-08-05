@@ -69,13 +69,11 @@ release.
   Staging uses enabled version 1 of
   `firna-preview-test-runtime-x-client-id` and
   `firna-preview-test-runtime-x-client-secret`. Production uses enabled version
-  3 of both `firna-prod-app-x-client-id` and
-  `firna-prod-app-x-client-secret`; secret version 3 copies the original
-  production value from version 1 so `latest` resolves past the disabled
-  cross-environment version 2. Obsolete production client-id versions 1 and 2
-  are disabled, as is production client-secret version 2. The earlier staging
-  consumer key is an OAuth 1.0 credential type and is not used by this app's
-  OAuth2 flow. No credential value was recorded.
+  3 of `firna-prod-app-x-client-id` and enabled version 4 of
+  `firna-prod-app-x-client-secret`, supplied as the matching pair. Production
+  client-id versions 1 and 2 and client-secret versions 1 through 3 are
+  disabled. The earlier staging consumer key is an OAuth 1.0 credential type
+  and is not used by this app's OAuth2 flow. No credential value was recorded.
 
 Official references:
 
@@ -403,9 +401,8 @@ immediately before it occurs.
   all four pre-seeded containers.
 - [x] Store the confirmed staging OAuth2 pair in enabled preview version 1,
   store the confirmed production client id in enabled production version 3,
-  copy the original production client secret into enabled version 3, and
-  disable every superseded or cross-environment version that could be selected
-  as `latest`.
+  store its matching client secret in enabled production version 4, and disable
+  every superseded or cross-environment version.
 - [x] Bump the package to `1.0.2`, declare `client_id` and `client_secret` as
   required deployment values, and align package tests and documentation.
 - [x] Add X only to the stable-main preview allowlist, keep it out of labelled
