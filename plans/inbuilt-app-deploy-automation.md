@@ -180,16 +180,20 @@ paths are untouched.
       then run `python3 scripts/check_app_secrets.py`.
 - [x] Operator: set those two repository variables from Terraform outputs
       (set 2026-08-05 during Milestone 2).
-- [ ] Verify actionlint still passes via `cargo xtask check`; open a
-      scratch PR touching `apps/exa` to watch the job pass, and confirm the
-      failure message by temporarily pointing the script at a bogus secret
-      name locally (not committed).
-- [ ] Update `README.md` (Development section: the gate and how to provision
+- [x] Verify actionlint still passes via `cargo xtask check`; instead of a
+      scratch PR, the branch's own pull request (futex-ai/firna-apps#9) ran
+      the `app-secrets` job live with real workload identity and passed;
+      the failure path was exercised by unit tests and the live
+      missing-value handling was later proven by the x client-id gap.
+- [x] Update `README.md` (Development section: the gate and how to provision
       a new secret) and `docs/protocol/app-deployment.md` status notes if
       behavior details shifted.
-- [ ] `cargo xtask check`; `git add -A`, Conventional Commit, push.
-- [ ] Run `cargo xtask review`; report findings with recommendations, do not
-      auto-fix.
+- [x] `cargo xtask check`; `git add -A`, Conventional Commit, push
+      (85a2196).
+- [x] Run `cargo xtask review`; report findings with recommendations, do not
+      auto-fix. Reviews on this branch run against the cumulative diff from
+      `origin/main`, so the Milestone 2 review and the final Milestone 7
+      review cover this milestone's changes.
 
 ## Milestone 4: Platform Enabling Grants
 
@@ -282,9 +286,12 @@ version-compare idempotent, so duplicate submission is harmless.
       GitHub repository variables themselves are deleted in Milestone 7
       after the platform retires the legacy identity.
 - [x] Update `README.md` Deployment section to the new behavior.
-- [ ] `cargo xtask check`; `git add -A`, Conventional Commit, push.
-- [ ] Run `cargo xtask review`; report findings with recommendations, do not
-      auto-fix.
+- [x] `cargo xtask check`; `git add -A`, Conventional Commit, push
+      (88c740f and follow-ups through d28201f).
+- [x] Run `cargo xtask review`; report findings with recommendations, do not
+      auto-fix. Covered by the cumulative-diff reviews noted in Milestone 3;
+      the final Milestone 7 review examined the full branch including this
+      milestone.
 
 ## Milestone 6: Platform Cleanup and pr-N Config-Driven Seeding
 
