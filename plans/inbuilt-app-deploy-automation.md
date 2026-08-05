@@ -362,8 +362,12 @@ Deletions below are pre-approved by this plan.
 - [x] Run the full gate: `cargo xtask check`.
 - [x] Move this plan to Completed in `plans/README.md`.
 - [x] `git add -A`, Conventional Commit, push.
-- [ ] Run `cargo xtask review`; report findings with recommendations, do not
-      auto-fix.
+- [x] Run `cargo xtask review`; report findings with recommendations, do not
+      auto-fix. Ran 2026-08-05 over the cumulative branch diff: one plan
+      bookkeeping finding (resolved by ticking the completed milestone 3
+      and 5 tail items) and two documentation drift findings (pr-N class
+      wording in the protocol's platform-integration section; the README's
+      stale x-targeting sentence) reported to the user for a fix decision.
 
 ## Completion Criteria
 
