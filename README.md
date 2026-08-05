@@ -122,7 +122,5 @@ The repository-specific [X app protocol](docs/protocol/x-app.md) defines its
 OAuth, read, publishing, recovery, and cost-control contract. X OAuth client
 credentials are deployment-supplied so production and the stable `br-main`
 preview can use separate provider apps with the same immutable package. The
-[app deployment protocol](docs/protocol/app-deployment.md) defines the target
-provisioning and deployment automation being implemented by
-[`plans/inbuilt-app-deploy-automation.md`](plans/inbuilt-app-deploy-automation.md);
-the Deployment section above describes live behavior until that plan lands.
+[app deployment protocol](docs/protocol/app-deployment.md) defines the
+provisioning and deployment automation contract.

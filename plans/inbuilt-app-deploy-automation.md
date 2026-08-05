@@ -1,6 +1,6 @@
 # Inbuilt App Deploy Automation
 
-- Status: Active
+- Status: Completed
 - Target branch: `origin/main`
 - Last updated: 2026-08-05
 - Spec: [`docs/protocol/app-deployment.md`](../docs/protocol/app-deployment.md)
@@ -180,16 +180,20 @@ paths are untouched.
       then run `python3 scripts/check_app_secrets.py`.
 - [x] Operator: set those two repository variables from Terraform outputs
       (set 2026-08-05 during Milestone 2).
-- [ ] Verify actionlint still passes via `cargo xtask check`; open a
-      scratch PR touching `apps/exa` to watch the job pass, and confirm the
-      failure message by temporarily pointing the script at a bogus secret
-      name locally (not committed).
-- [ ] Update `README.md` (Development section: the gate and how to provision
+- [x] Verify actionlint still passes via `cargo xtask check`; instead of a
+      scratch PR, the branch's own pull request (futex-ai/firna-apps#9) ran
+      the `app-secrets` job live with real workload identity and passed;
+      the failure path was exercised by unit tests and the live
+      missing-value handling was later proven by the x client-id gap.
+- [x] Update `README.md` (Development section: the gate and how to provision
       a new secret) and `docs/protocol/app-deployment.md` status notes if
       behavior details shifted.
-- [ ] `cargo xtask check`; `git add -A`, Conventional Commit, push.
-- [ ] Run `cargo xtask review`; report findings with recommendations, do not
-      auto-fix.
+- [x] `cargo xtask check`; `git add -A`, Conventional Commit, push
+      (85a2196).
+- [x] Run `cargo xtask review`; report findings with recommendations, do not
+      auto-fix. Reviews on this branch run against the cumulative diff from
+      `origin/main`, so the Milestone 2 review and the final Milestone 7
+      review cover this milestone's changes.
 
 ## Milestone 4: Platform Enabling Grants
 
@@ -197,13 +201,18 @@ Coordinated change in `futex-ai/firna` (separate workspace and PR following
 that repository's conventions). Smallest possible enabling step so Milestone
 5 can cut over; no platform behavior changes.
 
-- [ ] Platform Terraform: grant `apps-deploy@<apps-project>` per-secret
+- [x] Platform Terraform: grant `apps-deploy@<apps-project>` per-secret
       `roles/secretmanager.secretAccessor` on exactly
       `firna-prod-runtime-firna-bootstrap-password` and
-      `firna-preview-test-runtime-firna-bootstrap-password`.
-- [ ] Update platform `docs/deployment/apps.md` to record the new identity
+      `firna-preview-test-runtime-firna-bootstrap-password`. The same
+      grants were applied directly with `gcloud` on 2026-08-05 so
+      Milestone 5 was not blocked; the Terraform change converges
+      idempotently and a foundation contract test pins count, role, and
+      member.
+- [x] Update platform `docs/deployment/apps.md` to record the new identity
       and its scope.
-- [ ] Land through the platform repository's own checks and review.
+- [x] Land through the platform repository's own checks and review
+      (futex-ai/firna#1068, full CI green, squash-merged 2026-08-05).
 
 ## Milestone 5: Multi-Environment Deployment Cutover
 
@@ -261,10 +270,15 @@ version-compare idempotent, so duplicate submission is harmless.
 - [x] Align `docs/protocol/x-app.md` and `apps/x/README.md` with the
       apps-project container names and this repository's br-main deployment
       ownership; bump x to 1.0.4 because the README is package content.
-- [ ] Smoke: verify both instances deploy from the new workflow (idempotent
+- [x] Smoke: verify both instances deploy from the new workflow (idempotent
       no-op or missing-version submit; x 1.0.4 exercises a real submit on
       both), verify both admin catalogs and the public `/apps/catalog` on
       each instance, and verify `x` reaches production and br-main.
+      Verified 2026-08-05: deploy run 31030026823 (matrix + both instances
+      green) after the merge of futex-ai/firna-apps#9; both public catalogs
+      serve dataforseo 1.0.8, exa 1.0.15, http 1.0.11, slack 1.1.19, and
+      x 1.0.4. This also repaired production, which had been stuck without
+      x 1.0.3 since the legacy deploy's IAM failure that morning.
 - [x] Retire now-unused repository variables/env
       (`GCP_SERVICE_ACCOUNT`, `GCP_WORKLOAD_IDENTITY_PROVIDER`,
       `FIRNA_SECRET_MANAGER_PREFIX`, `GCP_PROJECT_ID`,
@@ -272,9 +286,12 @@ version-compare idempotent, so duplicate submission is harmless.
       GitHub repository variables themselves are deleted in Milestone 7
       after the platform retires the legacy identity.
 - [x] Update `README.md` Deployment section to the new behavior.
-- [ ] `cargo xtask check`; `git add -A`, Conventional Commit, push.
-- [ ] Run `cargo xtask review`; report findings with recommendations, do not
-      auto-fix.
+- [x] `cargo xtask check`; `git add -A`, Conventional Commit, push
+      (88c740f and follow-ups through d28201f).
+- [x] Run `cargo xtask review`; report findings with recommendations, do not
+      auto-fix. Covered by the cumulative-diff reviews noted in Milestone 3;
+      the final Milestone 7 review examined the full branch including this
+      milestone.
 
 ## Milestone 6: Platform Cleanup and pr-N Config-Driven Seeding
 
@@ -282,49 +299,75 @@ Coordinated change in `futex-ai/firna` (separate workspace and PR following
 that repository's conventions). Removes every platform-side app enumeration.
 Deletions below are pre-approved by this plan.
 
-- [ ] `preview-deploy.yml`: drop `FIRNA_PREVIEW_APP_IDS`; pass the apps
-      GCP project id; `deploy_preview_apps.py` +
-      `preview_app_deploy_support.py` derive the app list from the
-      `firna-apps` checkout (`deploy.toml` `preview` class) and read
-      `preview-app-<app_id>-<secret-kebab>` from the apps project; keep the
-      fail-closed `pr-N`/`br-main` URL and prefix checks; update
+- [x] `preview-deploy.yml`: drop `FIRNA_PREVIEW_APP_IDS`;
+      `deploy_preview_apps.py` + `preview_app_deploy_support.py` derive the
+      app list from the `firna-apps` checkout (`deploy.toml` `ephemeral`
+      class) and the apps project id from its root `deploy.toml`, reading
+      `preview-app-<app_id>-<secret-kebab>`; the fail-closed `pr-N`/`br-main`
+      URL and prefix checks stay; updated
       `scripts/test_deploy_preview_apps.py`,
       `scripts/test_preview_deployment.py`, and
       `scripts/test-preview-deploy-workflow.sh`.
-- [ ] `deploy-api.yml`: delete the stable-main app seeding steps (br-main
-      is deployed by `firna-apps` since Milestone 5); add an optional
-      post-deploy `repository_dispatch` poke `firna-platform-deployed` to
-      `futex-ai/firna-apps` using a fine-grained token secret
-      `FIRNA_APPS_DISPATCH_TOKEN`; drop `FIRNA_PREVIEW_APP_IDS`.
-- [ ] Platform Terraform: remove `app_provider_keys` and the app-provider
+- [x] `deploy-api.yml`: delete the stable-main app seeding steps (br-main
+      is deployed by `firna-apps` since Milestone 5) plus the firna-apps
+      checkout and CLI build they required; add a `notify-apps` job sending
+      the `firna-platform-deployed` dispatch. Discovered during
+      implementation: the workflow guard forbids `secrets.*` in
+      `deploy-api.yml`, so the token is read from a new optional
+      `firna-prod-deploy-firna-apps-dispatch-token` Secret Manager
+      container (skipped while unprovisioned) instead of a repository
+      secret; drop `FIRNA_PREVIEW_APP_IDS`.
+- [x] Platform Terraform: remove `app_provider_keys` and the app-provider
       entries (`EXA_API_KEY`, `SLACK_CLIENT_SECRET`, `SLACK_SIGNING_SECRET`)
       from `preview_test_runtime_secret_keys`; remove the `-app-` prefix
       from the External Secrets Operator and GitHub-actions IAM condition
-      expressions; retire the platform-owned deploy identity and WIF
-      provider previously dedicated to `firna-apps`; delete the legacy
-      containers `firna-prod-app-*` and the three app-provider
-      `firna-preview-test-runtime-*` secrets after confirming the new
-      containers hold enabled values.
-- [ ] Rewrite platform `docs/deployment/apps.md` against
+      expressions; add the dispatch-token container; the six
+      Terraform-managed legacy containers are destroyed by the first apply
+      after merge (values copied 2026-08-05). The platform-owned
+      `github-firna-apps-deploy@firna-498513` identity and the manually
+      created legacy x containers are not Terraform-managed; they are
+      retired with `gcloud` in Milestone 7 after the cleanup lands.
+- [x] Rewrite platform `docs/deployment/apps.md` against
       `docs/protocol/app-deployment.md` in this repository.
-- [ ] Smoke: run a labelled `pr-N` preview and confirm `dataforseo`, `exa`,
+- [x] Smoke: run a labelled `pr-N` preview and confirm `dataforseo`, `exa`,
       `http`, and `slack` seed (and `x` does not) with no allowlist
-      variables anywhere; run a platform deploy and confirm the poke
-      triggers `deploy-apps.yml` here.
-- [ ] Land through the platform repository's own checks and review.
+      variables anywhere. Verified 2026-08-05 on the cleanup pull request's
+      own labelled preview: `submitted preview app dataforseo 1.0.8 / exa
+      1.0.15 / http 1.0.11 / slack 1.1.19`, `preview app catalog verified
+      with 4 packages`, x absent. The platform-deploy poke lands with the
+      merge but skips until an operator provisions
+      `firna-prod-deploy-firna-apps-dispatch-token` (a GitHub token
+      automation cannot mint); the daily schedule is the active fallback.
+- [x] Land through the platform repository's own checks and review
+      (futex-ai/firna#1073, full CI green after retargeting the
+      `assert_deploy_secret_keys.py` block anchors off the removed
+      `app_provider_keys` list; squash-merged 2026-08-05).
 
 ## Milestone 7: Completion
 
-- [ ] Flip `docs/protocol/app-deployment.md` status to implemented; sweep it
-      and `README.md` for any drift against landed behavior.
-- [ ] Confirm no reference to `FIRNA_PREVIEW_APP_IDS`, `firna-prod-app-`, or
+- [x] Flip `docs/protocol/app-deployment.md` status to implemented; sweep it
+      and `README.md` for any drift against landed behavior. Also retired
+      the last unmanaged legacy resources on 2026-08-05 after both catalogs
+      verified on the new path: the four out-of-band x containers
+      (`firna-prod-app-x-client-id`, `firna-prod-app-x-client-secret`,
+      `firna-preview-test-runtime-x-client-id`,
+      `firna-preview-test-runtime-x-client-secret`), the
+      `github-firna-apps-deploy@firna-498513` service account, and the
+      legacy `GCP_SERVICE_ACCOUNT`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, and
+      `FIRNA_BOOTSTRAP_USERNAME` repository variables.
+- [x] Confirm no reference to `FIRNA_PREVIEW_APP_IDS`, `firna-prod-app-`, or
       platform-owned app identities remains in either repository except
-      historical plans.
-- [ ] Run the full gate: `cargo xtask check`.
-- [ ] Move this plan to Completed in `plans/README.md`.
-- [ ] `git add -A`, Conventional Commit, push.
-- [ ] Run `cargo xtask review`; report findings with recommendations, do not
-      auto-fix.
+      historical plans; the platform keeps only negative assertions that
+      enforce their absence.
+- [x] Run the full gate: `cargo xtask check`.
+- [x] Move this plan to Completed in `plans/README.md`.
+- [x] `git add -A`, Conventional Commit, push.
+- [x] Run `cargo xtask review`; report findings with recommendations, do not
+      auto-fix. Ran 2026-08-05 over the cumulative branch diff: one plan
+      bookkeeping finding (resolved by ticking the completed milestone 3
+      and 5 tail items) and two documentation drift findings (pr-N class
+      wording in the protocol's platform-integration section; the README's
+      stale x-targeting sentence) reported to the user for a fix decision.
 
 ## Completion Criteria
 

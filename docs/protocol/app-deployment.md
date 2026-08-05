@@ -1,8 +1,7 @@
 # App Deployment and Provisioning
 
-- Status: target contract, implemented by
+- Status: implemented 2026-08-05 by
   [`plans/inbuilt-app-deploy-automation.md`](../../plans/inbuilt-app-deploy-automation.md).
-  Until that plan completes, the repository `README.md` describes live behavior.
 
 This document defines how first-party app packages reach Firna's long-lived
 environments with no per-app platform-repository changes. After a package
@@ -206,13 +205,16 @@ RPCs against both instances daily.
   may send `repository_dispatch` `firna-platform-deployed` to this
   repository; the daily schedule is the fallback when it does not.
 
-## Legacy and Migration
+## Retired Legacy Surfaces
 
-The platform project's `firna-prod-app-*` and app-provider
+The migration removed every platform-side app deployment surface on
+2026-08-05: the platform project's `firna-prod-app-*` and app-provider
 `firna-preview-test-runtime-*` containers, the platform Terraform
 `app_provider_keys` list, the `FIRNA_PREVIEW_APP_IDS` allowlists, the
-platform-owned deploy identity for this repository, and the External Secrets
-Operator's unused `-app-` prefix grant are legacy. They remain untouched
-until the plan's cutover milestones verify the new path, then are removed in
-the platform repository. Secret values are copied, never moved, so rollback
-at any milestone is reverting workflow configuration.
+platform-owned `github-firna-apps-deploy` identity, and the External Secrets
+Operator's unused `-app-` prefix grant. Secret values were copied into the
+app-secrets project before any deletion, and both live catalogs were
+verified on the new path first. The platform's `notify-apps` dispatch stays
+dormant until an operator adds a GitHub token to
+`firna-prod-deploy-firna-apps-dispatch-token`; the daily scheduled run is
+the active convergence fallback.
