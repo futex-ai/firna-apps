@@ -212,39 +212,46 @@ reading app secrets from the app-secrets project. The platform's own
 br-main seeding keeps running until Milestone 6; both paths are
 version-compare idempotent, so duplicate submission is harmless.
 
-- [ ] Restructure `deploy-apps.yml`: a `plan` job reads `deploy.toml` with
-      `scripts/deploy_config.py` and emits an instance matrix; a `deploy`
-      matrix job per instance authenticates as `apps-deploy`, reads that
-      instance's bootstrap password from `firna-498513`, logs in with the
-      instance `admin_email`, filters candidate apps to the instance class,
-      plans with `scripts/plan-app-deploys.py`, and submits with secrets
-      from `<secret_prefix>-<app_id>-<secret-kebab>` in the apps project.
-- [ ] Enforce fail-closed rules in script code, not workflow YAML: exact
-      instance URL allowlist from `deploy.toml`, prefix/class pairing, and
-      non-empty secret values.
-- [ ] Use GitHub environment `production` for the production instance and
-      new unprotected environment `br-main` for br-main; keep
-      per-instance concurrency groups (`firna-apps-<instance>`).
-- [ ] Add triggers: `schedule` (`0 6 * * *`) and `repository_dispatch`
+- [x] Restructure `deploy-apps.yml`: a `prepare` job selects candidate apps
+      and emits the instance matrix via new `scripts/deploy_matrix.py`; a
+      `deploy` matrix job per instance authenticates as `apps-deploy`,
+      reads that instance's bootstrap password from `firna-498513`, logs in
+      with the instance `admin_email`, filters candidate apps to the
+      instance class via new `scripts/select_instance_apps.py`, plans with
+      `scripts/plan-app-deploys.py`, and submits with secrets from
+      `<secret_prefix>-<app_id>-<secret-kebab>` in the apps project.
+- [x] Enforce fail-closed rules in script code, not workflow YAML: the
+      matrix and class filter derive only from the validated `deploy.toml`
+      (exact URL and prefix/class pinning in `deploy_config`), and empty
+      secret values still fail the submit step.
+- [x] Use GitHub environment `production` for the production instance and
+      new unprotected environment `br-main` (created 2026-08-05); instances
+      run under one serialized `firna-apps-deploy` concurrency group with
+      `fail-fast: false` so instances deploy independently.
+- [x] Add triggers: `schedule` (`0 6 * * *`) and `repository_dispatch`
       types `[firna-platform-deployed]`; extend `workflow_dispatch` with an
       optional `instance` input.
-- [ ] Update `scripts/plan-app-deploys.py` only if per-class filtering
-      cannot stay in the selection step; otherwise keep it
-      catalog-diff-only. Update `scripts/test_plan_app_deploys.py`,
-      `scripts/test_deploy_workflow.py`, and `scripts/test-deploy-workflow.sh`
-      for the new workflow shape.
-- [ ] Operator: set `APPS_DEPLOY_SERVICE_ACCOUNT` repository variable;
-      confirm `vars.FIRNA_BOOTSTRAP_USERNAME` matches `deploy.toml`
-      `admin_email` for production, then retire the variable in the
+- [x] `scripts/plan-app-deploys.py` stays catalog-diff-only; added
+      `scripts/test_deploy_matrix.py` and
+      `scripts/test_select_instance_apps.py`, and updated
+      `scripts/test-deploy-workflow.sh` assertions (requires matrix, APPS_*
+      variables, new triggers; rejects every legacy single-instance
+      variable).
+- [x] Operator: set `APPS_DEPLOY_SERVICE_ACCOUNT` repository variable (done
+      2026-08-05 in Milestone 2); confirmed `vars.FIRNA_BOOTSTRAP_USERNAME`
+      is `admin`, matching `deploy.toml`, and retired the variable from the
       workflow.
-- [ ] Smoke: `workflow_dispatch` force-deploy one app per instance; verify
-      both admin catalogs and the public `/apps/catalog` on each instance;
-      verify `x` is absent from br-main.
-- [ ] Retire now-unused repository variables/env
+- [ ] Smoke: verify both instances deploy from the new workflow (idempotent
+      no-op or missing-version submit), verify both admin catalogs and the
+      public `/apps/catalog` on each instance, and verify `x` is absent
+      from br-main.
+- [x] Retire now-unused repository variables/env
       (`GCP_SERVICE_ACCOUNT`, `GCP_WORKLOAD_IDENTITY_PROVIDER`,
       `FIRNA_SECRET_MANAGER_PREFIX`, `GCP_PROJECT_ID`,
-      `FIRNA_SERVER_URL` single-instance env) from `deploy-apps.yml`.
-- [ ] Update `README.md` Deployment section to the new behavior.
+      `FIRNA_SERVER_URL` single-instance env) from `deploy-apps.yml`; the
+      GitHub repository variables themselves are deleted in Milestone 7
+      after the platform retires the legacy identity.
+- [x] Update `README.md` Deployment section to the new behavior.
 - [ ] `cargo xtask check`; `git add -A`, Conventional Commit, push.
 - [ ] Run `cargo xtask review`; report findings with recommendations, do not
       auto-fix.

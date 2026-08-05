@@ -65,30 +65,42 @@ Active and completed implementation work is tracked in
 
 Pull requests and `main` pushes run [CI](.github/workflows/ci.yml). After a
 successful CI run on `main`, [Deploy Firna Apps](.github/workflows/deploy-apps.yml)
-compares every local manifest with the live catalog and submits only missing or
-newer versions. A manual dispatch can force one app or all apps to be
-resubmitted.
+deploys every environment instance declared in [`deploy.toml`](deploy.toml) —
+currently `production` and the stable `br-main` preview. Per instance it
+compares every targeted local manifest with that instance's live catalog and
+submits only missing or newer versions. The workflow also runs on a daily
+schedule (so a reset environment converges without coordination), on the
+`firna-platform-deployed` repository dispatch the platform deploy can send,
+and on manual dispatch with optional `app` and `instance` inputs to force
+resubmission.
 
-Deployment authenticates as the production global admin and uses
-`firna admin apps submit`. That operator-controlled route builds, approves, and
-promotes these trusted packages in one operation; it deliberately does not use
-the community submission/review path. Required app values are read from Google
-Secret Manager and passed by environment variable without entering manifests,
-source bundles, or logs.
+Apps target environment classes through per-app `deploy.toml` files; `x`
+deploys to production only because its provider registers only the
+production OAuth callback. Deployment authenticates per instance as that
+instance's admin and uses `firna admin apps submit`. That operator-controlled
+route builds, approves, and promotes these trusted packages in one operation;
+it deliberately does not use the community submission/review path. App secret
+values are read from the dedicated `firna-apps` Google Cloud project
+(`<secret_prefix>-<app_id>-<secret-name-kebab>`) and passed by environment
+variable without entering manifests, source bundles, or logs. Only the two
+admin bootstrap passwords are read from the platform project.
 
-The workflow expects these GitHub Actions variables:
+The workflow expects these GitHub Actions variables, set from the
+[`infra/gcp/apps/`](infra/gcp/apps/README.md) Terraform outputs:
 
-- `GCP_SERVICE_ACCOUNT`
-- `GCP_WORKLOAD_IDENTITY_PROVIDER`
-- `FIRNA_BOOTSTRAP_USERNAME`
+- `APPS_GCP_WORKLOAD_IDENTITY_PROVIDER`
+- `APPS_CI_SERVICE_ACCOUNT`
+- `APPS_DEPLOY_SERVICE_ACCOUNT`
 
 CI and deployment also require the repository Actions secret
 `FIRNA_REPOSITORY_TOKEN`. It should contain a machine token restricted to
 reading the private `futex-ai/firna` platform repository. Google Cloud IAM does
 not grant access to private GitHub source dependencies.
 
-The Google identity should be dedicated to this repository and limited to
-reading the production bootstrap password plus manifest-declared app secrets.
+Ephemeral `pr-N` platform previews are seeded by the platform repository from
+a checkout of this repository at `main`, driven by the same `deploy.toml`
+targeting. The full contract is
+[`docs/protocol/app-deployment.md`](docs/protocol/app-deployment.md).
 
 ## Key Code
 
