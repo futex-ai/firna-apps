@@ -194,7 +194,7 @@ RPCs against both instances daily.
 ## Platform Integration (`futex-ai/firna`)
 
 - `pr-N` preview seeding checks out `firna-apps@main`, derives the app list
-  from manifests plus per-app `deploy.toml` (`preview` class only), builds
+  from manifests plus per-app `deploy.toml` (`ephemeral` class only), builds
   and validates with the pull request's own CLI, and reads values from
   `preview-app-*` in the app-secrets project. No app-id allowlist
   environment variables remain.
