@@ -65,15 +65,17 @@ release.
   The user approved and funded a $10 one-time balance reserved for initial
   production validation, with a $10 billing-cycle cap and auto-recharge
   disabled.
-- On 2026-08-05, the operator clarified that the latest OAuth2 client id and
-  secret pair belongs to production. It was transferred into enabled version 2
-  of `firna-prod-app-x-client-id` and `firna-prod-app-x-client-secret`, retaining
-  version 1 for rollback. The same pair had initially been assigned to preview
-  in error, so version 1 of `firna-preview-test-runtime-x-client-id` and
-  `firna-preview-test-runtime-x-client-secret` was disabled. The earlier
-  staging consumer-key pair is an OAuth 1.0 credential type and is not used by
-  this app's OAuth2 flow. Dedicated staging OAuth2 values are still required;
-  no credential value was recorded.
+- On 2026-08-05, the operator confirmed the final OAuth2 client-id mapping.
+  Staging uses enabled version 1 of
+  `firna-preview-test-runtime-x-client-id` and
+  `firna-preview-test-runtime-x-client-secret`. Production uses enabled version
+  3 of both `firna-prod-app-x-client-id` and
+  `firna-prod-app-x-client-secret`; secret version 3 copies the original
+  production value from version 1 so `latest` resolves past the disabled
+  cross-environment version 2. Obsolete production client-id versions 1 and 2
+  are disabled, as is production client-secret version 2. The earlier staging
+  consumer key is an OAuth 1.0 credential type and is not used by this app's
+  OAuth2 flow. No credential value was recorded.
 
 Official references:
 
@@ -399,12 +401,11 @@ immediately before it occurs.
 - [x] Provision the production client-id and stable-preview client-id/client-
   secret containers, preserve existing versions, and add Terraform imports for
   all four pre-seeded containers.
-- [x] Store the corrected production OAuth2 pair in enabled version 2 of its
-  containers and disable the versions that briefly assigned that pair to
-  preview.
-- [ ] Supply a dedicated staging OAuth2 client id and client secret as new
-  enabled preview versions; do not use the staging OAuth 1.0 consumer key or
-  reuse either production value.
+- [x] Store the confirmed staging OAuth2 pair in enabled preview version 1,
+  store the confirmed production client id in enabled production version 3,
+  copy the original production client secret into enabled version 3, and
+  disable every superseded or cross-environment version that could be selected
+  as `latest`.
 - [x] Bump the package to `1.0.2`, declare `client_id` and `client_secret` as
   required deployment values, and align package tests and documentation.
 - [x] Add X only to the stable-main preview allowlist, keep it out of labelled
@@ -421,10 +422,9 @@ immediately before it occurs.
   so no stable deployment can select the older production-bound manifest.
 - [ ] Let the successful app-repository `main` workflow deploy package version
   `1.0.2`; verify the production catalog and existing production OAuth setup.
-- [ ] After dedicated staging OAuth2 values are enabled, merge the platform
-  change with required CI and approval, apply Terraform so it adopts the
-  pre-seeded containers, and let the normal stable-main workflow deploy X to
-  `br-main`.
+- [ ] Merge the platform change with required CI and approval, apply Terraform
+  so it adopts the pre-seeded containers, and let the normal stable-main
+  workflow deploy X to `br-main`.
 - [ ] Verify `br-main` catalog version `1.0.2`, install it in the nominated
   preview workspace, and complete OAuth with the intended staging X account.
 - [ ] Read one known Post and one 10-result recent-search page; verify compact
