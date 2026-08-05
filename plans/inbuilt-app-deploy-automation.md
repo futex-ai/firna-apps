@@ -266,10 +266,15 @@ version-compare idempotent, so duplicate submission is harmless.
 - [x] Align `docs/protocol/x-app.md` and `apps/x/README.md` with the
       apps-project container names and this repository's br-main deployment
       ownership; bump x to 1.0.4 because the README is package content.
-- [ ] Smoke: verify both instances deploy from the new workflow (idempotent
+- [x] Smoke: verify both instances deploy from the new workflow (idempotent
       no-op or missing-version submit; x 1.0.4 exercises a real submit on
       both), verify both admin catalogs and the public `/apps/catalog` on
       each instance, and verify `x` reaches production and br-main.
+      Verified 2026-08-05: deploy run 31030026823 (matrix + both instances
+      green) after the merge of futex-ai/firna-apps#9; both public catalogs
+      serve dataforseo 1.0.8, exa 1.0.15, http 1.0.11, slack 1.1.19, and
+      x 1.0.4. This also repaired production, which had been stuck without
+      x 1.0.3 since the legacy deploy's IAM failure that morning.
 - [x] Retire now-unused repository variables/env
       (`GCP_SERVICE_ACCOUNT`, `GCP_WORKLOAD_IDENTITY_PROVIDER`,
       `FIRNA_SECRET_MANAGER_PREFIX`, `GCP_PROJECT_ID`,
