@@ -1,6 +1,6 @@
 # Inbuilt App Deploy Automation
 
-- Status: Active
+- Status: Completed
 - Target branch: `origin/main`
 - Last updated: 2026-08-05
 - Spec: [`docs/protocol/app-deployment.md`](../docs/protocol/app-deployment.md)
@@ -322,22 +322,39 @@ Deletions below are pre-approved by this plan.
       retired with `gcloud` in Milestone 7 after the cleanup lands.
 - [x] Rewrite platform `docs/deployment/apps.md` against
       `docs/protocol/app-deployment.md` in this repository.
-- [ ] Smoke: run a labelled `pr-N` preview and confirm `dataforseo`, `exa`,
+- [x] Smoke: run a labelled `pr-N` preview and confirm `dataforseo`, `exa`,
       `http`, and `slack` seed (and `x` does not) with no allowlist
-      variables anywhere; run a platform deploy and confirm the poke
-      triggers `deploy-apps.yml` here.
-- [ ] Land through the platform repository's own checks and review.
+      variables anywhere. Verified 2026-08-05 on the cleanup pull request's
+      own labelled preview: `submitted preview app dataforseo 1.0.8 / exa
+      1.0.15 / http 1.0.11 / slack 1.1.19`, `preview app catalog verified
+      with 4 packages`, x absent. The platform-deploy poke lands with the
+      merge but skips until an operator provisions
+      `firna-prod-deploy-firna-apps-dispatch-token` (a GitHub token
+      automation cannot mint); the daily schedule is the active fallback.
+- [x] Land through the platform repository's own checks and review
+      (futex-ai/firna#1073, full CI green after retargeting the
+      `assert_deploy_secret_keys.py` block anchors off the removed
+      `app_provider_keys` list; squash-merged 2026-08-05).
 
 ## Milestone 7: Completion
 
-- [ ] Flip `docs/protocol/app-deployment.md` status to implemented; sweep it
-      and `README.md` for any drift against landed behavior.
-- [ ] Confirm no reference to `FIRNA_PREVIEW_APP_IDS`, `firna-prod-app-`, or
+- [x] Flip `docs/protocol/app-deployment.md` status to implemented; sweep it
+      and `README.md` for any drift against landed behavior. Also retired
+      the last unmanaged legacy resources on 2026-08-05 after both catalogs
+      verified on the new path: the four out-of-band x containers
+      (`firna-prod-app-x-client-id`, `firna-prod-app-x-client-secret`,
+      `firna-preview-test-runtime-x-client-id`,
+      `firna-preview-test-runtime-x-client-secret`), the
+      `github-firna-apps-deploy@firna-498513` service account, and the
+      legacy `GCP_SERVICE_ACCOUNT`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, and
+      `FIRNA_BOOTSTRAP_USERNAME` repository variables.
+- [x] Confirm no reference to `FIRNA_PREVIEW_APP_IDS`, `firna-prod-app-`, or
       platform-owned app identities remains in either repository except
-      historical plans.
-- [ ] Run the full gate: `cargo xtask check`.
-- [ ] Move this plan to Completed in `plans/README.md`.
-- [ ] `git add -A`, Conventional Commit, push.
+      historical plans; the platform keeps only negative assertions that
+      enforce their absence.
+- [x] Run the full gate: `cargo xtask check`.
+- [x] Move this plan to Completed in `plans/README.md`.
+- [x] `git add -A`, Conventional Commit, push.
 - [ ] Run `cargo xtask review`; report findings with recommendations, do not
       auto-fix.
 
