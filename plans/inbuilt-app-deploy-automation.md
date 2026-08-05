@@ -197,13 +197,18 @@ Coordinated change in `futex-ai/firna` (separate workspace and PR following
 that repository's conventions). Smallest possible enabling step so Milestone
 5 can cut over; no platform behavior changes.
 
-- [ ] Platform Terraform: grant `apps-deploy@<apps-project>` per-secret
+- [x] Platform Terraform: grant `apps-deploy@<apps-project>` per-secret
       `roles/secretmanager.secretAccessor` on exactly
       `firna-prod-runtime-firna-bootstrap-password` and
-      `firna-preview-test-runtime-firna-bootstrap-password`.
-- [ ] Update platform `docs/deployment/apps.md` to record the new identity
+      `firna-preview-test-runtime-firna-bootstrap-password`. The same
+      grants were applied directly with `gcloud` on 2026-08-05 so
+      Milestone 5 was not blocked; the Terraform change converges
+      idempotently and a foundation contract test pins count, role, and
+      member.
+- [x] Update platform `docs/deployment/apps.md` to record the new identity
       and its scope.
-- [ ] Land through the platform repository's own checks and review.
+- [x] Land through the platform repository's own checks and review
+      (futex-ai/firna#1068, full CI green, squash-merged 2026-08-05).
 
 ## Milestone 5: Multi-Environment Deployment Cutover
 
@@ -282,30 +287,35 @@ Coordinated change in `futex-ai/firna` (separate workspace and PR following
 that repository's conventions). Removes every platform-side app enumeration.
 Deletions below are pre-approved by this plan.
 
-- [ ] `preview-deploy.yml`: drop `FIRNA_PREVIEW_APP_IDS`; pass the apps
-      GCP project id; `deploy_preview_apps.py` +
-      `preview_app_deploy_support.py` derive the app list from the
-      `firna-apps` checkout (`deploy.toml` `preview` class) and read
-      `preview-app-<app_id>-<secret-kebab>` from the apps project; keep the
-      fail-closed `pr-N`/`br-main` URL and prefix checks; update
+- [x] `preview-deploy.yml`: drop `FIRNA_PREVIEW_APP_IDS`;
+      `deploy_preview_apps.py` + `preview_app_deploy_support.py` derive the
+      app list from the `firna-apps` checkout (`deploy.toml` `ephemeral`
+      class) and the apps project id from its root `deploy.toml`, reading
+      `preview-app-<app_id>-<secret-kebab>`; the fail-closed `pr-N`/`br-main`
+      URL and prefix checks stay; updated
       `scripts/test_deploy_preview_apps.py`,
       `scripts/test_preview_deployment.py`, and
       `scripts/test-preview-deploy-workflow.sh`.
-- [ ] `deploy-api.yml`: delete the stable-main app seeding steps (br-main
-      is deployed by `firna-apps` since Milestone 5); add an optional
-      post-deploy `repository_dispatch` poke `firna-platform-deployed` to
-      `futex-ai/firna-apps` using a fine-grained token secret
-      `FIRNA_APPS_DISPATCH_TOKEN`; drop `FIRNA_PREVIEW_APP_IDS`.
-- [ ] Platform Terraform: remove `app_provider_keys` and the app-provider
+- [x] `deploy-api.yml`: delete the stable-main app seeding steps (br-main
+      is deployed by `firna-apps` since Milestone 5) plus the firna-apps
+      checkout and CLI build they required; add a `notify-apps` job sending
+      the `firna-platform-deployed` dispatch. Discovered during
+      implementation: the workflow guard forbids `secrets.*` in
+      `deploy-api.yml`, so the token is read from a new optional
+      `firna-prod-deploy-firna-apps-dispatch-token` Secret Manager
+      container (skipped while unprovisioned) instead of a repository
+      secret; drop `FIRNA_PREVIEW_APP_IDS`.
+- [x] Platform Terraform: remove `app_provider_keys` and the app-provider
       entries (`EXA_API_KEY`, `SLACK_CLIENT_SECRET`, `SLACK_SIGNING_SECRET`)
       from `preview_test_runtime_secret_keys`; remove the `-app-` prefix
       from the External Secrets Operator and GitHub-actions IAM condition
-      expressions; retire the platform-owned deploy identity and WIF
-      provider previously dedicated to `firna-apps`; delete the legacy
-      containers `firna-prod-app-*` and the three app-provider
-      `firna-preview-test-runtime-*` secrets after confirming the new
-      containers hold enabled values.
-- [ ] Rewrite platform `docs/deployment/apps.md` against
+      expressions; add the dispatch-token container; the six
+      Terraform-managed legacy containers are destroyed by the first apply
+      after merge (values copied 2026-08-05). The platform-owned
+      `github-firna-apps-deploy@firna-498513` identity and the manually
+      created legacy x containers are not Terraform-managed; they are
+      retired with `gcloud` in Milestone 7 after the cleanup lands.
+- [x] Rewrite platform `docs/deployment/apps.md` against
       `docs/protocol/app-deployment.md` in this repository.
 - [ ] Smoke: run a labelled `pr-N` preview and confirm `dataforseo`, `exa`,
       `http`, and `slack` seed (and `x` does not) with no allowlist
