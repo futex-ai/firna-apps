@@ -2,7 +2,7 @@
 
 - Status: Active
 - Target branch: `origin/main`
-- Last updated: 2026-08-04
+- Last updated: 2026-08-05
 
 ## Outcome
 
@@ -17,9 +17,10 @@ Creating the X Developer Console app, purchasing credits, and publishing a
 live smoke-test post are external actions. The app creation is in scope, but
 the exact credit purchase, billing-cycle spending limit, and public smoke post
 each require a human confirmation at the milestone that performs the action.
-Local builds and runtime tests never deploy the app. The only live deployment
-is the normal production release from `main`; smoke validation happens after
-that production release.
+Local builds and runtime tests never deploy the app. Live packages are released
+through the normal production workflow and the platform's stable `br-main`
+preview workflow from `main`; smoke validation happens only after the relevant
+release.
 
 ## Current Constraints
 
@@ -35,10 +36,10 @@ that production release.
 - OAuth scopes are `tweet.read`, `tweet.write`, `users.read`, and
   `offline.access`. The offline scope returns a refresh token; X's user access
   token flow requires refresh-token rotation for a durable connection.
-- The canonical Firna platform revision is `90d4c13f`, which contains the
+- The canonical Firna platform revision is `36978aa6`, which contains the
   merged OAuth refresh lifecycle, usage-based app charging, and task-specific
-  activity-label contracts required by this package, plus the canonical
-  `required_agent_permissions.top_level` manifest contract.
+  activity-label contracts required by this package, plus the uniform agent
+  capability contract that retires manifest permission flags.
 - X does not document an idempotency key for `POST /2/tweets`. Firna's existing
   durable tool ledger replays completed results and fails crash-ambiguous
   installed-app calls closed without redispatch. X must reuse and verify that
@@ -53,7 +54,8 @@ that production release.
   findings fixed with regressions, and two invalid plan-bookkeeping findings.
   The repository was initially pinned to platform `main` at `dbcc678a`, which
   also contains native usage-based app billing and activity labels, and was
-  later compatibility-repinned to `90d4c13f`.
+  later compatibility-repinned to `90d4c13f` and then to `36978aa6` for the
+  uniform agent capability contract.
 - This Conductor session has no controllable signed-in X console connector, so
   the human operator must confirm the production app type, callback, and OAuth
   settings. On 2026-08-04, the public client id was recorded in the manifest
@@ -64,6 +66,15 @@ that production release.
   The user approved and funded a $10 one-time balance reserved for initial
   production validation, with a $10 billing-cycle cap and auto-recharge
   disabled.
+- On 2026-08-05, the operator confirmed the final OAuth2 client-id mapping.
+  Staging uses enabled version 1 of
+  `firna-preview-test-runtime-x-client-id` and
+  `firna-preview-test-runtime-x-client-secret`. Production uses enabled version
+  3 of `firna-prod-app-x-client-id` and enabled version 4 of
+  `firna-prod-app-x-client-secret`, supplied as the matching pair. Production
+  client-id versions 1 and 2 and client-secret versions 1 through 3 are
+  disabled. The earlier staging consumer key is an OAuth 1.0 credential type
+  and is not used by this app's OAuth2 flow. No credential value was recorded.
 
 Official references:
 
@@ -206,9 +217,8 @@ screenshots, logs, `.context`, or chat.
   $10, and leave auto-recharge disabled.
 - [x] Save a redacted record of the app id, callback, app type, approved budget,
   and secret version—not the secret value—in the implementation handoff.
-- [x] Keep the production callback as the only callback. Do not create a
-  development X app, add a development callback, or deploy this Firna app to a
-  test or preproduction environment.
+- [x] Keep the initial `1.0.1` rollout production-only, with the production
+  callback as its sole callback and no preview credential reuse.
 
 Operator-confirmed handoff on 2026-08-04: production confidential Web App
 `Firna`; website `https://firna.ai`; sole callback
@@ -217,6 +227,10 @@ S256 PKCE and manifest-owned scopes; public client id recorded in the manifest;
 Google Secret Manager secret `firna-prod-app-x-client-secret` version 1; $10
 one-time balance and $10 billing-cycle cap; auto-recharge disabled. No secret
 value or provider billing identifier is recorded.
+
+This milestone records the initial production-only rollout. The separately
+approved stable-preview app and isolated credentials were added on 2026-08-05;
+they do not alter or reuse the production app configuration above.
 
 ## Milestone 4: Build the X App Package
 
@@ -229,8 +243,10 @@ reachable product path contains sample posts or metrics.
   app-owned `client_secret` declaration, and workspace-owned OAuth using
   `client_secret_basic` plus required S256 PKCE. Milestone 6 promotes its
   initial community source to priced first-party `built_in` distribution.
-- [x] After console provisioning, put the real public client id in manifest
-  environment key `client_id`; do not use a placeholder or secret value.
+- [x] For the initial production-only package, put the real public client id in
+  manifest environment key `client_id`; do not use a placeholder or secret
+  value. The `1.0.3` stable-preview follow-up moves this environment-specific
+  identifier to deployment-supplied app-owned storage.
 - [x] Map `access_token`, `refresh_token`, granted scopes, and expiry through
   the platform's reviewed refresh contract. Store and inject tokens only by
   opaque credential reference.
@@ -374,21 +390,47 @@ suites.
   proceed to the production-release milestone. Do not complete the plan before
   the production smoke validation is finished.
 
-## Milestone 10: Release and Validate in Production
+## Milestone 10: Release and Validate Production and Stable Preview
 
-Release through the normal production path only after the checked branch has
-been reviewed and merged. There is no test/preproduction deployment, catalog,
-callback, or X developer app. The user must approve the public write
+Keep production and the stable `br-main` preview on separate X OAuth apps while
+deploying one immutable package through their normal `main` workflows. Labelled
+PR previews continue to exclude X. The user must approve any public write
 immediately before it occurs.
 
-- [ ] Open the reviewed change against `main`, require CI and maintainer/user
-  approval, and merge it without bypassing branch protection.
-- [ ] Let the successful `main` CI run trigger the standard production app
-  deployment workflow. Do not deploy from the feature branch or use a test or
-  preproduction environment.
-- [ ] Verify production catalog version `1.0.1`, install it in the nominated
-  production workspace, and complete OAuth with the intended production X
-  account.
+- [x] Provision the production client-id and stable-preview client-id/client-
+  secret containers, preserve existing versions, and add Terraform imports for
+  all four pre-seeded containers.
+- [x] Store the confirmed staging OAuth2 pair in enabled preview version 1,
+  store the confirmed production client id in enabled production version 3,
+  store its matching client secret in enabled production version 4, and disable
+  every superseded or cross-environment version.
+- [x] Bump the package to `1.0.3`, declare `client_id` and `client_secret` as
+  required deployment values, and align package tests and documentation.
+- [x] Add X only to the stable-main preview allowlist, keep it out of labelled
+  PR previews, and reject X preview packages that do not require both isolated
+  OAuth values.
+- [x] Run the complete `firna-apps` and platform checks, including the platform
+  checks required for the affected CLI/app deployment boundary.
+- [x] After checks pass, audit both diffs against `origin/main`, stage every
+  changed file, commit with Conventional Commits, and push both branches.
+- [x] After the `firna-apps` push, run `cargo xtask review` against
+  `origin/main`, investigate every finding, and report recommendations without
+  automatically changing reviewed code.
+- [x] Open the reviewed `firna-apps` change as PR 7 against `main` after the
+  required checks and post-push review.
+- [ ] Merge the `firna-apps` package change first, with required CI and approval,
+  without bypassing branch protection, so no stable deployment can select the
+  older production-bound manifest.
+- [ ] Let successful app-repository `main` CI trigger the standard production
+  workflow; do not deploy from the feature branch or a test/preproduction
+  environment.
+- [ ] Verify production catalog version `1.0.3` and the existing production
+  OAuth setup.
+- [ ] Merge the platform change with required CI and approval, apply Terraform
+  so it adopts the pre-seeded containers, and let the normal stable-main
+  workflow deploy X to `br-main`.
+- [ ] Verify `br-main` catalog version `1.0.3`, install it in the nominated
+  preview workspace, and complete OAuth with the intended staging X account.
 - [ ] Read one known Post and one 10-result recent-search page; verify compact
   outputs, explicit pagination, and the expected usage entries in the X
   Developer Console.
@@ -406,9 +448,9 @@ immediately before it occurs.
 
 ## Completion Criteria
 
-- The X developer app exists with the exact callback, confidential credentials
-  stored outside Git, an approved prepaid balance, a spending limit, and the
-  approved auto-recharge state.
+- The production and stable-preview X developer apps have their exact callbacks
+  and isolated credentials outside Git; production retains its approved prepaid
+  balance, spending limit, and auto-recharge state.
 - Firna refreshes X credentials without exposing tokens and prevents duplicate
   provider writes across durable retries and ambiguous outcomes.
 - All three X tools return only real provider data, honor their bounded schemas,
@@ -416,6 +458,6 @@ immediately before it occurs.
 - All repository checks pass, documentation matches behavior, the committed
   branch is pushed, and every post-push review finding is investigated with
   valid findings fixed and re-reviewed.
-- The reviewed change is merged and deployed only through the standard
-  production workflow, then verified in the nominated production workspace;
-  no test or preproduction deployment exists.
+- The reviewed package is deployed through the standard production and
+  stable-main workflows, then verified in their nominated workspaces. Labelled
+  PR previews do not deploy X.

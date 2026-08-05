@@ -40,7 +40,7 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev 90d4c13f25a9176a43d2b9bce9177622191416cb \
+  --rev 36978aa6b3f035088787552f4737a7384a8da9cb \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```
@@ -119,7 +119,9 @@ targeting. The full contract is
 The platform-side manifest, runtime, and admin submission contracts remain in
 the [Firna platform app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md).
 The repository-specific [X app protocol](docs/protocol/x-app.md) defines its
-OAuth, read, publishing, recovery, and cost-control contract. The
+OAuth, read, publishing, recovery, and cost-control contract. X OAuth client
+credentials are deployment-supplied so production and the stable `br-main`
+preview can use separate provider apps with the same immutable package. The
 [app deployment protocol](docs/protocol/app-deployment.md) defines the target
 provisioning and deployment automation being implemented by
 [`plans/inbuilt-app-deploy-automation.md`](plans/inbuilt-app-deploy-automation.md);

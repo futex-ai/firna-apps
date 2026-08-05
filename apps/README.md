@@ -72,10 +72,10 @@ single-space-separated printable ASCII words, contain no more than 80 bytes,
 and start with a capitalized ASCII action word. The platform rejects the
 removed `activity_verb` key; there is no compatibility alias or fallback.
 
-Tool visibility uses `required_agent_permissions.top_level` when a tool must
-be restricted by caller ancestry. The removed `workspace_root` spelling is
-accepted only when the platform reads legacy stored manifests, not in new app
-packages.
+App tools are available to every live agent member with installation access and
+satisfied app authentication. New packages cannot declare the retired
+`required_agent_permissions` block; the platform accepts it only while reading
+immutable manifests stored under the old contract.
 
 Webhook-capable packages declare provider events through the top-level
 `events` catalog. Each event owns a stable app-local id, ingress id, provider
@@ -91,6 +91,11 @@ firna-prod-app-<app_id>-<secret-name-kebab>
 
 For example, `apps/slack` secret `client_secret` maps to
 `firna-prod-app-slack-client-secret`.
+
+Environment-specific public identifiers may also be required app-owned values
+when they must vary without changing the package. X declares both `client_id`
+and `client_secret` this way so production and stable preview deployments use
+separate OAuth apps with the same manifest.
 
 ## Repo-Owned Apps
 

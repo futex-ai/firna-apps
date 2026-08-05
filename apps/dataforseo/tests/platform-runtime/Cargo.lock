@@ -453,7 +453,7 @@ dependencies = [
 [[package]]
 name = "diesel-enum-macro"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=90d4c13f25a9176a43d2b9bce9177622191416cb#90d4c13f25a9176a43d2b9bce9177622191416cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
 dependencies = [
  "serde",
 ]
@@ -631,7 +631,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=90d4c13f25a9176a43d2b9bce9177622191416cb#90d4c13f25a9176a43d2b9bce9177622191416cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
 dependencies = [
  "ai-interface",
  "async-trait",
@@ -653,7 +653,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-wasm"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=90d4c13f25a9176a43d2b9bce9177622191416cb#90d4c13f25a9176a43d2b9bce9177622191416cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
 dependencies = [
  "async-trait",
  "fna-apps-interface",
@@ -669,7 +669,7 @@ dependencies = [
 [[package]]
 name = "fna-db-enums"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=90d4c13f25a9176a43d2b9bce9177622191416cb#90d4c13f25a9176a43d2b9bce9177622191416cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
 dependencies = [
  "diesel-enum-macro",
  "serde",
@@ -1666,9 +1666,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.16"
+version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fcfdb36bda0c880c5931cdc7a2bcdc8ba4556847b9d912bca70bc94708711ad"
+checksum = "ad8553b9b26413251cbf30e620595c7a41b3887f03da04579c0e6b0d6a06b4b2"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1925,7 +1925,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys",
