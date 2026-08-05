@@ -50,25 +50,24 @@ def run_gate(root: Path, runner: CommandRunner) -> int:
         for failure in failures:
             print(f"app-secrets: {failure}", file=sys.stderr)
         return 1
-    prefixes = {
-        instance.environment_class: instance.secret_prefix
-        for instance in config.instances
-    }
     project_id = config.gcp.project_id
     missing = []
     for app_id, classes, secret_names in apps:
-        for environment_class in classes:
-            for secret_name in secret_names:
-                container = (
-                    f"{prefixes[environment_class]}-{app_id}-"
-                    f"{secret_name.replace('_', '-')}"
-                )
-                failure = ensure_container(runner, project_id, app_id, container)
-                if failure is not None:
-                    print(f"app-secrets: {failure}", file=sys.stderr)
-                    return 1
-                if not has_enabled_version(runner, project_id, container):
-                    missing.append(container)
+        containers = sorted(
+            {
+                f"{deploy_config.CLASS_SECRET_PREFIXES[environment_class]}-"
+                f"{app_id}-{secret_name.replace('_', '-')}"
+                for environment_class in classes
+                for secret_name in secret_names
+            }
+        )
+        for container in containers:
+            failure = ensure_container(runner, project_id, app_id, container)
+            if failure is not None:
+                print(f"app-secrets: {failure}", file=sys.stderr)
+                return 1
+            if not has_enabled_version(runner, project_id, container):
+                missing.append(container)
     if missing:
         print("app-secrets: missing secret values", file=sys.stderr)
         for container in missing:

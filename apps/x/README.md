@@ -38,20 +38,23 @@ cargo test --manifest-path apps/x/tests/platform-runtime/Cargo.toml --locked
 All commands use the canonical platform revision recorded in
 [`platform.toml`](../../platform.toml).
 
-These commands validate locally and do not deploy. The standard app workflow
-releases to production after a reviewed change merges to `main`. The platform's
-stable-main workflow separately submits the same package to `br-main`; labelled
-PR previews exclude X because arbitrary per-PR callbacks are not registered.
+These commands validate locally and do not deploy. This repository's deploy
+workflow releases to production and the stable `br-main` preview after a
+reviewed change merges to `main` (`apps/x/deploy.toml` targets the
+`production` and `preview` classes); labelled PR previews exclude X because
+arbitrary per-PR callbacks are not registered.
 
 Use separate confidential Web Apps in the X Developer Console. Register
 `https://firna.ai/oauth/x/callback` for production and
 `https://br-main.preview.firna.ai/oauth/x/callback` for stable preview. Supply
 both required manifest values through Google Secret Manager:
 
-- production: `firna-prod-app-x-client-id` and
-  `firna-prod-app-x-client-secret`;
-- stable preview: `firna-preview-test-runtime-x-client-id` and
-  `firna-preview-test-runtime-x-client-secret`.
+- production: `prod-app-x-client-id` and `prod-app-x-client-secret`;
+- stable preview: `preview-app-x-client-id` and
+  `preview-app-x-client-secret`.
+
+Both live in the dedicated app-secrets Google Cloud project defined by
+[`docs/protocol/app-deployment.md`](../../docs/protocol/app-deployment.md).
 
 Never add either credential value to this package.
 
@@ -61,7 +64,7 @@ Firna prepays X and charges the authorizing workspace only after a successful
 tool call. Post reads cost $0.005 per returned Post, expanded User reads cost
 $0.010 per returned author, text-only creation costs $0.015, and link-bearing
 creation costs $0.200. Failed calls are uncharged. Prices are fixed for app
-version `1.0.3`; changing them requires a new version and explicit workspace
+version `1.0.4`; changing them requires a new version and explicit workspace
 consent.
 
 Production requires both platform billing and app charging to be enabled. If

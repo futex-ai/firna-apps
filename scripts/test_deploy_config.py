@@ -153,7 +153,7 @@ class AppClassesTests(unittest.TestCase):
             classes, failures = deploy_config.app_classes(app_root)
 
             self.assertEqual(failures, [])
-            self.assertEqual(classes, ("production", "preview"))
+            self.assertEqual(classes, ("production", "preview", "ephemeral"))
 
     def test_production_only_app(self) -> None:
         classes, failures = self.load_app('classes = ["production"]\n')

@@ -149,6 +149,10 @@ class RunGateTests(unittest.TestCase):
             self.assertEqual(created, [])
             preview_x = [call for call in runner.calls if "preview-app-x-client-secret" in call]
             self.assertEqual(preview_x, [])
+            exa_preview_checks = [
+                call for call in runner.calls if call == versions("preview-app-exa-api-key")
+            ]
+            self.assertEqual(len(exa_preview_checks), 1)
 
     def test_missing_value_creates_container_and_fails_with_remediation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

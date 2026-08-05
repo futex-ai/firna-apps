@@ -18,8 +18,12 @@ from pathlib import Path
 
 
 ROOT_FILE = "deploy.toml"
-KNOWN_CLASSES = ("production", "preview")
-CLASS_SECRET_PREFIXES = {"production": "prod-app", "preview": "preview-app"}
+KNOWN_CLASSES = ("production", "preview", "ephemeral")
+CLASS_SECRET_PREFIXES = {
+    "production": "prod-app",
+    "preview": "preview-app",
+    "ephemeral": "preview-app",
+}
 INSTANCE_CLASSES = {"production": "production", "br-main": "preview"}
 INSTANCE_URLS = {
     "production": "https://api.firna.ai",

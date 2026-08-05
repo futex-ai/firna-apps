@@ -241,10 +241,30 @@ version-compare idempotent, so duplicate submission is harmless.
       2026-08-05 in Milestone 2); confirmed `vars.FIRNA_BOOTSTRAP_USERNAME`
       is `admin`, matching `deploy.toml`, and retired the variable from the
       workflow.
+- [x] Merge `origin/main` into the branch (x OAuth isolation #7, permission
+      flag removal #8, platform repin to `36978aa6`), resolving the
+      workflow-env and README conflicts path-by-path with no deletions
+      relative to main. Main's x change surfaced during implementation: the
+      legacy production deploy of x 1.0.3 failed with IAM_PERMISSION_DENIED
+      on the out-of-band `firna-prod-app-x-client-id` container, the exact
+      failure class this plan removes.
+- [x] Add the third environment class `ephemeral` for `pr-N` instances
+      (discovered during implementation): `preview` and `ephemeral` share
+      `preview-app` secret values, but only long-lived instances have
+      OAuth-registrable callbacks, so `apps/x/deploy.toml` now declares
+      `classes = ["production", "preview"]` per the updated X protocol.
+      Updated `deploy_config`, the gate's per-app container dedupe, the
+      selection tests, and the app-deployment protocol doc.
+- [x] Copy the four x credential values into the apps project
+      (`prod-app-x-client-id`, rotated `prod-app-x-client-secret`,
+      `preview-app-x-client-id`, `preview-app-x-client-secret`).
+- [x] Align `docs/protocol/x-app.md` and `apps/x/README.md` with the
+      apps-project container names and this repository's br-main deployment
+      ownership; bump x to 1.0.4 because the README is package content.
 - [ ] Smoke: verify both instances deploy from the new workflow (idempotent
-      no-op or missing-version submit), verify both admin catalogs and the
-      public `/apps/catalog` on each instance, and verify `x` is absent
-      from br-main.
+      no-op or missing-version submit; x 1.0.4 exercises a real submit on
+      both), verify both admin catalogs and the public `/apps/catalog` on
+      each instance, and verify `x` reaches production and br-main.
 - [x] Retire now-unused repository variables/env
       (`GCP_SERVICE_ACCOUNT`, `GCP_WORKLOAD_IDENTITY_PROVIDER`,
       `FIRNA_SECRET_MANAGER_PREFIX`, `GCP_PROJECT_ID`,

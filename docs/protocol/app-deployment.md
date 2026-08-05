@@ -41,13 +41,18 @@ a fully isolated platform instance (own catalog, database, installations,
 artifacts, credentials).
 
 Each environment instance has a class. The class selects which secret values
-an instance receives and which apps may deploy to it.
+an instance receives and which apps may deploy to it. `preview` and
+`ephemeral` share the `preview-app` secret values; they are distinct classes
+because only long-lived instances have stable hostnames that OAuth providers
+can register as callbacks, so an app like `x` can target `preview` (br-main)
+while excluding `ephemeral` (pr-N) instances whose callbacks are never
+registered.
 
 | Instance   | Class        | Deployed by  | API URL                                  |
 | ---------- | ------------ | ------------ | ---------------------------------------- |
 | production | `production` | `firna-apps` | `https://api.firna.ai`                   |
 | br-main    | `preview`    | `firna-apps` | `https://br-main.api.preview.firna.ai`   |
-| pr-N       | `preview`    | `firna`      | `https://pr-N.api.preview.firna.ai`      |
+| pr-N       | `ephemeral`  | `firna`      | `https://pr-N.api.preview.firna.ai`      |
 
 ## Deployment Configuration
 
@@ -89,9 +94,9 @@ operational metadata for Futex's release automation; it is intentionally not
 part of the platform manifest contract and the platform never reads it. It
 is not package content either: a change that touches only
 `apps/<app_id>/deploy.toml` does not require a manifest version bump.
-`x` is the only current exception:
-its X developer app registers only the production OAuth callback and
-credential, so it declares `classes = ["production"]`.
+`x` is the only current exception: its production and stable-preview X
+developer apps register fixed callbacks, but ephemeral `pr-N` callbacks are
+never registered, so it declares `classes = ["production", "preview"]`.
 
 `cargo xtask check` validates both files: the root file must declare exactly
 the instances above with well-formed URLs and prefixes, and per-app files

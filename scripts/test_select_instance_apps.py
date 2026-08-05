@@ -42,6 +42,26 @@ class SelectAppsTests(unittest.TestCase):
             self.assertEqual(preview, ["exa"])
             self.assertEqual(production, ["exa", "x"])
 
+    def test_ephemeral_excludes_stable_preview_only_app(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write(root / "apps/exa/manifest.yaml", "id: exa\nversion: 1.0.0\n")
+            write(root / "apps/x/manifest.yaml", "id: x\nversion: 1.0.0\n")
+            write(root / "apps/x/deploy.toml", 'classes = ["production", "preview"]\n')
+            candidates = write(root / "candidates", "exa\nx\n")
+
+            ephemeral, failures = select_instance_apps.select_apps(
+                root, "ephemeral", candidates
+            )
+            preview, preview_failures = select_instance_apps.select_apps(
+                root, "preview", candidates
+            )
+
+            self.assertEqual(failures, [])
+            self.assertEqual(preview_failures, [])
+            self.assertEqual(ephemeral, ["exa"])
+            self.assertEqual(preview, ["exa", "x"])
+
     def test_unknown_class_fails(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
