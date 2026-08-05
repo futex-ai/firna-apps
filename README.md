@@ -95,4 +95,8 @@ reading the production bootstrap password plus manifest-declared app secrets.
 The platform-side manifest, runtime, and admin submission contracts remain in
 the [Firna platform app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md).
 The repository-specific [X app protocol](docs/protocol/x-app.md) defines its
-OAuth, read, publishing, recovery, and cost-control contract.
+OAuth, read, publishing, recovery, and cost-control contract. The
+[app deployment protocol](docs/protocol/app-deployment.md) defines the target
+provisioning and deployment automation being implemented by
+[`plans/inbuilt-app-deploy-automation.md`](plans/inbuilt-app-deploy-automation.md);
+the Deployment section above describes live behavior until that plan lands.
