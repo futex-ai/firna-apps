@@ -88,10 +88,13 @@ repository gate stays green.
 - [ ] Operator: create the app-secrets Google Cloud project, link billing,
       and create Terraform state bucket
       `gs://<project-id>-terraform-state`; record the chosen project id.
-- [ ] Add root `deploy.toml` exactly as specified in the protocol doc, with
+      Project `firna-apps` (number 712421637485) created 2026-08-05; billing
+      link is blocked on the billing account's project-link quota (5 of 5
+      used), so the bucket cannot be created yet.
+- [x] Add root `deploy.toml` exactly as specified in the protocol doc, with
       the recorded project id.
-- [ ] Add `apps/x/deploy.toml` with `classes = ["production"]`.
-- [ ] Add `infra/gcp/apps/` Terraform (`versions.tf`, `variables.tf`,
+- [x] Add `apps/x/deploy.toml` with `classes = ["production"]`.
+- [x] Add `infra/gcp/apps/` Terraform (`versions.tf`, `variables.tf`,
       `main.tf`, `outputs.tf`, `README.md`) defining: WIF pool `github` with
       provider `github-firna-apps` restricted to `futex-ai/firna-apps`;
       service account `apps-ci` (any-ref binding) with
@@ -102,15 +105,20 @@ repository gate stays green.
       `github-firna-preview@firna-498513` using both project-id and
       project-number name forms.
 - [ ] Operator: `terraform init && terraform validate && terraform fmt
-      -check && terraform apply` in `infra/gcp/apps/`.
-- [ ] Add `scripts/deploy_config.py`: parse and validate root and per-app
+      -check && terraform apply` in `infra/gcp/apps/` (validate and fmt ran
+      backend-less on 2026-08-05; init/apply blocked on billing).
+- [x] Add `scripts/deploy_config.py`: parse and validate root and per-app
       `deploy.toml` (known instances, exact URLs, prefix/class pairing,
       non-empty known `classes`), expose app-to-class targeting; add
       `scripts/test_deploy_config.py` unit tests for valid, missing,
       malformed, unknown-class, and unknown-key cases.
-- [ ] Extend `scripts/repository_audit.py` to require a valid root
+- [x] Extend `scripts/repository_audit.py` to require a valid root
       `deploy.toml` and validate any per-app `deploy.toml` via
       `deploy_config`; extend `scripts/test_repository_audit.py`.
+- [x] Exempt changes touching only `apps/<app_id>/deploy.toml` from the
+      audit's manifest version-bump requirement, with tests, and record the
+      exemption in the protocol doc (discovered during implementation:
+      targeting is repository metadata, not package content).
 - [ ] Operator: copy the seven existing secret values listed in Current
       Constraints into the new containers
       (`gcloud secrets versions access latest --project=firna-498513
@@ -118,10 +126,10 @@ repository gate stays green.
       --project=<apps-project> --data-file=-`), creating containers with
       `gcloud secrets create <new> --project=<apps-project>` first; verify
       with `gcloud secrets versions list`.
-- [ ] Run the full gate: `cargo xtask check`.
-- [ ] Update `README.md` and `infra/gcp/apps/README.md` for the new
+- [x] Run the full gate: `cargo xtask check`.
+- [x] Update `README.md` and `infra/gcp/apps/README.md` for the new
       directory; keep the Deployment section describing live behavior.
-- [ ] `git add -A`, Conventional Commit, push.
+- [x] `git add -A`, Conventional Commit, push.
 - [ ] Run `cargo xtask review`; report findings with recommendations, do not
       auto-fix.
 

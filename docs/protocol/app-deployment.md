@@ -86,8 +86,10 @@ classes = ["production"]
 
 A missing per-app file means the app targets every class. Targeting is
 operational metadata for Futex's release automation; it is intentionally not
-part of the platform manifest contract, is never packaged into source
-bundles, and never reaches the platform. `x` is the only current exception:
+part of the platform manifest contract and the platform never reads it. It
+is not package content either: a change that touches only
+`apps/<app_id>/deploy.toml` does not require a manifest version bump.
+`x` is the only current exception:
 its X developer app registers only the production OAuth callback and
 credential, so it declares `classes = ["production"]`.
 

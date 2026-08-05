@@ -7,3 +7,4 @@ __pycache__/
 *.py[cod]
 apps/*/component/target/
 apps/*/tests/platform-runtime/target/
+.terraform/

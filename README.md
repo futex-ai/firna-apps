@@ -90,6 +90,10 @@ reading the production bootstrap password plus manifest-declared app secrets.
   version, source-layout, and file-length checks.
 - [`scripts/plan-app-deploys.py`](scripts/plan-app-deploys.py): catalog-aware
   production deployment planning.
+- [`deploy.toml`](deploy.toml) and [`scripts/deploy_config.py`](scripts/deploy_config.py):
+  environment targeting validated by the repository audit.
+- [`infra/gcp/apps/`](infra/gcp/apps/README.md): Terraform for the dedicated
+  app-secrets Google Cloud project and its workload identities.
 - [`xtask/`](xtask/README.md): local and CI verification entrypoints.
 
 The platform-side manifest, runtime, and admin submission contracts remain in
