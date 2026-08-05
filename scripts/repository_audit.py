@@ -9,6 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import deploy_config
+
 
 APP_MANIFEST_NAMES = ("manifest.yaml", "manifest.json")
 APPS_REPOSITORY = "https://github.com/futex-ai/firna-apps.git"
@@ -42,12 +44,17 @@ def audit_repository(root: Path, base_ref: str) -> list[str]:
     failures = []
     failures.extend(audit_workspace_metadata(root))
     failures.extend(audit_app_layout(root))
+    failures.extend(audit_deploy_config(root))
     failures.extend(audit_platform_pins(root))
     failures.extend(audit_static_rust_includes(root))
     failures.extend(audit_changed_versions(root, base_ref))
     failures.extend(audit_rust_file_lengths(root))
     failures.extend(audit_markdown_links(root))
     return failures
+
+
+def audit_deploy_config(root: Path) -> list[str]:
+    return deploy_config.validate_repository(root)
 
 
 def audit_workspace_metadata(root: Path) -> list[str]:
@@ -186,7 +193,9 @@ def audit_changed_versions(root: Path, base_ref: str) -> list[str]:
     app_ids = sorted(
         components[1]
         for path in changed_paths
-        if len(components := Path(path).parts) > 2 and components[0] == "apps"
+        if len(components := Path(path).parts) > 2
+        and components[0] == "apps"
+        and components[2:] != ("deploy.toml",)
     )
     failures = []
     for app_id in sorted(set(app_ids)):

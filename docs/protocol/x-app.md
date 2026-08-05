@@ -33,10 +33,12 @@ The package contract is:
 - required app-owned values: `client_id` and `client_secret`
 
 Both OAuth client values are deployment-supplied so one immutable package can
-use distinct provider apps. Production reads
-`firna-prod-app-x-client-id` and `firna-prod-app-x-client-secret`; stable preview
-reads `firna-preview-test-runtime-x-client-id` and
-`firna-preview-test-runtime-x-client-secret`. Neither value, nor an access or
+use distinct provider apps. Deployment reads them from the dedicated
+app-secrets Google Cloud project per
+[app deployment](app-deployment.md): production reads
+`prod-app-x-client-id` and `prod-app-x-client-secret`; the stable br-main
+preview reads `preview-app-x-client-id` and
+`preview-app-x-client-secret`. Neither value, nor an access or
 refresh token, enters source, bundles, logs, component input, or tool output.
 The host injects only an opaque credential reference into provider HTTP
 requests.

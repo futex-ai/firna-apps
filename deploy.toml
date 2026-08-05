@@ -1,0 +1,17 @@
+[gcp]
+project_id = "firna-apps"
+platform_project_id = "firna-498513"
+
+[environments.production]
+class = "production"
+api_url = "https://api.firna.ai"
+secret_prefix = "prod-app"
+admin_email = "admin"
+bootstrap_password_secret = "firna-prod-runtime-firna-bootstrap-password"
+
+[environments.br-main]
+class = "preview"
+api_url = "https://br-main.api.preview.firna.ai"
+secret_prefix = "preview-app"
+admin_email = "preview-admin"
+bootstrap_password_secret = "firna-preview-test-runtime-firna-bootstrap-password"

@@ -14,6 +14,27 @@ repository_audit = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(repository_audit)
 
 
+VALID_DEPLOY_ROOT = """\
+[gcp]
+project_id = "firna-apps"
+platform_project_id = "firna-498513"
+
+[environments.production]
+class = "production"
+api_url = "https://api.firna.ai"
+secret_prefix = "prod-app"
+admin_email = "admin"
+bootstrap_password_secret = "firna-prod-runtime-firna-bootstrap-password"
+
+[environments.br-main]
+class = "preview"
+api_url = "https://br-main.api.preview.firna.ai"
+secret_prefix = "preview-app"
+admin_email = "preview-admin"
+bootstrap_password_secret = "firna-preview-test-runtime-firna-bootstrap-password"
+"""
+
+
 class RepositoryAuditTests(unittest.TestCase):
     def test_changed_app_requires_version_bump(self) -> None:
         with TestRepository() as repository:
@@ -51,6 +72,52 @@ class RepositoryAuditTests(unittest.TestCase):
 
             self.assertEqual(len(failures), 1)
             self.assertIn("version `1.0.0` is not above `1.0.0`", failures[0])
+
+    def test_deploy_config_only_change_skips_version_bump(self) -> None:
+        with TestRepository() as repository:
+            repository.write("apps/slack/manifest.yaml", "id: slack\nversion: 1.0.0\n")
+            repository.write("apps/slack/component/src/lib.rs", "pub fn app() {}\n")
+            repository.commit("seed")
+            repository.write("apps/slack/deploy.toml", 'classes = ["production"]\n')
+
+            failures = repository_audit.audit_changed_versions(repository.root, "HEAD")
+
+            self.assertEqual(failures, [])
+
+    def test_deploy_config_change_beside_code_change_requires_bump(self) -> None:
+        with TestRepository() as repository:
+            repository.write("apps/slack/manifest.yaml", "id: slack\nversion: 1.0.0\n")
+            repository.write("apps/slack/component/src/lib.rs", "pub fn old() {}\n")
+            repository.commit("seed")
+            repository.write("apps/slack/deploy.toml", 'classes = ["production"]\n')
+            repository.write("apps/slack/component/src/lib.rs", "pub fn changed() {}\n")
+
+            failures = repository_audit.audit_changed_versions(repository.root, "HEAD")
+
+            self.assertEqual(len(failures), 1)
+            self.assertIn("version `1.0.0` is not above `1.0.0`", failures[0])
+
+    def test_audit_deploy_config_reports_invalid_configuration(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write(root / "deploy.toml", VALID_DEPLOY_ROOT)
+            write(root / "apps/x/manifest.yaml", "id: x\nversion: 1.0.0\n")
+            write(root / "apps/x/deploy.toml", 'classes = ["staging"]\n')
+
+            failures = repository_audit.audit_deploy_config(root)
+
+            self.assertTrue(
+                any("apps/x/deploy.toml classes entry `staging`" in item for item in failures)
+            )
+
+    def test_audit_deploy_config_accepts_valid_configuration(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write(root / "deploy.toml", VALID_DEPLOY_ROOT)
+            write(root / "apps/x/manifest.yaml", "id: x\nversion: 1.0.0\n")
+            write(root / "apps/x/deploy.toml", 'classes = ["production"]\n')
+
+            self.assertEqual(repository_audit.audit_deploy_config(root), [])
 
     def test_platform_dependencies_must_match_canonical_pin(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

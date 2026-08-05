@@ -6,10 +6,19 @@ on:
       - CI
     types:
       - completed
+  schedule:
+    - cron: "0 6 * * *"
+  repository_dispatch:
+    types:
+      - firna-platform-deployed
   workflow_dispatch:
     inputs:
       app:
         description: App id to deploy, or all
+        required: false
+        default: all
+      instance:
+        description: Environment instance to deploy, or all
         required: false
         default: all
 
@@ -19,41 +28,38 @@ permissions:
   id-token: write
 
 concurrency:
-  group: firna-apps-production
+  group: firna-apps-deploy
   cancel-in-progress: false
 
 env:
-  FIRNA_BOOTSTRAP_USERNAME: ${{ vars.FIRNA_BOOTSTRAP_USERNAME }}
   FIRNA_PLATFORM_REPOSITORY: https://github.com/futex-ai/firna.git
   FIRNA_PLATFORM_REVISION: 36978aa6b3f035088787552f4737a7384a8da9cb
-  FIRNA_SECRET_MANAGER_PREFIX: firna-prod
-  FIRNA_SERVER_URL: https://api.firna.ai
-  GCP_PROJECT_ID: firna-498513
   RUST_TOOLCHAIN_VERSION: 1.89.0
 
 jobs:
-  deploy:
-    name: Submit trusted app packages
+  prepare:
+    name: Plan deployment matrix
     if: >-
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'repository_dispatch' ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.head_branch == 'main' &&
        github.event.workflow_run.head_repository.full_name == github.repository)
-    runs-on: ubuntu-latest-m
-    timeout-minutes: 45
-    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      forced: ${{ steps.selection.outputs.forced }}
     steps:
       - name: Check out verified revision
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-
-      - name: Configure private Firna source access
-        env:
-          FIRNA_REPOSITORY_TOKEN: ${{ secrets.FIRNA_REPOSITORY_TOKEN }}
-        run: bash scripts/configure-firna-repository-access.sh
 
       - name: Select app packages
         id: selection
@@ -68,17 +74,73 @@ jobs:
               echo "::error::app package apps/$manual_app does not exist"
               exit 1
             fi
-            printf '%s\n' "$manual_app" > /tmp/candidate-apps
+            printf '%s\n' "$manual_app" > candidate-apps
           else
             find apps -mindepth 2 -maxdepth 2 \( -name manifest.yaml -o -name manifest.json \) -print \
               | awk -F/ '{ print $2 }' \
-              | sort -u > /tmp/candidate-apps
+              | sort -u > candidate-apps
           fi
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "forced=true" >> "$GITHUB_OUTPUT"
           else
             echo "forced=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Build environment instance matrix
+        id: matrix
+        shell: bash
+        env:
+          MANUAL_INSTANCE: ${{ inputs.instance }}
+        run: |
+          set -euo pipefail
+          matrix="$(python3 scripts/deploy_matrix.py --instance "${MANUAL_INSTANCE:-all}")"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+      - name: Upload candidate app list
+        uses: actions/upload-artifact@v4
+        with:
+          name: candidate-apps-${{ github.run_id }}
+          path: candidate-apps
+          retention-days: 1
+
+  deploy:
+    name: Deploy to ${{ matrix.instance }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    runs-on: ubuntu-latest-m
+    timeout-minutes: 45
+    environment: ${{ matrix.instance }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out verified revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Download candidate app list
+        uses: actions/download-artifact@v4
+        with:
+          name: candidate-apps-${{ github.run_id }}
+
+      - name: Configure private Firna source access
+        env:
+          FIRNA_REPOSITORY_TOKEN: ${{ secrets.FIRNA_REPOSITORY_TOKEN }}
+        run: bash scripts/configure-firna-repository-access.sh
+
+      - name: Select instance app packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/select_instance_apps.py \
+            --environment-class "${{ matrix.environment_class }}" \
+            --candidates candidate-apps > instance-apps
+          echo "Deploying to ${{ matrix.instance }}:"
+          cat instance-apps
 
       - name: Install Firna CLI system dependencies
         run: |
@@ -113,9 +175,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          project_id: ${{ env.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ vars.APPS_GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.APPS_DEPLOY_SERVICE_ACCOUNT }}
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
@@ -132,13 +193,13 @@ jobs:
             printf '%s' "$value"
           }
           password="$(gcloud secrets versions access latest \
-            --project="${GCP_PROJECT_ID}" \
-            --secret="${FIRNA_SECRET_MANAGER_PREFIX}-runtime-firna-bootstrap-password")"
+            --project="${{ matrix.platform_project }}" \
+            --secret="${{ matrix.bootstrap_password_secret }}")"
           echo "::add-mask::$(escape_github_command "$password")"
-          firna config set-server "$FIRNA_SERVER_URL"
+          firna config set-server "${{ matrix.api_url }}"
           FIRNA_APP_ADMIN_PASSWORD="$password" \
             firna admin login \
-              --email "${FIRNA_BOOTSTRAP_USERNAME:-admin}" \
+              --email "${{ matrix.admin_email }}" \
               --password-env FIRNA_APP_ADMIN_PASSWORD
 
       - name: Plan app package deployment
@@ -146,26 +207,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "${{ steps.selection.outputs.forced }}" = "true" ]; then
-            cp /tmp/candidate-apps /tmp/deploy-apps
+          if [ "${{ needs.prepare.outputs.forced }}" = "true" ]; then
+            cp instance-apps deploy-apps
           else
-            firna admin apps catalog --json > /tmp/remote-app-catalog.json
-            : > /tmp/changed-apps
-            : > /tmp/local-app-manifests.jsonl
+            firna admin apps catalog --json > remote-app-catalog.json
+            : > changed-apps
+            : > local-app-manifests.jsonl
             while IFS= read -r app; do
               [ -n "$app" ] || continue
               manifest_json="$(firna apps validate "apps/$app" --json)"
               python3 -c 'import json,sys; payload=json.load(sys.stdin); payload["directory"]=sys.argv[1]; print(json.dumps(payload, sort_keys=True))' "$app" \
-                <<< "$manifest_json" >> /tmp/local-app-manifests.jsonl
-            done < /tmp/candidate-apps
+                <<< "$manifest_json" >> local-app-manifests.jsonl
+            done < instance-apps
             python3 scripts/plan-app-deploys.py \
-              --catalog /tmp/remote-app-catalog.json \
-              --local-manifests /tmp/local-app-manifests.jsonl \
-              --changed-apps /tmp/changed-apps > /tmp/deploy-apps
+              --catalog remote-app-catalog.json \
+              --local-manifests local-app-manifests.jsonl \
+              --changed-apps changed-apps > deploy-apps
           fi
           {
             echo "apps<<EOF"
-            cat /tmp/deploy-apps
+            cat deploy-apps
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
@@ -190,10 +251,10 @@ jobs:
             mapfile -t secrets < <(python3 -c 'import json,sys; [print(secret) for secret in json.load(sys.stdin)["required_secrets"]]' <<< "$manifest_json")
             submit_args=()
             for secret_name in "${secrets[@]}"; do
-              secret_id="${FIRNA_SECRET_MANAGER_PREFIX}-app-${manifest_id}-${secret_name//_/-}"
-              echo "Reading Secret Manager app secret projects/${GCP_PROJECT_ID}/secrets/${secret_id}"
+              secret_id="${{ matrix.secret_prefix }}-${manifest_id}-${secret_name//_/-}"
+              echo "Reading Secret Manager app secret projects/${{ matrix.apps_project }}/secrets/${secret_id}"
               value="$(gcloud secrets versions access latest \
-                --project="${GCP_PROJECT_ID}" \
+                --project="${{ matrix.apps_project }}" \
                 --secret="$secret_id")"
               if [ -z "$value" ]; then
                 echo "::error::missing required app secret $secret_id"
