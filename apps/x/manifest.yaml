@@ -95,9 +95,6 @@ tools:
   export: call-tool
   operation: x.get_posts
   allowed_agent_roles: []
-  required_agent_permissions:
-    top_level: false
-    manage_secrets: false
   side_effect: external_read
   limits:
     max_response_bytes: 262144
@@ -128,9 +125,6 @@ tools:
   export: call-tool
   operation: x.search_recent_posts
   allowed_agent_roles: []
-  required_agent_permissions:
-    top_level: false
-    manage_secrets: false
   side_effect: external_read
   limits:
     max_response_bytes: 262144
@@ -166,9 +160,6 @@ tools:
   export: call-tool
   operation: x.create_post
   allowed_agent_roles: []
-  required_agent_permissions:
-    top_level: false
-    manage_secrets: false
   side_effect: external_write
   limits:
     max_response_bytes: 262144
