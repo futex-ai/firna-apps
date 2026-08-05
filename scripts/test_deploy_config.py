@@ -166,6 +166,14 @@ class AppClassesTests(unittest.TestCase):
 
         self.assertTrue(any("`staging` is not a known class" in item for item in failures))
 
+    def test_nested_list_entry_fails_without_crashing(self) -> None:
+        _, failures = self.load_app('classes = [["production"]]\n')
+
+        self.assertTrue(
+            any("is not a known class" in item for item in failures),
+            f"expected type failure in {failures}",
+        )
+
     def test_empty_classes_fails(self) -> None:
         _, failures = self.load_app("classes = []\n")
 

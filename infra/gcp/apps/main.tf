@@ -54,11 +54,15 @@ resource "google_iam_workload_identity_pool_provider" "github_firna_apps" {
 resource "google_service_account" "apps_ci" {
   account_id   = "apps-ci"
   display_name = "firna-apps merge gate (container create and metadata read)"
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_service_account" "apps_deploy" {
   account_id   = "apps-deploy"
   display_name = "firna-apps deployment (secret value read)"
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_service_account_iam_member" "apps_ci_workload_identity" {
@@ -78,6 +82,8 @@ resource "google_project_iam_custom_role" "app_secret_creator" {
   title       = "App secret container creator"
   description = "Create app secret containers without reading or writing values."
   permissions = ["secretmanager.secrets.create"]
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_project_iam_member" "apps_ci_viewer" {

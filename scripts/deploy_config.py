@@ -205,9 +205,10 @@ def app_classes(app_root: Path) -> tuple[tuple[str, ...], list[str]]:
     for entry in classes:
         if not isinstance(entry, str) or entry not in KNOWN_CLASSES:
             failures.append(f"{context} classes entry `{entry}` is not a known class")
+    if failures:
+        return (), failures
     if len(set(classes)) != len(classes):
         failures.append(f"{context} classes must not repeat entries")
-    if failures:
         return (), failures
     return tuple(name for name in KNOWN_CLASSES if name in classes), []
 

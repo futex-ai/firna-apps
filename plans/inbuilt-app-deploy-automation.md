@@ -140,6 +140,24 @@ repository gate stays green.
       can raise `TypeError` on non-string class entries) reported to the
       user for a fix decision.
 
+## Milestone 2.1: Review Fixes
+
+Fix the two P2 findings from the Milestone 2 `cargo xtask review` run. The
+next milestone's review covers the same cumulative branch diff, so this
+milestone ends at commit and push.
+
+- [x] Add `depends_on = [google_project_service.required]` to the
+      `apps_ci`/`apps_deploy` service accounts and the `appSecretCreator`
+      custom role in `infra/gcp/apps/main.tf` so a fresh-project bootstrap
+      cannot race API enablement; run `terraform fmt -check`, `validate`,
+      and a no-op `apply`.
+- [x] In `scripts/deploy_config.py` `app_classes`, return the collected
+      failures before the duplicate-entry check when any class entry fails
+      type validation, so malformed-but-valid TOML such as
+      `classes = [["production"]]` produces validation failures instead of
+      a `TypeError` crash; add a nested-list regression test.
+- [x] `cargo xtask check`; `git add -A`, Conventional Commit, push.
+
 ## Milestone 3: Merge Gate
 
 Block merging any app change whose declared secrets lack values. Deployment
