@@ -40,6 +40,11 @@ terraform validate
 terraform apply
 ```
 
+Terraform authenticates with Application Default Credentials, which can
+differ from the active `gcloud` account. If init or apply is denied, run the
+commands with `GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"`
+exported so Terraform uses the `gcloud` account.
+
 After apply, set the GitHub repository variables from the outputs:
 
 - `APPS_GCP_WORKLOAD_IDENTITY_PROVIDER` = `workload_identity_provider`

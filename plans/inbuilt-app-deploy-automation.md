@@ -85,12 +85,14 @@ Stand up the dedicated project and the repository deployment configuration.
 Nothing consumes them yet, so live deployment behavior is unchanged and the
 repository gate stays green.
 
-- [ ] Operator: create the app-secrets Google Cloud project, link billing,
+- [x] Operator: create the app-secrets Google Cloud project, link billing,
       and create Terraform state bucket
       `gs://<project-id>-terraform-state`; record the chosen project id.
-      Project `firna-apps` (number 712421637485) created 2026-08-05; billing
-      link is blocked on the billing account's project-link quota (5 of 5
-      used), so the bucket cannot be created yet.
+      Project `firna-apps` (number 712421637485) created 2026-08-05. The
+      billing account's 5-project link quota was freed by deleting the
+      empty projects `terminal-498309` and `bowser-503012` (no enabled
+      compute/SQL/run APIs, no buckets; user-approved 2026-08-05), then
+      billing was linked and `gs://firna-apps-terraform-state` created.
 - [x] Add root `deploy.toml` exactly as specified in the protocol doc, with
       the recorded project id.
 - [x] Add `apps/x/deploy.toml` with `classes = ["production"]`.
@@ -104,9 +106,10 @@ repository gate stays green.
       and the cross-project `preview-app-` conditional accessor grant for
       `github-firna-preview@firna-498513` using both project-id and
       project-number name forms.
-- [ ] Operator: `terraform init && terraform validate && terraform fmt
-      -check && terraform apply` in `infra/gcp/apps/` (validate and fmt ran
-      backend-less on 2026-08-05; init/apply blocked on billing).
+- [x] Operator: `terraform init && terraform validate && terraform fmt
+      -check && terraform apply` in `infra/gcp/apps/`. Applied 2026-08-05
+      (16 resources); the three `APPS_*` GitHub repository variables were
+      set from the outputs.
 - [x] Add `scripts/deploy_config.py`: parse and validate root and per-app
       `deploy.toml` (known instances, exact URLs, prefix/class pairing,
       non-empty known `classes`), expose app-to-class targeting; add
@@ -119,13 +122,14 @@ repository gate stays green.
       audit's manifest version-bump requirement, with tests, and record the
       exemption in the protocol doc (discovered during implementation:
       targeting is repository metadata, not package content).
-- [ ] Operator: copy the seven existing secret values listed in Current
+- [x] Operator: copy the seven existing secret values listed in Current
       Constraints into the new containers
       (`gcloud secrets versions access latest --project=firna-498513
       --secret=<old> | gcloud secrets versions add <new>
       --project=<apps-project> --data-file=-`), creating containers with
       `gcloud secrets create <new> --project=<apps-project>` first; verify
-      with `gcloud secrets versions list`.
+      with `gcloud secrets versions list`. Copied 2026-08-05; all seven
+      containers hold enabled version 1 with `app` labels.
 - [x] Run the full gate: `cargo xtask check`.
 - [x] Update `README.md` and `infra/gcp/apps/README.md` for the new
       directory; keep the Deployment section describing live behavior.
