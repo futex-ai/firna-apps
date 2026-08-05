@@ -92,6 +92,11 @@ firna-prod-app-<app_id>-<secret-name-kebab>
 For example, `apps/slack` secret `client_secret` maps to
 `firna-prod-app-slack-client-secret`.
 
+Environment-specific public identifiers may also be required app-owned values
+when they must vary without changing the package. X declares both `client_id`
+and `client_secret` this way so production and stable preview deployments use
+separate OAuth apps with the same manifest.
+
 ## Repo-Owned Apps
 
 - `apps/slack`: explicit-install Slack workspace integration with OAuth,

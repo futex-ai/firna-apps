@@ -95,4 +95,6 @@ reading the production bootstrap password plus manifest-declared app secrets.
 The platform-side manifest, runtime, and admin submission contracts remain in
 the [Firna platform app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md).
 The repository-specific [X app protocol](docs/protocol/x-app.md) defines its
-OAuth, read, publishing, recovery, and cost-control contract.
+OAuth, read, publishing, recovery, and cost-control contract. X OAuth client
+credentials are deployment-supplied so production and the stable `br-main`
+preview can use separate provider apps with the same immutable package.

@@ -10,7 +10,7 @@ publishing without exposing OAuth tokens to the component or agents.
   refresh-token rotation.
 - Expose only the three reviewed V1 tools and keep every billed request bounded.
 - Build a Wasm component that validates inputs and returns compact typed data.
-- Keep the client secret and workspace tokens behind opaque host credentials.
+- Keep client credentials and workspace tokens behind opaque host credentials.
 - Report bounded usage so successful calls settle against the workspace wallet.
 
 ## What This App Does
@@ -38,15 +38,22 @@ cargo test --manifest-path apps/x/tests/platform-runtime/Cargo.toml --locked
 All commands use the canonical platform revision recorded in
 [`platform.toml`](../../platform.toml).
 
-These commands validate locally and do not deploy. The app is released only by
-the standard production workflow after a reviewed change merges to `main`;
-there is no test or preproduction X/Firna deployment for this package.
+These commands validate locally and do not deploy. The standard app workflow
+releases to production after a reviewed change merges to `main`. The platform's
+stable-main workflow separately submits the same package to `br-main`; labelled
+PR previews exclude X because arbitrary per-PR callbacks are not registered.
 
-Before deployment, create a confidential Web App in the X Developer Console,
-register exactly `https://firna.ai/oauth/x/callback`, and put its public client
-id in manifest environment key `client_id`. Store the client secret as Google
-Secret Manager secret `firna-prod-app-x-client-secret`; never add its value to
-this package.
+Use separate confidential Web Apps in the X Developer Console. Register
+`https://firna.ai/oauth/x/callback` for production and
+`https://br-main.preview.firna.ai/oauth/x/callback` for stable preview. Supply
+both required manifest values through Google Secret Manager:
+
+- production: `firna-prod-app-x-client-id` and
+  `firna-prod-app-x-client-secret`;
+- stable preview: `firna-preview-test-runtime-x-client-id` and
+  `firna-preview-test-runtime-x-client-secret`.
+
+Never add either credential value to this package.
 
 ## Cost and Write Safety
 
@@ -54,7 +61,7 @@ Firna prepays X and charges the authorizing workspace only after a successful
 tool call. Post reads cost $0.005 per returned Post, expanded User reads cost
 $0.010 per returned author, text-only creation costs $0.015, and link-bearing
 creation costs $0.200. Failed calls are uncharged. Prices are fixed for app
-version `1.0.1`; changing them requires a new version and explicit workspace
+version `1.0.2`; changing them requires a new version and explicit workspace
 consent.
 
 Production requires both platform billing and app charging to be enabled. If
