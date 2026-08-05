@@ -404,9 +404,9 @@ immediately before it occurs.
   OAuth values.
 - [x] Run the complete `firna-apps` and platform checks, including the platform
   checks required for the affected CLI/app deployment boundary.
-- [ ] After checks pass, audit both diffs against `origin/main`, stage every
+- [x] After checks pass, audit both diffs against `origin/main`, stage every
   changed file, commit with Conventional Commits, and push both branches.
-- [ ] After the `firna-apps` push, run `cargo xtask review` against
+- [x] After the `firna-apps` push, run `cargo xtask review` against
   `origin/main`, investigate every finding, and report recommendations without
   automatically changing reviewed code.
 - [ ] Merge the `firna-apps` package change first, with required CI and approval,
