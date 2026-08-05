@@ -19,7 +19,7 @@ per-member grants are out of scope.
 The package contract is:
 
 - manifest id and name: `x` and `X`
-- version: `1.0.2`
+- version: `1.0.3`
 - source kind: `built_in`
 - install policy: `explicit`
 - HTTP allowlist: `api.x.com` only
@@ -30,13 +30,16 @@ The package contract is:
 - PKCE: required, `S256`
 - scope separator: one ASCII space
 - scopes: `tweet.read`, `tweet.write`, `users.read`, `offline.access`
-- app-owned secret: `client_secret`, deployed from
-  `firna-prod-app-x-client-secret`
+- required app-owned values: `client_id` and `client_secret`
 
-The public client id is manifest environment data. The client secret, access
-token, and refresh token never enter source, bundles, logs, component input, or
-tool output. The host injects only an opaque credential reference into provider
-HTTP requests.
+Both OAuth client values are deployment-supplied so one immutable package can
+use distinct provider apps. Production reads
+`firna-prod-app-x-client-id` and `firna-prod-app-x-client-secret`; stable preview
+reads `firna-preview-test-runtime-x-client-id` and
+`firna-preview-test-runtime-x-client-secret`. Neither value, nor an access or
+refresh token, enters source, bundles, logs, component input, or tool output.
+The host injects only an opaque credential reference into provider HTTP
+requests.
 
 The standard OAuth response maps `$.access_token` to `access_token`,
 `$.refresh_token` to `refresh_token`, `$.scope` to granted scopes, and
@@ -192,7 +195,7 @@ any uncharged provider cost.
 
 Every successful component result uses the priced envelope
 `{"output": <tool output>, "usage": <report>}`. The host removes `usage` before
-returning `output` to the agent. Prices are immutable for app version `1.0.2`;
+returning `output` to the agent. Prices are immutable for app version `1.0.3`;
 any price change requires a new version and explicit workspace update consent.
 
 ## Limits and Cost Controls
@@ -216,11 +219,13 @@ text and destination account. Redacted handoff evidence may record app id,
 callback, app type, secret version, budget, credit balance, and usage totals,
 but never credential values.
 
-Local component and runtime checks do not deploy the app. V1 has no test or
-preproduction X app, callback, catalog, or Firna deployment. The reviewed
-package is released only through the standard production workflow after it
-merges to `main`, and live smoke validation runs in the nominated production
-workspace against the intended production X account.
+Local component and runtime checks do not deploy the app. The reviewed package
+is released through the standard production workflow after it merges to
+`main`. The stable `br-main` preview deploys the same package with a dedicated X
+Web App whose only callback is
+`https://br-main.preview.firna.ai/oauth/x/callback`. Labelled PR previews exclude
+X because their variable callbacks are not registered. Live smoke validation
+runs in the nominated environment against its intended X account.
 
 Current prices must be rechecked in the console immediately before purchase.
 The public documentation references are [X API pricing], [OAuth 2.0 user access

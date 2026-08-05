@@ -15,13 +15,18 @@ fn x_manifest_declares_exact_oauth_and_host_contract() {
     manifest.validate().expect("X manifest should validate");
     assert_eq!(manifest.id, "x");
     assert_eq!(manifest.name, "X");
-    assert_eq!(manifest.version, "1.0.2");
+    assert_eq!(manifest.version, "1.0.3");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.source.package, None);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);
+    assert!(manifest.env.is_empty());
     assert_eq!(
-        manifest.env.get("client_id").map(String::as_str),
-        Some("QktBWTkzdGJYaWdGS2VDa1VYNzM6MTpjaQ")
+        manifest
+            .secrets
+            .iter()
+            .map(|secret| (secret.name.as_str(), secret.required))
+            .collect::<Vec<_>>(),
+        [("client_id", true), ("client_secret", true)]
     );
     let http = manifest.capabilities.http.expect("X HTTP capability");
     assert_eq!(http.allowed_hosts, [String::from("api.x.com")]);
