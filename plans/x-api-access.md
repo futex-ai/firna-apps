@@ -245,7 +245,7 @@ reachable product path contains sample posts or metrics.
   initial community source to priced first-party `built_in` distribution.
 - [x] For the initial production-only package, put the real public client id in
   manifest environment key `client_id`; do not use a placeholder or secret
-  value. The `1.0.2` stable-preview follow-up moves this environment-specific
+  value. The `1.0.3` stable-preview follow-up moves this environment-specific
   identifier to deployment-supplied app-owned storage.
 - [x] Map `access_token`, `refresh_token`, granted scopes, and expiry through
   the platform's reviewed refresh contract. Store and inject tokens only by
@@ -404,7 +404,7 @@ immediately before it occurs.
   store the confirmed production client id in enabled production version 3,
   store its matching client secret in enabled production version 4, and disable
   every superseded or cross-environment version.
-- [x] Bump the package to `1.0.2`, declare `client_id` and `client_secret` as
+- [x] Bump the package to `1.0.3`, declare `client_id` and `client_secret` as
   required deployment values, and align package tests and documentation.
 - [x] Add X only to the stable-main preview allowlist, keep it out of labelled
   PR previews, and reject X preview packages that do not require both isolated
@@ -424,12 +424,12 @@ immediately before it occurs.
 - [ ] Let successful app-repository `main` CI trigger the standard production
   workflow; do not deploy from the feature branch or a test/preproduction
   environment.
-- [ ] Verify production catalog version `1.0.2` and the existing production
+- [ ] Verify production catalog version `1.0.3` and the existing production
   OAuth setup.
 - [ ] Merge the platform change with required CI and approval, apply Terraform
   so it adopts the pre-seeded containers, and let the normal stable-main
   workflow deploy X to `br-main`.
-- [ ] Verify `br-main` catalog version `1.0.2`, install it in the nominated
+- [ ] Verify `br-main` catalog version `1.0.3`, install it in the nominated
   preview workspace, and complete OAuth with the intended staging X account.
 - [ ] Read one known Post and one 10-result recent-search page; verify compact
   outputs, explicit pagination, and the expected usage entries in the X

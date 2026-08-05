@@ -19,7 +19,7 @@ per-member grants are out of scope.
 The package contract is:
 
 - manifest id and name: `x` and `X`
-- version: `1.0.2`
+- version: `1.0.3`
 - source kind: `built_in`
 - install policy: `explicit`
 - HTTP allowlist: `api.x.com` only
@@ -195,7 +195,7 @@ any uncharged provider cost.
 
 Every successful component result uses the priced envelope
 `{"output": <tool output>, "usage": <report>}`. The host removes `usage` before
-returning `output` to the agent. Prices are immutable for app version `1.0.2`;
+returning `output` to the agent. Prices are immutable for app version `1.0.3`;
 any price change requires a new version and explicit workspace update consent.
 
 ## Limits and Cost Controls
