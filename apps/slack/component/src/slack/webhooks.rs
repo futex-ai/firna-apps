@@ -1,6 +1,7 @@
 //! Slack webhook verification and event normalization.
 
 use std::collections::BTreeMap;
+use std::str;
 
 use serde_json::{Value, json};
 
@@ -84,10 +85,10 @@ pub(crate) fn webhook_response(request: &str) -> String {
 }
 
 fn verify_signature(envelope: &WebhookEnvelope, body: &str) -> Option<Value> {
-    let Some(signature) = envelope.headers.get("x-slack-signature") else {
+    let Some(signature) = unique_header(envelope, "x-slack-signature") else {
         return Some(invalid_request("missing_slack_signature"));
     };
-    let Some(timestamp) = envelope.headers.get("x-slack-request-timestamp") else {
+    let Some(timestamp) = unique_header(envelope, "x-slack-request-timestamp") else {
         return Some(invalid_request("missing_slack_timestamp"));
     };
     let Ok(timestamp_seconds) = timestamp.parse::<i64>() else {
@@ -107,6 +108,19 @@ fn verify_signature(envelope: &WebhookEnvelope, body: &str) -> Option<Value> {
     } else {
         Some(invalid_request("invalid_slack_signature"))
     }
+}
+
+fn unique_header<'a>(envelope: &'a WebhookEnvelope, name: &str) -> Option<&'a str> {
+    let mut values = envelope
+        .headers
+        .iter()
+        .filter(|header| header.name == name)
+        .map(|header| header.value.as_slice());
+    let value = values.next()?;
+    if values.next().is_some() {
+        return None;
+    }
+    str::from_utf8(value).ok()
 }
 
 fn team_id(body: &Value) -> Option<&str> {
