@@ -16,6 +16,8 @@ The crate exports `call-tool`, `verify-webhook`, `webhook-response`, and
 `normalize-event` through `wit-bindgen`. The Firna app build service compiles the
 source to `wasm32-unknown-unknown`, wraps it as a Wasm component, validates the
 ABI, stores the artifact, and waits for approval before promotion.
+Webhook verification consumes the platform's ordered raw header values and
+rejects duplicate or non-text Slack signature headers as ambiguous input.
 For `slack_send_message`, the component forwards the host-provided
 `operation_id` as Slack `chat.postMessage.client_msg_id`, giving durable agent
 tool execution a provider-facing idempotency key.

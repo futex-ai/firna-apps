@@ -42,7 +42,7 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev 5a7060b5d369190a6b102dfb07af0a300dd4502f \
+  --rev 5c3635debb329dfd1aa6206a7b75039313d61420 \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```
@@ -110,8 +110,9 @@ targeting. The full contract is
 
 - [`apps/`](apps/README.md): manifests, component source, assets, and runtime
   tests.
-- [`scripts/repository_audit.py`](scripts/repository_audit.py): compatibility,
-  version, source-layout, and file-length checks.
+- [`scripts/repository_audit.py`](scripts/repository_audit.py): manifest
+  authoring-contract, compatibility, version, source-layout, and file-length
+  checks.
 - [`scripts/plan-app-deploys.py`](scripts/plan-app-deploys.py): catalog-aware
   production deployment planning.
 - [`deploy.toml`](deploy.toml) and [`scripts/deploy_config.py`](scripts/deploy_config.py):

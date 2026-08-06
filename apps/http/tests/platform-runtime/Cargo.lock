@@ -397,7 +397,7 @@ dependencies = [
 [[package]]
 name = "diesel-enum-macro"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
+source = "git+https://github.com/futex-ai/firna.git?rev=5c3635debb329dfd1aa6206a7b75039313d61420#5c3635debb329dfd1aa6206a7b75039313d61420"
 dependencies = [
  "serde",
 ]
@@ -543,7 +543,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
+source = "git+https://github.com/futex-ai/firna.git?rev=5c3635debb329dfd1aa6206a7b75039313d61420#5c3635debb329dfd1aa6206a7b75039313d61420"
 dependencies = [
  "ai-interface",
  "async-trait",
@@ -565,7 +565,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-wasm"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
+source = "git+https://github.com/futex-ai/firna.git?rev=5c3635debb329dfd1aa6206a7b75039313d61420#5c3635debb329dfd1aa6206a7b75039313d61420"
 dependencies = [
  "async-trait",
  "fna-apps-interface",
@@ -581,7 +581,7 @@ dependencies = [
 [[package]]
 name = "fna-db-enums"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
+source = "git+https://github.com/futex-ai/firna.git?rev=5c3635debb329dfd1aa6206a7b75039313d61420#5c3635debb329dfd1aa6206a7b75039313d61420"
 dependencies = [
  "diesel-enum-macro",
  "serde",

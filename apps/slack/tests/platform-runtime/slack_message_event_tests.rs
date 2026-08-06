@@ -7,7 +7,7 @@ use fna_apps_wasm::{HostHmacSha256Response, WasmHostMock};
 use serde_json::json;
 use unimock::{MockFn as _, Unimock, matching};
 
-use crate::slack_runtime_support::runtime_with_host;
+use crate::slack_runtime_support::{runtime_with_host, webhook_header};
 
 #[tokio::test]
 async fn slack_component_maps_message_channel_types_to_events_api_names() {
@@ -46,13 +46,10 @@ async fn slack_component_maps_message_channel_types_to_events_api_names() {
             .verify_webhook(fna_apps_interface::runtime::WebhookEnvelope {
                 app_id: String::from("slack"),
                 ingress_id: String::from("slack_events"),
-                headers: BTreeMap::from([
-                    (
-                        String::from("x-slack-request-timestamp"),
-                        now.timestamp().to_string(),
-                    ),
-                    (String::from("x-slack-signature"), String::from("v0=digest")),
-                ]),
+                headers: vec![
+                    webhook_header("x-slack-request-timestamp", &now.timestamp().to_string()),
+                    webhook_header("x-slack-signature", "v0=digest"),
+                ],
                 query: BTreeMap::new(),
                 body: body.into_bytes(),
                 received_at: now,

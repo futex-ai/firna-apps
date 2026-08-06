@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -83,7 +84,9 @@ def audit_app_layout(root: Path) -> list[str]:
         if len(present) != 1:
             failures.append(f"{app_root.relative_to(root)} must contain one manifest")
             continue
-        fields = manifest_fields(present[0])
+        manifest_path = present[0]
+        contents = manifest_path.read_text(encoding="utf-8")
+        fields = manifest_fields_from_text(contents)
         app_id = fields.get("id")
         version = fields.get("version")
         if app_id != app_root.name:
@@ -92,7 +95,12 @@ def audit_app_layout(root: Path) -> list[str]:
             )
         if version is None or SEMVER_RE.fullmatch(version) is None:
             failures.append(
-                f"{present[0].relative_to(root)} version `{version}` is not valid semver"
+                f"{manifest_path.relative_to(root)} version `{version}` is not valid semver"
+            )
+        if manifest_declares_top_level_events(manifest_path, contents):
+            failures.append(
+                f"{manifest_path.relative_to(root)} must not declare top-level events; "
+                "nest events under their owning ingress or omit the key"
             )
         for relative in (
             "README.md",
@@ -266,6 +274,18 @@ def audit_markdown_links(root: Path) -> list[str]:
 
 def manifest_fields(path: Path) -> dict[str, str]:
     return manifest_fields_from_text(path.read_text(encoding="utf-8"))
+
+
+def manifest_declares_top_level_events(path: Path, contents: str) -> bool:
+    if path.suffix == ".json":
+        try:
+            document = json.loads(contents)
+        except json.JSONDecodeError:
+            return False
+        return isinstance(document, dict) and "events" in document
+    return re.search(
+        r'''^(?:events|["']events["'])[ \t]*:''', contents, re.MULTILINE
+    ) is not None
 
 
 def manifest_fields_from_text(contents: str) -> dict[str, str]:

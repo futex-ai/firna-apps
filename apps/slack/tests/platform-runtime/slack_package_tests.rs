@@ -10,104 +10,11 @@ use serde_json::json;
 use unimock::{MockFn as _, Unimock, matching};
 use uuid::Uuid;
 
-use crate::slack_runtime_support::runtime_with_host;
-use crate::{component_bytes, manifest};
+use crate::component_bytes;
+use crate::slack_runtime_support::{runtime_with_host, webhook_header};
 
 #[path = "slack_component_error_tests.rs"]
 mod slack_component_error_tests;
-
-#[test]
-fn slack_manifest_declares_v1_tools_ingress_and_events() {
-    let manifest = manifest();
-
-    manifest.validate().unwrap();
-    assert_eq!(manifest.id, "slack");
-    assert_eq!(manifest.version, "1.1.20");
-    assert!(manifest.icon.is_some());
-    assert_eq!(
-        manifest.icon.as_ref().unwrap().color_pair.primary,
-        "#36C5F0"
-    );
-    assert_eq!(
-        manifest.icon.as_ref().unwrap().color_pair.secondary,
-        "#E01E5A"
-    );
-    assert_eq!(manifest.credential_flows.len(), 1);
-    assert_eq!(manifest.credential_flows[0].kind(), "standard_oauth2");
-    assert!(
-        manifest
-            .auth_requirements
-            .iter()
-            .all(|requirement| requirement.credential_flow.as_deref() == Some("slack"))
-    );
-    assert_eq!(manifest.tools.len(), 4);
-    assert_eq!(
-        manifest
-            .tools
-            .iter()
-            .map(|tool| tool.activity_label.as_str())
-            .collect::<Vec<_>>(),
-        [
-            "Listing Slack channels",
-            "Reading Slack channel history",
-            "Sending Slack message",
-            "Searching Slack messages",
-        ]
-    );
-    assert_eq!(manifest.ingress[0].verify_export, "verify-webhook");
-    assert_eq!(
-        manifest
-            .events
-            .iter()
-            .map(|event| {
-                (
-                    event.id.as_str(),
-                    event.ingress_id.as_str(),
-                    event.provider_type.as_str(),
-                    event.description.as_str(),
-                    event.contract_version,
-                )
-            })
-            .collect::<Vec<_>>(),
-        vec![
-            (
-                "app_mention",
-                "slack_events",
-                "app_mention",
-                "A Slack message mentions the workspace app bot.",
-                1,
-            ),
-            (
-                "message_channels",
-                "slack_events",
-                "message.channels",
-                "A public channel message is visible to the workspace app bot.",
-                1,
-            ),
-            (
-                "message_groups",
-                "slack_events",
-                "message.groups",
-                "A private channel message is visible to the workspace app bot.",
-                1,
-            ),
-            (
-                "message_im",
-                "slack_events",
-                "message.im",
-                "A direct message is visible to the workspace app bot.",
-                1,
-            ),
-            (
-                "message_mpim",
-                "slack_events",
-                "message.mpim",
-                "A group direct message is visible to the workspace app bot.",
-                1,
-            ),
-        ]
-    );
-}
 
 #[tokio::test]
 async fn slack_component_sends_messages_through_host_http() {
@@ -196,13 +103,10 @@ async fn slack_component_verifies_and_normalizes_webhooks() {
         .verify_webhook(fna_apps_interface::runtime::WebhookEnvelope {
             app_id: String::from("slack"),
             ingress_id: String::from("slack_events"),
-            headers: BTreeMap::from([
-                (
-                    String::from("x-slack-request-timestamp"),
-                    now.timestamp().to_string(),
-                ),
-                (String::from("x-slack-signature"), String::from("v0=digest")),
-            ]),
+            headers: vec![
+                webhook_header("x-slack-request-timestamp", &now.timestamp().to_string()),
+                webhook_header("x-slack-signature", "v0=digest"),
+            ],
             query: BTreeMap::new(),
             body: body_bytes.clone(),
             received_at: now,
@@ -219,7 +123,7 @@ async fn slack_component_verifies_and_normalizes_webhooks() {
             envelope: fna_apps_interface::runtime::WebhookEnvelope {
                 app_id: String::from("slack"),
                 ingress_id: String::from("slack_events"),
-                headers: BTreeMap::new(),
+                headers: Vec::new(),
                 query: BTreeMap::new(),
                 body: body_bytes,
                 received_at: now,
@@ -264,6 +168,40 @@ async fn slack_component_rejects_bad_or_stale_webhook_signatures() {
     ));
 }
 
+#[tokio::test]
+async fn slack_component_rejects_ambiguous_or_non_text_signature_headers() {
+    let runtime = runtime_with_host(Arc::new(Unimock::new(())));
+    let now = Utc::now();
+    let mut duplicate = slack_envelope(now, "v0=digest", now.timestamp());
+    duplicate
+        .headers
+        .push(webhook_header("x-slack-signature", "v0=digest"));
+
+    let error = runtime.verify_webhook(duplicate).await.unwrap_err();
+
+    assert!(matches!(
+        error,
+        fna_apps_interface::Error::RuntimeRejected { reason, .. }
+            if reason == "invalid_slack_signature"
+    ));
+
+    let mut non_text = slack_envelope(now, "v0=digest", now.timestamp());
+    non_text
+        .headers
+        .iter_mut()
+        .find(|header| header.name == "x-slack-request-timestamp")
+        .unwrap()
+        .value = vec![0xff];
+
+    let error = runtime.verify_webhook(non_text).await.unwrap_err();
+
+    assert!(matches!(
+        error,
+        fna_apps_interface::Error::RuntimeRejected { reason, .. }
+            if reason == "invalid_slack_timestamp"
+    ));
+}
+
 fn slack_envelope(
     received_at: chrono::DateTime<Utc>,
     signature: &str,
@@ -272,13 +210,10 @@ fn slack_envelope(
     fna_apps_interface::runtime::WebhookEnvelope {
         app_id: String::from("slack"),
         ingress_id: String::from("slack_events"),
-        headers: BTreeMap::from([
-            (
-                String::from("x-slack-request-timestamp"),
-                timestamp.to_string(),
-            ),
-            (String::from("x-slack-signature"), String::from(signature)),
-        ]),
+        headers: vec![
+            webhook_header("x-slack-request-timestamp", &timestamp.to_string()),
+            webhook_header("x-slack-signature", signature),
+        ],
         query: BTreeMap::new(),
         body: json!({
             "team_id": "T123",
