@@ -72,9 +72,9 @@ checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
 name = "android_system_properties"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "819e7219dbd41043ac279b19830f2efc897156490d7fd6ea916720117ee66311"
+checksum = "ae221649c9976a6f6c56ae1facf410f3ddb33cc661c4b7b61020a912d4237fbc"
 dependencies = [
  "libc",
 ]
@@ -641,9 +641,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "deranged"
+version = "0.5.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7cd812cc2bc1d69d4764bd80df88b4317eaef9e773c75226407d9bc0876b211c"
+
+[[package]]
 name = "diesel-enum-macro"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "serde",
 ]
@@ -860,7 +866,7 @@ dependencies = [
 [[package]]
 name = "fna-apps"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "ai-interface",
  "async-trait",
@@ -879,6 +885,8 @@ dependencies = [
  "fna-wake-queue",
  "hmac",
  "http",
+ "internal-error",
+ "jsonwebtoken",
  "libc",
  "semver",
  "serde",
@@ -889,6 +897,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.19",
  "tracing",
+ "unimock",
  "ureq",
  "uuid",
 ]
@@ -896,7 +905,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "ai-interface",
  "async-trait",
@@ -918,7 +927,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-store-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "chrono",
  "fna-apps-interface",
@@ -934,7 +943,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-wasm"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "async-trait",
  "fna-apps-interface",
@@ -950,7 +959,7 @@ dependencies = [
 [[package]]
 name = "fna-artifacts"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -968,7 +977,7 @@ dependencies = [
 [[package]]
 name = "fna-billing-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "async-trait",
  "chrono",
@@ -983,7 +992,7 @@ dependencies = [
 [[package]]
 name = "fna-core"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "argon2",
  "base64 0.22.1",
@@ -1004,7 +1013,7 @@ dependencies = [
 [[package]]
 name = "fna-db-enums"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "diesel-enum-macro",
  "serde",
@@ -1013,7 +1022,7 @@ dependencies = [
 [[package]]
 name = "fna-drives-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1030,7 +1039,7 @@ dependencies = [
 [[package]]
 name = "fna-kms"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "aes-gcm-siv",
  "base64 0.22.1",
@@ -1050,7 +1059,7 @@ dependencies = [
 [[package]]
 name = "fna-kms-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -1064,7 +1073,7 @@ dependencies = [
 [[package]]
 name = "fna-kms-store-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "chrono",
  "fna-kms-interface",
@@ -1078,7 +1087,7 @@ dependencies = [
 [[package]]
 name = "fna-sandbox-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1092,7 +1101,7 @@ dependencies = [
 [[package]]
 name = "fna-store-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "chrono",
  "fna-billing-interface",
@@ -1114,7 +1123,7 @@ dependencies = [
 [[package]]
 name = "fna-wake-queue"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=36978aa6b3f035088787552f4737a7384a8da9cb#36978aa6b3f035088787552f4737a7384a8da9cb"
+source = "git+https://github.com/futex-ai/firna.git?rev=5a7060b5d369190a6b102dfb07af0a300dd4502f#5a7060b5d369190a6b102dfb07af0a300dd4502f"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1784,6 +1793,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonwebtoken"
+version = "11.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "881733cbc631fc9e472e24447ce32a64bedf2da498d6d8570b08edc87de71f65"
+dependencies = [
+ "base64 0.22.1",
+ "getrandom 0.2.17",
+ "js-sys",
+ "pem",
+ "serde",
+ "serde_json",
+ "signature",
+ "simple_asn1",
+ "zeroize",
+]
+
+[[package]]
 name = "leb128fmt"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1950,6 +1976,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-conv"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "521739c6d2bac4aa25192232afe6841231376b2b26d4d9fae5ecf8ca5772e441"
+
+[[package]]
 name = "num-integer"
 version = "0.1.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2096,6 +2128,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ee67f1008b1ba2321834326597b8e186293b049a023cdef258527550b9935b4"
 
 [[package]]
+name = "pem"
+version = "3.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d30c53c26bc5b31a98cd02d20f25a7c8567146caf63ed593a9d87b2775291be"
+dependencies = [
+ "base64 0.22.1",
+ "serde_core",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2165,6 +2207,12 @@ checksum = "0103b1cef7ec0cf76490e969665504990193874ea05c85ff9bab8b911d0a0564"
 dependencies = [
  "zerovec",
 ]
+
+[[package]]
+name = "powerfmt"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391"
 
 [[package]]
 name = "pretty_assertions"
@@ -2802,6 +2850,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "signature"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77549399552de45a898a580c1b41d445bf730df867cc44e6c0233bbc4b8329de"
+dependencies = [
+ "rand_core 0.6.4",
+]
+
+[[package]]
 name = "simd-adler32"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2822,6 +2879,18 @@ name = "simdutf8"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
+
+[[package]]
+name = "simple_asn1"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d585997b0ac10be3c5ee635f1bab02d512760d14b7c468801ac8a01d9ae5f1d"
+dependencies = [
+ "num-bigint",
+ "num-traits",
+ "thiserror 2.0.19",
+ "time",
+]
 
 [[package]]
 name = "sized-chunks"
@@ -2989,6 +3058,36 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.3",
+]
+
+[[package]]
+name = "time"
+version = "0.3.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cdb87b95ec50ddfa440816d227a17b2ccbdda963a316a727fda0fc4334f7d134"
+dependencies = [
+ "deranged",
+ "num-conv",
+ "powerfmt",
+ "serde_core",
+ "time-core",
+ "time-macros",
+]
+
+[[package]]
+name = "time-core"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e1c906769ad99c88eaa54e728060edef082f8e358ff32030cb7c7d315e81109"
+
+[[package]]
+name = "time-macros"
+version = "0.2.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e689342a48d2ea927c87ea50cabf8594854bf940e9310208848d680d668ed85"
+dependencies = [
+ "num-conv",
+ "time-core",
 ]
 
 [[package]]
@@ -4129,6 +4228,20 @@ name = "zeroize"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e"
+dependencies = [
+ "zeroize_derive",
+]
+
+[[package]]
+name = "zeroize_derive"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c50655cbb0fe3fc43170059e702f1ce5e19b84cec58dc87b037a09935c2f328"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
 
 [[package]]
 name = "zerotrie"

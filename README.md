@@ -9,6 +9,8 @@ The current catalog packages are:
 - DataForSEO: explicitly installed research tools backed by each workspace's
   own DataForSEO credentials.
 - Exa: workspace-default web search backed by a Firna-managed API key.
+- GitHub: explicit workspace installation for short-lived external-repository
+  credentials, with no baseline agent tools or webhooks.
 - HTTP: workspace-default, first-party arbitrary-host HTTP requests.
 - Slack: explicitly installed Slack tools, OAuth, webhooks, and event handling.
 - X: explicitly installed, workspace-authorized, usage-priced Post reads,
@@ -40,14 +42,14 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev 36978aa6b3f035088787552f4737a7384a8da9cb \
+  --rev 5a7060b5d369190a6b102dfb07af0a300dd4502f \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```
 
-The X manifest uses the platform's merged usage-based app pricing and OAuth
-refresh lifecycle. Its validation, packaging, and runtime tests are part of the
-canonical repository checks.
+The GitHub manifest uses the platform's installation-token flow; the X manifest
+uses its usage-based app pricing and OAuth refresh lifecycle. Their validation,
+packaging, and runtime tests are part of the canonical repository checks.
 
 CI also runs a secret-provisioning merge gate
 (`scripts/check_app_secrets.py`): for every environment class an app targets
@@ -74,10 +76,11 @@ schedule (so a reset environment converges without coordination), on the
 and on manual dispatch with optional `app` and `instance` inputs to force
 resubmission.
 
-Apps target environment classes through per-app `deploy.toml` files; `x`
-deploys to production and the stable `br-main` preview, whose fixed OAuth
-callbacks its provider registers, while ephemeral `pr-N` previews exclude
-it. Deployment authenticates per instance as that
+Apps target environment classes through per-app `deploy.toml` files. `github`
+deploys only to production because its registration uses the production setup
+and callback URLs. `x` deploys to production and the stable `br-main` preview,
+whose fixed OAuth callbacks its provider registers, while ephemeral `pr-N`
+previews exclude it. Deployment authenticates per instance as that
 instance's admin and uses `firna admin apps submit`. That operator-controlled
 route builds, approves, and promotes these trusted packages in one operation;
 it deliberately does not use the community submission/review path. App secret

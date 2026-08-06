@@ -31,12 +31,14 @@ offline build inputs in the completed archive.
 firna apps new apps/demo --app-id demo --name Demo --non-interactive
 firna apps validate apps/slack
 firna apps validate apps/exa
+firna apps validate apps/github
 firna apps validate apps/http
 firna apps validate apps/dataforseo
 firna apps validate apps/x
 firna apps package apps/slack
 cargo test --manifest-path apps/slack/tests/platform-runtime/Cargo.toml --locked
 cargo test --manifest-path apps/exa/tests/platform-runtime/Cargo.toml --locked
+cargo test --manifest-path apps/github/tests/platform-runtime/Cargo.toml --locked
 cargo test --manifest-path apps/http/tests/platform-runtime/Cargo.toml --locked
 cargo test --manifest-path apps/dataforseo/tests/platform-runtime/Cargo.toml --locked
 cargo test --manifest-path apps/x/tests/platform-runtime/Cargo.toml --locked
@@ -104,6 +106,9 @@ separate OAuth apps with the same manifest.
 - `apps/exa`: workspace-default Exa web-search app exposing
   `exa_web_search`; it stores the provider key as the app-owned `api_key`
   secret, not as a server or worker runtime environment variable.
+- `apps/github`: production-only, explicit-install built-in GitHub App package
+  for short-lived repository credentials. Its baseline version declares no
+  agent tools or webhook ingress.
 - `apps/http`: workspace-default built-in HTTP app exposing `http_request`.
   It uses the first-party broad HTTP host capability and does not receive or
   inject app/provider credentials.
