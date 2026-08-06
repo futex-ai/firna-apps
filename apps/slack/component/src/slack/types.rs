@@ -1,7 +1,5 @@
 //! JSON DTOs used by the Slack component.
 
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -51,9 +49,15 @@ pub(crate) struct SlackSearchMessagesRequest {
 pub(crate) struct WebhookEnvelope {
     pub(crate) app_id: String,
     pub(crate) ingress_id: String,
-    pub(crate) headers: BTreeMap<String, String>,
+    pub(crate) headers: Vec<WebhookHeader>,
     pub(crate) body: Vec<u8>,
     pub(crate) received_at: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub(crate) struct WebhookHeader {
+    pub(crate) name: String,
+    pub(crate) value: Vec<u8>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -7,7 +7,7 @@ use fna_apps_wasm::{HostHmacSha256Response, WasmHostMock};
 use serde_json::json;
 use unimock::{MockFn as _, Unimock, matching};
 
-use crate::slack_runtime_support::runtime_with_host;
+use crate::slack_runtime_support::{runtime_with_host, webhook_headers};
 
 #[tokio::test]
 async fn slack_component_verifies_url_challenge_without_team_id() {
@@ -31,13 +31,7 @@ async fn slack_component_verifies_url_challenge_without_team_id() {
         .verify_webhook(fna_apps_interface::runtime::WebhookEnvelope {
             app_id: String::from("slack"),
             ingress_id: String::from("slack_events"),
-            headers: BTreeMap::from([
-                (
-                    String::from("x-slack-request-timestamp"),
-                    now.timestamp().to_string(),
-                ),
-                (String::from("x-slack-signature"), String::from("v0=digest")),
-            ]),
+            headers: webhook_headers(now.timestamp(), "v0=digest"),
             query: BTreeMap::new(),
             body: body.into_bytes(),
             received_at: now,
@@ -56,7 +50,7 @@ async fn slack_component_returns_url_verification_challenge_response() {
     let envelope = fna_apps_interface::runtime::WebhookEnvelope {
         app_id: String::from("slack"),
         ingress_id: String::from("slack_events"),
-        headers: BTreeMap::new(),
+        headers: Vec::new(),
         query: BTreeMap::new(),
         body: json!({
             "type": "url_verification",
@@ -71,10 +65,12 @@ async fn slack_component_returns_url_verification_challenge_response() {
         .webhook_response(WebhookResponseRequest {
             envelope,
             verification: fna_apps_interface::runtime::WebhookVerificationResult {
+                provider_installation_id: None,
                 provider_account_id: String::from("T123"),
                 provider_event_id: String::from("challenge-token"),
                 provider_event_type: String::from("url_verification"),
                 provider_user_id: None,
+                installation_lifecycle: None,
             },
         })
         .await
