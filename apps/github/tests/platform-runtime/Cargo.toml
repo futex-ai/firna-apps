@@ -1,5 +1,5 @@
 [package]
-name = "fna-app-slack-platform-runtime-tests"
+name = "fna-app-github-platform-runtime-tests"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
@@ -7,15 +7,6 @@ authors = ["Polybase"]
 
 [workspace]
 
-[lib]
-doctest = false
-
 [dependencies]
-chrono = "0.4.44"
 fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "5a7060b5d369190a6b102dfb07af0a300dd4502f" }
 fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "5a7060b5d369190a6b102dfb07af0a300dd4502f" }
-serde_json = "1.0.150"
-serde_yaml = "0.9.34"
-tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread"] }
-unimock = "0.6.8"
-uuid = { version = "1.23.1", features = ["v7"] }
