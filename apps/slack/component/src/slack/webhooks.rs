@@ -6,7 +6,9 @@ use std::str;
 use serde_json::{Value, json};
 
 use crate::slack::host::{hmac_sha256, signing_credential};
-use crate::slack::types::{VerifiedProviderEvent, WebhookEnvelope, WebhookResponseRequest};
+use crate::slack::types::{
+    VerifiedProviderEvent, WebhookEnvelope, WebhookHeader, WebhookResponseRequest,
+};
 use crate::slack::{encode_json, invalid_request};
 
 const MAX_SIGNATURE_AGE_SECONDS: i64 = 300;
@@ -85,11 +87,15 @@ pub(crate) fn webhook_response(request: &str) -> String {
 }
 
 fn verify_signature(envelope: &WebhookEnvelope, body: &str) -> Option<Value> {
-    let Some(signature) = unique_header(envelope, "x-slack-signature") else {
-        return Some(invalid_request("missing_slack_signature"));
+    let signature = match header_text(&envelope.headers, "x-slack-signature") {
+        HeaderText::Value(value) => value,
+        HeaderText::Missing => return Some(invalid_request("missing_slack_signature")),
+        HeaderText::Invalid => return Some(invalid_request("invalid_slack_signature")),
     };
-    let Some(timestamp) = unique_header(envelope, "x-slack-request-timestamp") else {
-        return Some(invalid_request("missing_slack_timestamp"));
+    let timestamp = match header_text(&envelope.headers, "x-slack-request-timestamp") {
+        HeaderText::Value(value) => value,
+        HeaderText::Missing => return Some(invalid_request("missing_slack_timestamp")),
+        HeaderText::Invalid => return Some(invalid_request("invalid_slack_timestamp")),
     };
     let Ok(timestamp_seconds) = timestamp.parse::<i64>() else {
         return Some(invalid_request("invalid_slack_timestamp"));
@@ -110,17 +116,24 @@ fn verify_signature(envelope: &WebhookEnvelope, body: &str) -> Option<Value> {
     }
 }
 
-fn unique_header<'a>(envelope: &'a WebhookEnvelope, name: &str) -> Option<&'a str> {
-    let mut values = envelope
-        .headers
-        .iter()
-        .filter(|header| header.name == name)
-        .map(|header| header.value.as_slice());
-    let value = values.next()?;
-    if values.next().is_some() {
-        return None;
+enum HeaderText<'a> {
+    Missing,
+    Invalid,
+    Value(&'a str),
+}
+
+fn header_text<'a>(headers: &'a [WebhookHeader], name: &str) -> HeaderText<'a> {
+    let mut matching = headers.iter().filter(|header| header.name == name);
+    let Some(header) = matching.next() else {
+        return HeaderText::Missing;
+    };
+    if matching.next().is_some() {
+        return HeaderText::Invalid;
     }
-    str::from_utf8(value).ok()
+    match str::from_utf8(&header.value) {
+        Ok(value) => HeaderText::Value(value),
+        Err(_) => HeaderText::Invalid,
+    }
 }
 
 fn team_id(body: &Value) -> Option<&str> {

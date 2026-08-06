@@ -9,16 +9,17 @@ pub(crate) fn runtime_with_host(host: DynWasmHost) -> WasmComponentRuntime {
     compiled_runtime().with_host(host)
 }
 
+pub(crate) fn webhook_header(name: &str, value: &str) -> WebhookHeader {
+    WebhookHeader {
+        name: name.to_owned(),
+        value: value.as_bytes().to_vec(),
+    }
+}
+
 pub(crate) fn webhook_headers(timestamp: i64, signature: &str) -> Vec<WebhookHeader> {
     vec![
-        WebhookHeader {
-            name: String::from("x-slack-request-timestamp"),
-            value: timestamp.to_string().into_bytes(),
-        },
-        WebhookHeader {
-            name: String::from("x-slack-signature"),
-            value: signature.as_bytes().to_vec(),
-        },
+        webhook_header("x-slack-request-timestamp", &timestamp.to_string()),
+        webhook_header("x-slack-signature", signature),
     ]
 }
 

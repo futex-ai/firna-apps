@@ -63,9 +63,9 @@ Never add either credential value to this package.
 Firna prepays X and charges the authorizing workspace only after a successful
 tool call. Post reads cost $0.005 per returned Post, expanded User reads cost
 $0.010 per returned author, text-only creation costs $0.015, and link-bearing
-creation costs $0.200. Failed calls are uncharged. Prices are fixed for app
-version `1.0.6`; changing them requires a new version and explicit workspace
-consent.
+creation costs $0.200. Failed calls are uncharged. Prices are fixed for the
+installed app version; changing them requires a new version and explicit
+workspace consent.
 
 Production requires both platform billing and app charging to be enabled. If
 either is disabled, or the wallet cannot cover the declared worst-case hold,

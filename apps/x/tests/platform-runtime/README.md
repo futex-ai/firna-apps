@@ -52,8 +52,8 @@ responses are fixtures at the host boundary, and every output assertion rejects
 provider-only fields or secret-bearing error details.
 
 The durable write proof is intentionally split at the ownership boundary. This
-crate runs `x_component_never_retries_an_ambiguous_write`; platform revision
-`36978aa6` runs
+crate runs `x_component_never_retries_an_ambiguous_write`; the platform
+revision pinned in the repository's `platform.toml` runs
 `tool_execution_transitions_from_pending_to_completed`,
 `reclaimed_event_replays_normalized_tool_history_without_provider_context`, and
 `pending_tool_executions_fail_closed_without_reexecution`. Keeping the durable

@@ -110,8 +110,9 @@ targeting. The full contract is
 
 - [`apps/`](apps/README.md): manifests, component source, assets, and runtime
   tests.
-- [`scripts/repository_audit.py`](scripts/repository_audit.py): compatibility,
-  version, source-layout, and file-length checks.
+- [`scripts/repository_audit.py`](scripts/repository_audit.py): manifest
+  authoring-contract, compatibility, version, source-layout, and file-length
+  checks.
 - [`scripts/plan-app-deploys.py`](scripts/plan-app-deploys.py): catalog-aware
   production deployment planning.
 - [`deploy.toml`](deploy.toml) and [`scripts/deploy_config.py`](scripts/deploy_config.py):

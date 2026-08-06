@@ -103,6 +103,9 @@ fn component_filename() -> String {
 #[path = "../documentation_tests.rs"]
 mod documentation_tests;
 #[cfg(test)]
+#[path = "../slack_manifest_tests.rs"]
+mod slack_manifest_tests;
+#[cfg(test)]
 #[path = "../slack_message_event_tests.rs"]
 mod slack_message_event_tests;
 #[cfg(test)]

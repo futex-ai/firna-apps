@@ -29,7 +29,8 @@ Install `wasm32-unknown-unknown` and the `wasm-tools` version from the root
 ### Key Code
 
 - `src/lib.rs` builds and wraps the component.
-- `slack_package_tests.rs` validates package metadata and runtime behavior.
+- `slack_manifest_tests.rs` validates package metadata and event declarations.
+- `slack_package_tests.rs` covers host HTTP and webhook runtime behavior.
 - `slack_url_verification_tests.rs` covers Slack verification responses.
 
 ### Related Docs

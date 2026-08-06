@@ -82,10 +82,12 @@ immutable manifests stored under the old contract.
 Webhook-capable packages declare provider events in the `events` list nested
 under their owning `ingress` entry. Each event owns a stable app-local id,
 provider type, model-safe description, and positive contract version; the
-containing ingress supplies its ingress id and exact lower-case forwarded
-header allowlist. The platform rejects the retired top-level `events` shape in
-new submissions. Packages do not declare handlers or subscriptions: agents
-explicitly subscribe themselves after installation.
+containing ingress supplies its ingress id. Each webhook ingress lists the
+exact lowercase request headers its verifier receives in `allowed_headers`.
+The platform rejects the retired top-level `events` shape in new submissions;
+packages without provider events omit `events` rather than declaring an empty
+catalog. Packages do not declare handlers or subscriptions: agents explicitly
+subscribe themselves after installation.
 
 Production secret IDs use:
 
