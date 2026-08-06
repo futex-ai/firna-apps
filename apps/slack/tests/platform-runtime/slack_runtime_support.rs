@@ -16,6 +16,13 @@ pub(crate) fn webhook_header(name: &str, value: &str) -> WebhookHeader {
     }
 }
 
+pub(crate) fn webhook_headers(timestamp: i64, signature: &str) -> Vec<WebhookHeader> {
+    vec![
+        webhook_header("x-slack-request-timestamp", &timestamp.to_string()),
+        webhook_header("x-slack-signature", signature),
+    ]
+}
+
 fn compiled_runtime() -> &'static WasmComponentRuntime {
     static COMPILED_RUNTIME: OnceLock<WasmComponentRuntime> = OnceLock::new();
 

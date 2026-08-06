@@ -79,14 +79,15 @@ satisfied app authentication. New packages cannot declare the retired
 `required_agent_permissions` block; the platform accepts it only while reading
 immutable manifests stored under the old contract.
 
-Webhook-capable packages nest provider events under their owning `ingress`
-entry. Each event owns a stable app-local id, provider type, model-safe
-description, and positive contract version; its ingress id comes from the
-containing entry. Each webhook ingress also lists the exact lowercase request
-headers its verifier receives in `allowed_headers`. Packages without provider
-events omit `events` rather than declaring an empty top-level catalog. Packages
-do not declare handlers or subscriptions: agents explicitly subscribe
-themselves after installation.
+Webhook-capable packages declare provider events in the `events` list nested
+under their owning `ingress` entry. Each event owns a stable app-local id,
+provider type, model-safe description, and positive contract version; the
+containing ingress supplies its ingress id. Each webhook ingress lists the
+exact lowercase request headers its verifier receives in `allowed_headers`.
+The platform rejects the retired top-level `events` shape in new submissions;
+packages without provider events omit `events` rather than declaring an empty
+catalog. Packages do not declare handlers or subscriptions: agents explicitly
+subscribe themselves after installation.
 
 Production secret IDs use:
 

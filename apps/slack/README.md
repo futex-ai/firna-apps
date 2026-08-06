@@ -49,8 +49,10 @@ Slack exposes `app_mention`, `message_channels`, `message_groups`,
 `message_im`, and `message_mpim` as stable native events. Installing Slack
 does not choose a handler or wake an agent automatically. Each agent explicitly
 subscribes to the events it needs after the workspace installation is active.
-The manifest nests these events under `slack_events` and forwards only
-`x-slack-request-timestamp` and `x-slack-signature` to its verifier.
+The manifest nests these events under `slack_events`. The webhook ingress
+forwards only `x-slack-request-timestamp` and `x-slack-signature`, preserving
+their raw bytes and rejecting missing, malformed, or duplicate signature
+inputs.
 
 ## Secrets
 

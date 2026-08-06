@@ -11,7 +11,7 @@ use unimock::{MockFn as _, Unimock, matching};
 use uuid::Uuid;
 
 use crate::component_bytes;
-use crate::slack_runtime_support::{runtime_with_host, webhook_header};
+use crate::slack_runtime_support::{runtime_with_host, webhook_header, webhook_headers};
 
 #[path = "slack_component_error_tests.rs"]
 mod slack_component_error_tests;
@@ -103,10 +103,7 @@ async fn slack_component_verifies_and_normalizes_webhooks() {
         .verify_webhook(fna_apps_interface::runtime::WebhookEnvelope {
             app_id: String::from("slack"),
             ingress_id: String::from("slack_events"),
-            headers: vec![
-                webhook_header("x-slack-request-timestamp", &now.timestamp().to_string()),
-                webhook_header("x-slack-signature", "v0=digest"),
-            ],
+            headers: webhook_headers(now.timestamp(), "v0=digest"),
             query: BTreeMap::new(),
             body: body_bytes.clone(),
             received_at: now,
@@ -169,7 +166,7 @@ async fn slack_component_rejects_bad_or_stale_webhook_signatures() {
 }
 
 #[tokio::test]
-async fn slack_component_rejects_ambiguous_or_non_text_signature_headers() {
+async fn slack_component_rejects_ambiguous_or_non_text_verification_headers() {
     let runtime = runtime_with_host(Arc::new(Unimock::new(())));
     let now = Utc::now();
     let mut duplicate = slack_envelope(now, "v0=digest", now.timestamp());
@@ -210,10 +207,7 @@ fn slack_envelope(
     fna_apps_interface::runtime::WebhookEnvelope {
         app_id: String::from("slack"),
         ingress_id: String::from("slack_events"),
-        headers: vec![
-            webhook_header("x-slack-request-timestamp", &timestamp.to_string()),
-            webhook_header("x-slack-signature", signature),
-        ],
+        headers: webhook_headers(timestamp, signature),
         query: BTreeMap::new(),
         body: json!({
             "team_id": "T123",

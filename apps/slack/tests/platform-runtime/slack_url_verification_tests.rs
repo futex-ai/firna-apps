@@ -7,7 +7,7 @@ use fna_apps_wasm::{HostHmacSha256Response, WasmHostMock};
 use serde_json::json;
 use unimock::{MockFn as _, Unimock, matching};
 
-use crate::slack_runtime_support::{runtime_with_host, webhook_header};
+use crate::slack_runtime_support::{runtime_with_host, webhook_headers};
 
 #[tokio::test]
 async fn slack_component_verifies_url_challenge_without_team_id() {
@@ -31,10 +31,7 @@ async fn slack_component_verifies_url_challenge_without_team_id() {
         .verify_webhook(fna_apps_interface::runtime::WebhookEnvelope {
             app_id: String::from("slack"),
             ingress_id: String::from("slack_events"),
-            headers: vec![
-                webhook_header("x-slack-request-timestamp", &now.timestamp().to_string()),
-                webhook_header("x-slack-signature", "v0=digest"),
-            ],
+            headers: webhook_headers(now.timestamp(), "v0=digest"),
             query: BTreeMap::new(),
             body: body.into_bytes(),
             received_at: now,

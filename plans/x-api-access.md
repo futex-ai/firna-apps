@@ -36,7 +36,7 @@ release.
 - OAuth scopes are `tweet.read`, `tweet.write`, `users.read`, and
   `offline.access`. The offline scope returns a refresh token; X's user access
   token flow requires refresh-token rotation for a durable connection.
-- The canonical Firna platform revision is `5c3635de`, which contains the
+- The canonical Firna platform revision is `595de3fc`, which contains the
   merged OAuth refresh lifecycle, usage-based app charging, task-specific
   activity-label contracts, and uniform agent capability contract required by
   this package, plus ingress-owned event authoring and lossless webhook header
@@ -56,7 +56,7 @@ release.
   The repository was initially pinned to platform `main` at `dbcc678a`, which
   also contains native usage-based app billing and activity labels, and was
   later compatibility-repinned to `90d4c13f`, then to `36978aa6` for the
-  uniform agent capability contract, and finally to `5c3635de` for
+  uniform agent capability contract, and finally to `595de3fc` for
   ingress-owned events and lossless webhook headers.
 - This Conductor session has no controllable signed-in X console connector, so
   the human operator must confirm the production app type, callback, and OAuth
