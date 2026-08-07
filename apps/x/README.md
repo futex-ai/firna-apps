@@ -4,10 +4,19 @@
 authorized Firna workspace bounded Post lookup, recent search, and one-Post
 publishing without exposing OAuth tokens to the component or agents.
 
+The multi-account behavior below is the target for package `1.1.0`. The
+checked-in `1.0.9` manifest remains single-connection until the corresponding
+generic Firna platform revision is merged and pinned in this repository.
+
 ## Responsibilities
 
 - Declare workspace-owned OAuth 2.0 with PKCE, offline access, and host-owned
-  refresh-token rotation.
+  per-connection refresh-token rotation.
+- Identify each authorization with one trusted, bounded `GET /2/users/me`
+  before tokens are published, mapping X user id to immutable connection
+  identity and username to public display label.
+- Opt into the platform's 25-account workspace limit while keeping add,
+  reconnect, disable, agent access, refresh, and disconnect installation-scoped.
 - Expose only the three reviewed V1 tools and keep every billed request bounded.
 - Build a Wasm component that validates inputs and returns compact typed data.
 - Keep client credentials and workspace tokens behind opaque host credentials.
@@ -24,6 +33,30 @@ publishing without exposing OAuth tokens to the component or agents.
 The app requests `tweet.read`, `tweet.write`, `users.read`, and
 `offline.access`. It does not expose media, threads, deletion, editing,
 streams, automatic pagination, or background polling.
+
+### Multiple Accounts
+
+Workspace owners and admins install the first X account, then use **Connect
+another account** to authorize more. Each account is a separate Firna
+installation with its own opaque credentials, refresh claim, status, agent
+access, billing attribution, and audit identity. Duplicate X user ids are
+rejected without rotating the existing account. Reconnect must return the same
+X user id as the selected connection, so authorizing a different account cannot
+silently replace it. Disconnect removes only that account; the final disconnect
+makes the app unavailable until it is installed again.
+
+Every X tool call explicitly selects one agent-visible `connection_id`; the
+host shows the corresponding X username, validates the selection, and strips
+the reserved field before invoking this component. The component retains its
+current input schemas and never receives an account selector or token. There is
+no default-account fallback, automatic cross-post, or one-call fan-out.
+
+X does not document an account-forcing parameter for this OAuth 2.0 authorize
+endpoint. Before approving another connection, use X's account switcher or
+sign out and sign into the intended account in the system browser. If the
+current account is returned and Firna reports that it is already connected,
+switch accounts in X and start a fresh authorization. Do not add OAuth 1.0a's
+`force_login` or `screen_name` parameters to this OAuth 2.0 manifest.
 
 ## Quick Start
 
@@ -67,6 +100,10 @@ creation costs $0.200. Failed calls are uncharged. Prices are fixed for the
 installed app version; changing them requires a new version and explicit
 workspace consent.
 
+The one `/2/users/me` identity request made during install, add, reconnect, or
+upgrade is control-plane work, not a billed tool call. Firna absorbs any X cost
+for it and includes that bounded overhead in the provider spending limit.
+
 Production requires both platform billing and app charging to be enabled. If
 either is disabled, or the wallet cannot cover the declared worst-case hold,
 the call fails before X receives a request.
@@ -95,3 +132,5 @@ purchased.
 - [Firna app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md)
 - [X API pricing](https://docs.x.com/x-api/getting-started/pricing)
 - [X OAuth user access](https://docs.x.com/fundamentals/authentication/oauth-2-0/user-access-token)
+- [X authenticated user](https://docs.x.com/x-api/users/get-my-user)
+- [X OAuth API reference](https://docs.x.com/fundamentals/authentication/api-reference)
