@@ -39,7 +39,7 @@ fn github_manifest_preserves_installation_access_and_adds_tools_and_events() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "github");
-    assert_eq!(manifest.version, "2.0.1");
+    assert_eq!(manifest.version, "2.0.2");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);
     assert_eq!(
@@ -48,7 +48,15 @@ fn github_manifest_preserves_installation_access_and_adds_tools_and_events() {
             .iter()
             .map(|secret| secret.name.as_str())
             .collect::<Vec<_>>(),
-        ["client_secret", "private_key", "webhook_secret"]
+        [
+            "app_slug",
+            "callback_url",
+            "client_id",
+            "client_secret",
+            "private_key",
+            "setup_url",
+            "webhook_secret",
+        ]
     );
     assert_eq!(
         manifest
@@ -119,17 +127,18 @@ fn github_installation_and_ingress_contracts_are_exact() {
         panic!("expected one installation-token flow");
     };
     assert_eq!(flow.provider, "github");
-    assert_eq!(flow.client_id, "Iv23lidBdZ0I2rgwjhXB");
-    assert_eq!(flow.app_slug, "firna-ai");
+    assert_eq!(flow.client_id, None);
+    assert_eq!(flow.client_id_env.as_deref(), Some("client_id"));
+    assert_eq!(flow.app_slug, None);
+    assert_eq!(flow.app_slug_env.as_deref(), Some("app_slug"));
     assert_eq!(
         flow.install_url_template,
-        "https://github.com/apps/firna-ai/installations/new?state={state}"
+        "https://github.com/apps/{app_slug}/installations/new?state={state}"
     );
-    assert_eq!(flow.setup_url, "https://firna.ai/apps/github/install/setup");
-    assert_eq!(
-        flow.callback_url,
-        "https://firna.ai/apps/github/install/callback"
-    );
+    assert_eq!(flow.setup_url, None);
+    assert_eq!(flow.setup_url_env.as_deref(), Some("setup_url"));
+    assert_eq!(flow.callback_url, None);
+    assert_eq!(flow.callback_url_env.as_deref(), Some("callback_url"));
     assert_eq!(
         serde_json::to_value(flow).unwrap()["permissions"],
         serde_json::json!({
@@ -173,14 +182,24 @@ fn package_documentation_tracks_registration_and_runtime_contracts() {
 
     for contract in [
         "App ID: `4504159`",
+        "App ID: `4515873`",
+        "Client ID: `Iv23lidBdZ0I2rgwjhXB`",
+        "Client ID: `Iv23liSZsLmwSZrxxpzm`",
         "Slug: `firna-ai`",
+        "Slug: `firna-ai-preview`",
+        "`app_slug`",
+        "`callback_url`",
+        "`client_id`",
         "`client_secret`",
         "`private_key`",
+        "`setup_url`",
         "`webhook_secret`",
         "`github_installation`",
         "16 path segments",
         "https://firna.ai/apps/github/install/setup",
         "https://firna.ai/apps/github/install/callback",
+        "https://br-main.preview.firna.ai/apps/github/install/setup",
+        "https://br-main.preview.firna.ai/apps/github/install/callback",
         "/apps/github/webhooks/github_events",
         "`pull_request_review_comment`",
     ] {

@@ -711,7 +711,7 @@ checksum = "7cd812cc2bc1d69d4764bd80df88b4317eaef9e773c75226407d9bc0876b211c"
 [[package]]
 name = "diesel-enum-macro"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "serde",
 ]
@@ -1004,7 +1004,7 @@ dependencies = [
 [[package]]
 name = "fna-apps"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "ai-interface",
  "async-trait",
@@ -1044,7 +1044,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "ai-interface",
  "async-trait",
@@ -1066,7 +1066,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-store-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "chrono",
  "fna-apps-interface",
@@ -1082,7 +1082,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-wasm"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "async-trait",
  "fna-apps-interface",
@@ -1098,7 +1098,7 @@ dependencies = [
 [[package]]
 name = "fna-artifacts"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -1117,7 +1117,7 @@ dependencies = [
 [[package]]
 name = "fna-billing-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1132,7 +1132,7 @@ dependencies = [
 [[package]]
 name = "fna-core"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "argon2",
  "base64 0.22.1",
@@ -1153,7 +1153,7 @@ dependencies = [
 [[package]]
 name = "fna-db-enums"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "diesel-enum-macro",
  "serde",
@@ -1162,7 +1162,7 @@ dependencies = [
 [[package]]
 name = "fna-drives-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1179,7 +1179,7 @@ dependencies = [
 [[package]]
 name = "fna-kms"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "aes-gcm-siv",
  "base64 0.22.1",
@@ -1199,7 +1199,7 @@ dependencies = [
 [[package]]
 name = "fna-kms-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -1213,7 +1213,7 @@ dependencies = [
 [[package]]
 name = "fna-kms-store-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "chrono",
  "fna-kms-interface",
@@ -1227,7 +1227,7 @@ dependencies = [
 [[package]]
 name = "fna-sandbox-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1241,7 +1241,7 @@ dependencies = [
 [[package]]
 name = "fna-store-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "chrono",
  "fna-billing-interface",
@@ -1263,7 +1263,7 @@ dependencies = [
 [[package]]
 name = "fna-wake-queue"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=a59d30891868aaabbb8c675f70307fa192ee22f5#a59d30891868aaabbb8c675f70307fa192ee22f5"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "async-trait",
  "chrono",
