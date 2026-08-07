@@ -1,0 +1,14 @@
+{
+  "installation": {"id": 1001, "account": {"id": 2001, "login": "octo-org", "html_url": "https://github.com/octo-org"}},
+  "repository": {"id": 3001, "name": "repo", "full_name": "octo-org/repo", "html_url": "https://github.com/octo-org/repo", "private": true},
+  "sender": {"id": 4001, "login": "octocat", "html_url": "https://github.com/octocat"},
+  "ref": "refs/heads/main",
+  "before": "1111111111111111111111111111111111111111",
+  "after": "2222222222222222222222222222222222222222",
+  "compare": "https://github.com/octo-org/repo/compare/111...222",
+  "created": false,
+  "deleted": false,
+  "forced": false,
+  "commits": [{"id": "2222222222222222222222222222222222222222", "message": "Ship events", "url": "https://github.com/octo-org/repo/commit/222", "author": {"name": "Octo Cat", "username": "octocat"}}],
+  "head_commit": {"id": "2222222222222222222222222222222222222222", "message": "Ship events", "url": "https://github.com/octo-org/repo/commit/222", "author": {"name": "Octo Cat", "username": "octocat"}}
+}

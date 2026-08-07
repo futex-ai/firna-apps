@@ -105,8 +105,26 @@ fn component_filename() -> String {
 #[path = "../github_component_tests.rs"]
 mod github_component_tests;
 #[cfg(test)]
+#[path = "../github_file_smoke_tests.rs"]
+mod github_file_smoke_tests;
+#[cfg(test)]
+#[path = "../github_fixtures.rs"]
+mod github_fixtures;
+#[cfg(test)]
+#[path = "../github_host_contract_tests.rs"]
+mod github_host_contract_tests;
+#[cfg(test)]
 #[path = "../github_package_tests.rs"]
 mod github_package_tests;
+#[cfg(test)]
+#[path = "../github_runtime_support.rs"]
+mod github_runtime_support;
+#[cfg(test)]
+#[path = "../github_tool_smoke_tests.rs"]
+mod github_tool_smoke_tests;
+#[cfg(test)]
+#[path = "../github_webhook_smoke_tests.rs"]
+mod github_webhook_smoke_tests;
 #[cfg(test)]
 #[path = "../target_directory_tests.rs"]
 mod target_directory_tests;

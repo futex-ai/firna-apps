@@ -1,0 +1,8 @@
+{
+  "action": "created",
+  "installation": {"id": 1001, "account": {"id": 2001, "login": "octo-org", "html_url": "https://github.com/octo-org"}},
+  "repository": {"id": 3001, "name": "repo", "full_name": "octo-org/repo", "html_url": "https://github.com/octo-org/repo", "private": true},
+  "sender": {"id": 4002, "login": "commenter", "html_url": "https://github.com/commenter"},
+  "issue": {"id": 8001, "number": 23, "title": "Webhook issue", "body": "A bounded issue body", "state": "open", "html_url": "https://github.com/octo-org/repo/issues/23", "locked": false, "user": {"id": 4001, "login": "octocat", "html_url": "https://github.com/octocat"}},
+  "comment": {"id": 9001, "body": "A bounded comment", "html_url": "https://github.com/octo-org/repo/issues/23#issuecomment-9001", "created_at": "2026-08-03T12:00:00Z", "updated_at": "2026-08-03T12:00:00Z", "user": {"id": 4002, "login": "commenter", "html_url": "https://github.com/commenter"}}
+}

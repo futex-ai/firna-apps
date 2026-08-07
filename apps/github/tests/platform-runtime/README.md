@@ -1,18 +1,23 @@
 # GitHub Platform Runtime Tests
 
 This crate verifies the GitHub package against the Firna app manifest and Wasm
-runtime pinned by this repository.
+runtime pinned by this repository. Depend on it only as a standalone
+integration-test package.
 
 ## Responsibilities
 
-- Parse and validate the credential-only GitHub manifest.
-- Assert exact installation permissions, callback URLs, and HTTP bounds.
-- Build and compile the real component through the pinned Wasm runtime.
+- Build and wrap the GitHub WebAssembly component reproducibly.
+- Validate installation, permission, tool, webhook, event, secret, and limit
+  manifest contracts.
+- Exercise GitHub requests and signed webhooks through a fake trusted host.
 
 ## What This Crate Does
 
-The tests exercise package structure without making live GitHub requests or
-reading deployment secrets.
+The tests run the real component through `fna-apps-wasm` without live GitHub
+credentials or network calls. They cover all five tools, credential references,
+request construction, provider failures, bounded file traversal, HMAC host
+calls, duplicate headers, ping, lifecycle classification, and all six event
+projections.
 
 ## Quick Start
 
@@ -22,14 +27,16 @@ cargo test --manifest-path apps/github/tests/platform-runtime/Cargo.toml --locke
 
 ## Development
 
-Install the Rust target and `wasm-tools` version recorded in the repository's
+Install `wasm32-unknown-unknown` and the `wasm-tools` version from the root
 `platform.toml` before running the suite.
 
 ### Key Code
 
 - `src/lib.rs` builds and wraps the component.
-- `github_package_tests.rs` asserts the installation-token contract.
-- `github_component_tests.rs` compiles the component ABI.
+- `github_package_tests.rs` validates package metadata and schemas.
+- `github_tool_smoke_tests.rs` exercises the tool host boundary.
+- `github_file_smoke_tests.rs` verifies commit-pinned tree checks.
+- `github_webhook_smoke_tests.rs` exercises signed event behavior.
 
 ### Related Docs
 
