@@ -8,5 +8,5 @@ authors = ["Polybase"]
 [workspace]
 
 [dependencies]
-fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "595de3fcfff65e15a1aa10647b1361d43e449fde" }
-fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "595de3fcfff65e15a1aa10647b1361d43e449fde" }
+fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "a59d30891868aaabbb8c675f70307fa192ee22f5" }
+fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "a59d30891868aaabbb8c675f70307fa192ee22f5" }

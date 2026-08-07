@@ -14,7 +14,7 @@ fn github_manifest_declares_the_installation_token_flow() {
         .validate()
         .expect("GitHub manifest should validate");
     assert_eq!(manifest.id, "github");
-    assert_eq!(manifest.version, "1.0.1");
+    assert_eq!(manifest.version, "1.0.2");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);
     assert!(manifest.tools.is_empty());

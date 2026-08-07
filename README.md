@@ -8,7 +8,8 @@ The current catalog packages are:
 
 - DataForSEO: explicitly installed research tools backed by each workspace's
   own DataForSEO credentials.
-- Exa: workspace-default web search backed by a Firna-managed API key.
+- Exa: workspace-default web search with an optional workspace-owned Exa API
+  key and a Firna-managed fallback.
 - GitHub: explicit workspace installation for short-lived external-repository
   credentials, with no baseline agent tools or webhooks.
 - HTTP: workspace-default, first-party arbitrary-host HTTP requests.
@@ -42,7 +43,7 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev 595de3fcfff65e15a1aa10647b1361d43e449fde \
+  --rev a59d30891868aaabbb8c675f70307fa192ee22f5 \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```
