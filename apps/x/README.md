@@ -85,6 +85,8 @@ purchased.
 ### Key Code
 
 - `manifest.yaml` owns OAuth, tool schemas, host permissions, and runtime limits.
+- [`assets/README.md`](assets/README.md) documents the icon source and how to
+  regenerate the PNG, its base64 sidecar, and the embedded manifest value.
 - `component/src/x/service.rs` validates calls and builds bounded requests.
 - `component/src/x/response.rs` maps typed provider responses to stable results.
 - `tests/platform-runtime` exercises the built component through the pinned host.
