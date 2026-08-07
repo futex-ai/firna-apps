@@ -112,8 +112,8 @@ separate OAuth apps with the same manifest.
   app-owned `api_key` secret remains the zero-configuration fallback. Both
   values stay behind host-mediated credential injection.
 - `apps/github`: production-only, explicit-install built-in GitHub App package
-  for short-lived repository credentials. Its baseline version declares no
-  agent tools or webhook ingress.
+  for short-lived repository credentials, five bounded read tools, and six
+  signed repository event definitions.
 - `apps/http`: workspace-default built-in HTTP app exposing `http_request`.
   It uses the first-party broad HTTP host capability and does not receive or
   inject app/provider credentials.
