@@ -111,8 +111,8 @@ separate OAuth apps with the same manifest.
   `exa_web_search`; it stores the provider key as the app-owned `api_key`
   secret, not as a server or worker runtime environment variable.
 - `apps/github`: production-only, explicit-install built-in GitHub App package
-  for short-lived repository credentials. Its baseline version declares no
-  agent tools or webhook ingress.
+  for short-lived repository credentials, five bounded read tools, and six
+  signed repository event definitions.
 - `apps/http`: workspace-default built-in HTTP app exposing `http_request`.
   It uses the first-party broad HTTP host capability and does not receive or
   inject app/provider credentials.

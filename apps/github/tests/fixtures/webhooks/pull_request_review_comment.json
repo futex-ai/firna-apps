@@ -1,0 +1,12 @@
+{
+  "action": "created",
+  "installation": {"id": 1001, "account": {"id": 2001, "login": "octo-org", "html_url": "https://github.com/octo-org"}},
+  "repository": {"id": 3001, "name": "repo", "full_name": "octo-org/repo", "html_url": "https://github.com/octo-org/repo", "private": true},
+  "sender": {"id": 4002, "login": "reviewer", "html_url": "https://github.com/reviewer"},
+  "pull_request": {
+    "id": 5001, "number": 17, "title": "Add webhooks", "body": "A bounded description", "state": "open", "draft": false, "merged": false,
+    "html_url": "https://github.com/octo-org/repo/pull/17", "user": {"id": 4001, "login": "octocat", "html_url": "https://github.com/octocat"},
+    "head": {"ref": "events", "sha": "3333333333333333333333333333333333333333"}, "base": {"ref": "main", "sha": "2222222222222222222222222222222222222222"}
+  },
+  "comment": {"id": 7001, "body": "Please tighten this", "html_url": "https://github.com/octo-org/repo/pull/17#discussion_r7001", "created_at": "2026-08-03T12:00:00Z", "updated_at": "2026-08-03T12:00:00Z", "user": {"id": 4002, "login": "reviewer", "html_url": "https://github.com/reviewer"}}
+}

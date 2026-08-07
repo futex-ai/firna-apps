@@ -10,7 +10,7 @@ The current catalog packages are:
   own DataForSEO credentials.
 - Exa: workspace-default web search backed by a Firna-managed API key.
 - GitHub: explicit workspace installation for short-lived external-repository
-  credentials, with no baseline agent tools or webhooks.
+  credentials, five bounded read tools, and signed repository events.
 - HTTP: workspace-default, first-party arbitrary-host HTTP requests.
 - Slack: explicitly installed Slack tools, OAuth, webhooks, and event handling.
 - X: explicitly installed, workspace-authorized, usage-priced Post reads,
@@ -127,5 +127,7 @@ The repository-specific [X app protocol](docs/protocol/x-app.md) defines its
 OAuth, read, publishing, recovery, and cost-control contract. X OAuth client
 credentials are deployment-supplied so production and the stable `br-main`
 preview can use separate provider apps with the same immutable package. The
+[GitHub app protocol](docs/protocol/github-app.md) defines its installation,
+tool, signed-event, lifecycle, and redaction contract. The
 [app deployment protocol](docs/protocol/app-deployment.md) defines the
 provisioning and deployment automation contract.
