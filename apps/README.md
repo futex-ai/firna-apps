@@ -108,8 +108,9 @@ separate OAuth apps with the same manifest.
 - `apps/slack`: explicit-install Slack workspace integration with OAuth,
   webhook, Slack tool support, and cyan/magenta icon accents.
 - `apps/exa`: workspace-default Exa web-search app exposing
-  `exa_web_search`; it stores the provider key as the app-owned `api_key`
-  secret, not as a server or worker runtime environment variable.
+  `exa_web_search`; a workspace may supply its own Exa API key, while the
+  app-owned `api_key` secret remains the zero-configuration fallback. Both
+  values stay behind host-mediated credential injection.
 - `apps/github`: production-only, explicit-install built-in GitHub App package
   for short-lived repository credentials, five bounded read tools, and six
   signed repository event definitions.

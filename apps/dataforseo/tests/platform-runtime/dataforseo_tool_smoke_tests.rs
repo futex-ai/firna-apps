@@ -38,6 +38,7 @@ async fn dataforseo_component_smoke_calls_all_sixteen_tools() {
                 operation_id: None,
                 input: tool.input,
                 effective_user_id: None,
+                agent_id: None,
                 output_hints: None,
             })
             .await
@@ -90,6 +91,7 @@ async fn dataforseo_component_maps_truncation_without_decoding_partial_json() {
             operation_id: None,
             input: tool.input,
             effective_user_id: None,
+            agent_id: None,
             output_hints: None,
         })
         .await

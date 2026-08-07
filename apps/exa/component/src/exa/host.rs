@@ -86,6 +86,11 @@ fn host_http(request: &HostHttpRequest) -> Result<HostHttpResponse, Value> {
 }
 
 fn provider_body(response: HostHttpResponse) -> Result<Value, Value> {
+    if !response.ok {
+        return Err(host_error(
+            response.error.as_deref().unwrap_or("host_http_failed"),
+        ));
+    }
     let status = response.status.unwrap_or(500);
     if status == 429 {
         return Err(rate_limited(&response));
@@ -100,11 +105,6 @@ fn provider_body(response: HostHttpResponse) -> Result<Value, Value> {
             "status": status
         }));
     }
-    if !response.ok {
-        return Err(host_error(
-            response.error.as_deref().unwrap_or("host_http_failed"),
-        ));
-    }
     let mut body = match response.body_json {
         Some(Value::Object(body)) => body,
         Some(body) => serde_json::Map::from_iter([(String::from("body"), body)]),
@@ -118,6 +118,9 @@ fn provider_body(response: HostHttpResponse) -> Result<Value, Value> {
 
 fn host_error(code: &str) -> Value {
     match code {
+        "workspace_api_key_rejected" => {
+            json!({ "ok": false, "error": "provider_authentication_failed" })
+        }
         "credential_not_found" | "credential_unavailable" => {
             json!({ "ok": false, "error": "provider_unavailable" })
         }

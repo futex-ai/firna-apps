@@ -236,6 +236,7 @@ fn tool_call(
     AppToolCall {
         workspace_id: Uuid::now_v7(),
         installation_id: Uuid::now_v7(),
+        agent_id: None,
         tool_name: tool_name.to_owned(),
         operation: operation.to_owned(),
         operation_id: None,

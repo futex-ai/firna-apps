@@ -208,6 +208,7 @@ fn http_tool_call(input: Value) -> AppToolCall {
         operation_id: None,
         input,
         effective_user_id: None,
+        agent_id: None,
         output_hints: None,
     }
 }

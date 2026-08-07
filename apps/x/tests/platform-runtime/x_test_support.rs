@@ -23,6 +23,7 @@ pub(crate) async fn call_tool_result(
             operation_id: operation_id.map(str::to_owned),
             input,
             effective_user_id: None,
+            agent_id: None,
             output_hints: None,
         })
         .await

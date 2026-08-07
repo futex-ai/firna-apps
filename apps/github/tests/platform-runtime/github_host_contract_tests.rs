@@ -35,6 +35,7 @@ async fn github_component_maps_host_transport_failure_without_exposing_details()
         .call_tool(AppToolCall {
             workspace_id: Uuid::now_v7(),
             installation_id: Uuid::now_v7(),
+            agent_id: None,
             tool_name: String::from("github_list_repositories"),
             operation: String::from("github.list_repositories"),
             operation_id: None,
@@ -77,6 +78,7 @@ async fn github_component_maps_missing_credential_to_auth_required() {
         .call_tool(AppToolCall {
             workspace_id: Uuid::now_v7(),
             installation_id: Uuid::now_v7(),
+            agent_id: None,
             tool_name: String::from("github_list_repositories"),
             operation: String::from("github.list_repositories"),
             operation_id: None,
@@ -116,6 +118,7 @@ async fn github_component_keeps_credential_vault_failure_unavailable() {
         .call_tool(AppToolCall {
             workspace_id: Uuid::now_v7(),
             installation_id: Uuid::now_v7(),
+            agent_id: None,
             tool_name: String::from("github_list_repositories"),
             operation: String::from("github.list_repositories"),
             operation_id: None,
@@ -174,6 +177,7 @@ async fn list_repositories_error(response: HostHttpResponse) -> Error {
         .call_tool(AppToolCall {
             workspace_id: Uuid::now_v7(),
             installation_id: Uuid::now_v7(),
+            agent_id: None,
             tool_name: String::from("github_list_repositories"),
             operation: String::from("github.list_repositories"),
             operation_id: None,

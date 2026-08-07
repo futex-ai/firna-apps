@@ -34,6 +34,7 @@ async fn github_component_rejects_symlinks_before_reading_contents() {
         .call_tool(AppToolCall {
             workspace_id: Uuid::now_v7(),
             installation_id: Uuid::now_v7(),
+            agent_id: None,
             tool_name: String::from("github_read_file"),
             operation: String::from("github.read_file"),
             operation_id: None,

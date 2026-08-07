@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use fna_apps_interface::{
     Error,
+    provider_error::ProviderError,
     runtime::{AppRuntime, AppToolCall, AppToolResult},
 };
 use fna_apps_wasm::{HostHttpRequest, HostHttpResponse, WasmComponentRuntime, WasmHostMock};
@@ -97,6 +98,7 @@ async fn exa_component_rejects_invalid_request_input() {
             operation_id: None,
             input: json!({ "query": "   " }),
             effective_user_id: None,
+            agent_id: None,
             output_hints: None,
         })
         .await
@@ -153,6 +155,27 @@ async fn exa_component_maps_provider_unavailable_responses() {
     }
 }
 
+#[tokio::test]
+async fn exa_component_maps_rejected_workspace_key_to_authentication_failure() {
+    let error = call_with_host_response(HostHttpResponse {
+        ok: false,
+        status: None,
+        url: None,
+        headers: BTreeMap::new(),
+        content_type: None,
+        body_json: None,
+        body_truncated: false,
+        error: Some(String::from("workspace_api_key_rejected")),
+    })
+    .await
+    .unwrap_err();
+
+    assert!(matches!(
+        error,
+        Error::Provider(ProviderError::AuthenticationFailed { app_id, .. }) if app_id == "exa"
+    ));
+}
+
 async fn call_tool(runtime: &WasmComponentRuntime, input: Value) -> Value {
     call_tool_result(runtime, input).await.unwrap().output
 }
@@ -184,6 +207,7 @@ fn exa_tool_call(input: Value) -> AppToolCall {
         operation_id: None,
         input,
         effective_user_id: None,
+        agent_id: None,
         output_hints: None,
     }
 }

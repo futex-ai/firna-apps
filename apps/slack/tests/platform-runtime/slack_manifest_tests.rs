@@ -8,7 +8,7 @@ fn slack_manifest_declares_v1_tools_ingress_and_events() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "slack");
-    assert_eq!(manifest.version, "1.1.22");
+    assert_eq!(manifest.version, "1.1.23");
     assert!(manifest.icon.is_some());
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,

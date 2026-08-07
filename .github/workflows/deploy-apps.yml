@@ -33,7 +33,7 @@ concurrency:
 
 env:
   FIRNA_PLATFORM_REPOSITORY: https://github.com/futex-ai/firna.git
-  FIRNA_PLATFORM_REVISION: 595de3fcfff65e15a1aa10647b1361d43e449fde
+  FIRNA_PLATFORM_REVISION: a59d30891868aaabbb8c675f70307fa192ee22f5
   RUST_TOOLCHAIN_VERSION: 1.89.0
 
 jobs:
