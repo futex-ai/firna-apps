@@ -8,9 +8,10 @@ The current catalog packages are:
 
 - DataForSEO: explicitly installed research tools backed by each workspace's
   own DataForSEO credentials.
-- Exa: workspace-default web search backed by a Firna-managed API key.
+- Exa: workspace-default web search with an optional workspace-owned Exa API
+  key and a Firna-managed fallback.
 - GitHub: explicit workspace installation for short-lived external-repository
-  credentials, with no baseline agent tools or webhooks.
+  credentials, five bounded read tools, and signed repository events.
 - HTTP: workspace-default, first-party arbitrary-host HTTP requests.
 - Slack: explicitly installed Slack tools, OAuth, webhooks, and event handling.
 - X: explicitly installed, workspace-authorized, usage-priced Post reads,
@@ -42,7 +43,7 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev 595de3fcfff65e15a1aa10647b1361d43e449fde \
+  --rev 4b4ac44076085c99fb11f78512ef1c2e48828c49 \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```
@@ -77,10 +78,10 @@ and on manual dispatch with optional `app` and `instance` inputs to force
 resubmission.
 
 Apps target environment classes through per-app `deploy.toml` files. `github`
-deploys only to production because its registration uses the production setup
-and callback URLs. `x` deploys to production and the stable `br-main` preview,
-whose fixed OAuth callbacks its provider registers, while ephemeral `pr-N`
-previews exclude it. Deployment authenticates per instance as that
+and `x` deploy to production and the stable `br-main` preview, using separate
+provider registrations whose fixed callbacks are registered for each long-lived
+environment. Ephemeral `pr-N` previews exclude both apps. Deployment
+authenticates per instance as that
 instance's admin and uses `firna admin apps submit`. That operator-controlled
 route builds, approves, and promotes these trusted packages in one operation;
 it deliberately does not use the community submission/review path. App secret
@@ -127,5 +128,7 @@ The repository-specific [X app protocol](docs/protocol/x-app.md) defines its
 OAuth, read, publishing, recovery, and cost-control contract. X OAuth client
 credentials are deployment-supplied so production and the stable `br-main`
 preview can use separate provider apps with the same immutable package. The
+[GitHub app protocol](docs/protocol/github-app.md) defines its installation,
+tool, signed-event, lifecycle, and redaction contract. The
 [app deployment protocol](docs/protocol/app-deployment.md) defines the
 provisioning and deployment automation contract.

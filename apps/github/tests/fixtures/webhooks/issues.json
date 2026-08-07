@@ -1,0 +1,7 @@
+{
+  "action": "opened",
+  "installation": {"id": 1001, "account": {"id": 2001, "login": "octo-org", "html_url": "https://github.com/octo-org"}},
+  "repository": {"id": 3001, "name": "repo", "full_name": "octo-org/repo", "html_url": "https://github.com/octo-org/repo", "private": true},
+  "sender": {"id": 4001, "login": "octocat", "html_url": "https://github.com/octocat"},
+  "issue": {"id": 8001, "number": 23, "title": "Webhook issue", "body": "A bounded issue body", "state": "open", "html_url": "https://github.com/octo-org/repo/issues/23", "locked": false, "user": {"id": 4001, "login": "octocat", "html_url": "https://github.com/octocat"}}
+}

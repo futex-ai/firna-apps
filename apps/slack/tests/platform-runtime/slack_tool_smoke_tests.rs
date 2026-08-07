@@ -67,6 +67,7 @@ async fn slack_component_smoke_calls_all_v1_tools() {
             operation_id: None,
             input: json!({ "query": "hello" }),
             effective_user_id: None,
+            agent_id: None,
             output_hints: None,
         })
         .await
@@ -93,6 +94,7 @@ async fn call_tool(
             operation_id: None,
             input,
             effective_user_id,
+            agent_id: None,
             output_hints: None,
         })
         .await

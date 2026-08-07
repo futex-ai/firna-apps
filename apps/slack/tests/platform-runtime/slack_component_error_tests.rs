@@ -143,6 +143,7 @@ async fn call_with_provider_response(
             operation_id: None,
             input,
             effective_user_id: None,
+            agent_id: None,
             output_hints: None,
         })
         .await

@@ -1,11 +1,14 @@
 use std::collections::VecDeque;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use fna_apps::credentials::{
     AppCredentialVault, PutInstallationCredential, PutInstallationCredentialPair,
     PutUserGrantCredential,
 };
-use fna_apps::host::{AppHostInvocation, CredentialScopedWasmHost, ProviderHttpClient};
+use fna_apps::host::{
+    AppHostInvocation, CredentialScopedWasmHost, ProviderArtifactHttpResult, ProviderHttpClient,
+};
 use fna_apps::oauth_tokens::{
     AppOAuthAccessToken, AppOAuthTokenMode, AppOAuthTokenRequest, AppOAuthTokenResult,
     AppOAuthTokenService,
@@ -65,6 +68,7 @@ async fn x_host_refreshes_and_retries_once_after_unauthorized() {
             operation_id: Some(String::from("oauth-retry-operation")),
             input: json!({"text": "Hello X"}),
             effective_user_id: None,
+            agent_id: None,
             output_hints: None,
         })
         .await
@@ -135,6 +139,29 @@ impl ProviderHttpClient for SequencedProvider {
     ) -> HostHttpResponse {
         panic!("X provider requests must not use Basic authorization")
     }
+
+    fn execute_without_redirects(&self, _request: &HostHttpRequest) -> HostHttpResponse {
+        panic!("X OAuth lifecycle test does not exercise redirect-sensitive requests")
+    }
+
+    fn execute_artifact_upload(
+        &self,
+        _request: &HostHttpRequest,
+        _source: &Path,
+        _media_type: &str,
+        _response_limit_bytes: u64,
+    ) -> ProviderArtifactHttpResult {
+        panic!("X OAuth lifecycle test does not exercise artifact uploads")
+    }
+
+    fn execute_artifact_download(
+        &self,
+        _request: &HostHttpRequest,
+        _destination: &Path,
+        _response_limit_bytes: u64,
+    ) -> ProviderArtifactHttpResult {
+        panic!("X OAuth lifecycle test does not exercise artifact downloads")
+    }
 }
 
 struct SequencedOAuth {
@@ -179,6 +206,15 @@ impl AppCredentialVault for UnusedCredentialVault {
         &self,
         _input: PutInstallationCredential,
     ) -> Result<AppCredentialRecord> {
+        panic!("OAuth lifecycle should own installation credentials")
+    }
+
+    fn remove_installation_credential(
+        &self,
+        _workspace_id: Uuid,
+        _installation_id: Uuid,
+        _credential_kind: &str,
+    ) -> Result<bool> {
         panic!("OAuth lifecycle should own installation credentials")
     }
 

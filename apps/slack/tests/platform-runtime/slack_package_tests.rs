@@ -50,6 +50,7 @@ async fn slack_component_sends_messages_through_host_http() {
             operation_id: Some(String::from("operation-slack-message-1")),
             input: json!({"channel_id": "C123", "text": "hello"}),
             effective_user_id: None,
+            agent_id: None,
             output_hints: None,
         })
         .await

@@ -10,13 +10,15 @@ Firna app crates.
 - Decode `exa_web_search` app tool calls.
 - Validate search limits before calling the provider.
 - Render Exa's camelCase `/search` request body.
-- Request host-mediated `x-api-key` injection for the app-owned API key.
+- Request host-mediated `x-api-key` injection without knowing whether the host
+  selected a workspace-owned key or the app-owned fallback.
 
 ## What This Crate Does
 
 The component exports `call-tool` for the app runtime ABI. It imports only
-`host-http-request`, so the API key is never passed through component input or
-output.
+`host-http-request`, so neither API-key source is passed through component
+input or output. A rejected workspace key becomes a typed authentication
+failure so the user can update or remove it in the Exa app's Settings page.
 
 ## Quick Start
 

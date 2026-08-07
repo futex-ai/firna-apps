@@ -6,13 +6,15 @@ Depend on it only as a standalone integration-test package.
 ## Responsibilities
 
 - Build and wrap the Exa WebAssembly component reproducibly.
-- Validate the app manifest and search-tool contract.
+- Validate the built-in manifest, optional workspace API-key flow, fallback,
+  and search-tool contract.
 - Exercise host-mediated Exa requests without live credentials or network IO.
 
 ## What This Crate Does
 
 The tests run the real component through `fna-apps-wasm` with a fake host and
-assert the bounded provider request and normalized response behavior.
+assert the bounded provider request, rejected workspace-key mapping, and
+normalized response behavior.
 
 ## Quick Start
 

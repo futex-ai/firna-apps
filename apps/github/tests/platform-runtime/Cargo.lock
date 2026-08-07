@@ -397,7 +397,7 @@ dependencies = [
 [[package]]
 name = "diesel-enum-macro"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=595de3fcfff65e15a1aa10647b1361d43e449fde#595de3fcfff65e15a1aa10647b1361d43e449fde"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "serde",
 ]
@@ -534,12 +534,16 @@ version = "0.1.0"
 dependencies = [
  "fna-apps-interface",
  "fna-apps-wasm",
+ "serde_json",
+ "tokio",
+ "unimock",
+ "uuid",
 ]
 
 [[package]]
 name = "fna-apps-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=595de3fcfff65e15a1aa10647b1361d43e449fde#595de3fcfff65e15a1aa10647b1361d43e449fde"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "ai-interface",
  "async-trait",
@@ -561,7 +565,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-wasm"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=595de3fcfff65e15a1aa10647b1361d43e449fde#595de3fcfff65e15a1aa10647b1361d43e449fde"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "async-trait",
  "fna-apps-interface",
@@ -577,7 +581,7 @@ dependencies = [
 [[package]]
 name = "fna-db-enums"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=595de3fcfff65e15a1aa10647b1361d43e449fde#595de3fcfff65e15a1aa10647b1361d43e449fde"
+source = "git+https://github.com/futex-ai/firna.git?rev=4b4ac44076085c99fb11f78512ef1c2e48828c49#4b4ac44076085c99fb11f78512ef1c2e48828c49"
 dependencies = [
  "diesel-enum-macro",
  "serde",
@@ -1582,6 +1586,27 @@ checksum = "c8323304221c2a851516f22236c5722a72eaa19749016521d6dff0824447d96d"
 dependencies = [
  "displaydoc",
  "zerovec",
+]
+
+[[package]]
+name = "tokio"
+version = "1.53.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+dependencies = [
+ "pin-project-lite",
+ "tokio-macros",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "2.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78773a2a397f451582ce068015985c33193cf6dea8b74d2a639fe457b2f07b0e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.3",
 ]
 
 [[package]]

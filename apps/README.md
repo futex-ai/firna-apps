@@ -114,20 +114,22 @@ For example, `apps/slack` secret `client_secret` maps to
 `firna-prod-app-slack-client-secret`.
 
 Environment-specific public identifiers may also be required app-owned values
-when they must vary without changing the package. X declares both `client_id`
-and `client_secret` this way so production and stable preview deployments use
-separate OAuth apps with the same manifest.
+when they must vary without changing the package. GitHub resolves its app slug,
+client ID, setup URL, and callback URL this way; X does the same for its client
+ID. Production and stable preview can therefore use separate provider apps with
+the same immutable package.
 
 ## Repo-Owned Apps
 
 - `apps/slack`: explicit-install Slack workspace integration with OAuth,
   webhook, Slack tool support, and cyan/magenta icon accents.
 - `apps/exa`: workspace-default Exa web-search app exposing
-  `exa_web_search`; it stores the provider key as the app-owned `api_key`
-  secret, not as a server or worker runtime environment variable.
-- `apps/github`: production-only, explicit-install built-in GitHub App package
-  for short-lived repository credentials. Its baseline version declares no
-  agent tools or webhook ingress.
+  `exa_web_search`; a workspace may supply its own Exa API key, while the
+  app-owned `api_key` secret remains the zero-configuration fallback. Both
+  values stay behind host-mediated credential injection.
+- `apps/github`: production-and-stable-preview, explicit-install built-in
+  GitHub App package for short-lived repository credentials, five bounded read
+  tools, and six signed repository event definitions.
 - `apps/http`: workspace-default built-in HTTP app exposing `http_request`.
   It uses the first-party broad HTTP host capability and does not receive or
   inject app/provider credentials.

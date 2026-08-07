@@ -22,6 +22,28 @@ select_instance_apps = load_module("select_instance_apps")
 
 
 class SelectAppsTests(unittest.TestCase):
+    def test_github_targets_stable_preview_but_not_ephemeral(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+
+        with tempfile.TemporaryDirectory() as directory:
+            candidate_list = write(Path(directory) / "candidates", "github\n")
+            production, production_failures = select_instance_apps.select_apps(
+                root, "production", candidate_list
+            )
+            preview, preview_failures = select_instance_apps.select_apps(
+                root, "preview", candidate_list
+            )
+            ephemeral, ephemeral_failures = select_instance_apps.select_apps(
+                root, "ephemeral", candidate_list
+            )
+
+        self.assertEqual(production_failures, [])
+        self.assertEqual(preview_failures, [])
+        self.assertEqual(ephemeral_failures, [])
+        self.assertEqual(production, ["github"])
+        self.assertEqual(preview, ["github"])
+        self.assertEqual(ephemeral, [])
+
     def test_production_only_app_is_excluded_from_preview(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

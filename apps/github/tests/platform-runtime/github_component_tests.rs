@@ -1,4 +1,4 @@
-//! Runtime compilation tests for the credential-only GitHub component.
+//! Runtime compilation tests for the GitHub tools and events component.
 
 use fna_apps_wasm::{WasmComponentRuntime, WasmRuntimeLimits};
 

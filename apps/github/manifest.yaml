@@ -1,6 +1,6 @@
 id: github
 name: GitHub
-version: 1.0.1
+version: 2.0.2
 icon:
   media_type: image/png
   data_base64: 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
@@ -16,9 +16,19 @@ runtime:
   abi: firna-app-component-v1
 env: {}
 secrets:
+- name: app_slug
+  required: true
+- name: callback_url
+  required: true
+- name: client_id
+  required: true
 - name: client_secret
   required: true
 - name: private_key
+  required: true
+- name: setup_url
+  required: true
+- name: webhook_secret
   required: true
 install:
   policy: explicit
@@ -30,8 +40,12 @@ capabilities:
     - GET
     - POST
     max_response_bytes: 1048576
+  crypto:
+    hmac: true
 limits:
+  max_event_payload_bytes: 262144
   max_tool_response_bytes: 1048576
+  max_component_ms: 5000
 auth_requirements:
 - id: github_installation
   display_name: GitHub repositories
@@ -43,27 +57,282 @@ auth_requirements:
   owner: workspace
   scopes:
   - contents:write
+  - issues:read
   - metadata:read
   - pull_requests:write
   credential_kinds:
   - provider_installation_id
-  required_for: []
+  required_for:
+  - tool:github_list_repositories
+  - tool:github_search_code
+  - tool:github_read_file
+  - tool:github_read_pr
+  - tool:github_read_issue
 credential_flows:
 - id: github
   kind: installation_token
   provider: github
-  client_id: Iv23lidBdZ0I2rgwjhXB
-  app_slug: firna-ai
+  client_id_env: client_id
+  app_slug_env: app_slug
   client_secret_env: client_secret
   private_key_env: private_key
-  install_url_template: https://github.com/apps/firna-ai/installations/new?state={state}
-  setup_url: https://firna.ai/apps/github/install/setup
-  callback_url: https://firna.ai/apps/github/install/callback
+  install_url_template: https://github.com/apps/{app_slug}/installations/new?state={state}
+  setup_url_env: setup_url
+  callback_url_env: callback_url
   installation_id_credential_kind: provider_installation_id
   token_credential_kind: installation_token
   permissions:
     contents: write
+    issues: read
     metadata: read
     pull_requests: write
-tools: []
-ingress: []
+tools:
+- name: github_list_repositories
+  description: List repositories selected for the connected GitHub App installation.
+  activity_label: Listing GitHub repositories
+  auth: [github_installation]
+  input_schema_ref: null
+  output_schema_ref: null
+  export: call-tool
+  operation: github.list_repositories
+  allowed_agent_roles: []
+  side_effect: external_read
+  limits:
+    max_response_bytes: 1048576
+    max_component_ms: null
+  input_schema:
+    type: object
+    additionalProperties: false
+    properties:
+      page:
+        type: integer
+        minimum: 1
+        maximum: 2147483647
+      per_page:
+        type: integer
+        minimum: 1
+        maximum: 50
+- name: github_search_code
+  description: Search code in repositories selected for this workspace.
+  activity_label: Searching GitHub code
+  auth: [github_installation]
+  input_schema_ref: null
+  output_schema_ref: null
+  export: call-tool
+  operation: github.search_code
+  allowed_agent_roles: []
+  side_effect: external_read
+  limits:
+    max_response_bytes: 1048576
+    max_component_ms: null
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [query]
+    properties:
+      query:
+        type: string
+        minLength: 1
+        maxLength: 256
+        pattern: '\S'
+      owner:
+        type: string
+        minLength: 1
+        maxLength: 100
+        pattern: '^[A-Za-z0-9]([A-Za-z0-9-]{0,98}[A-Za-z0-9])?$'
+      repository:
+        type: string
+        minLength: 1
+        maxLength: 100
+        pattern: '^[A-Za-z0-9._-]+$'
+        not:
+          enum: ['.', '..']
+      language:
+        type: string
+        minLength: 1
+        maxLength: 100
+        pattern: '\S'
+      path:
+        type: string
+        minLength: 1
+        maxLength: 256
+        pattern: '^[^\u0000-\u001F\u007F]*$'
+      page:
+        type: integer
+        minimum: 1
+        maximum: 2147483647
+      per_page:
+        type: integer
+        minimum: 1
+        maximum: 20
+- name: github_read_file
+  description: Read one exact regular UTF-8 file with at most 16 path segments from a GitHub repository.
+  activity_label: Reading GitHub file
+  auth: [github_installation]
+  input_schema_ref: null
+  output_schema_ref: null
+  export: call-tool
+  operation: github.read_file
+  allowed_agent_roles: []
+  side_effect: external_read
+  limits:
+    max_response_bytes: 1048576
+    max_component_ms: null
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [owner, repository, path]
+    properties:
+      owner:
+        type: string
+        minLength: 1
+        maxLength: 100
+        pattern: '^[A-Za-z0-9]([A-Za-z0-9-]{0,98}[A-Za-z0-9])?$'
+      repository:
+        type: string
+        minLength: 1
+        maxLength: 100
+        pattern: '^[A-Za-z0-9._-]+$'
+        not:
+          enum: ['.', '..']
+      path:
+        type: string
+        minLength: 1
+        maxLength: 1024
+        pattern: '^[^/\u0000-\u001F\u007F]+(/[^/\u0000-\u001F\u007F]+)*$'
+        not:
+          pattern: '(^|/)\.{1,2}($|/)'
+      ref:
+        type: string
+        minLength: 1
+        maxLength: 255
+        pattern: '^[^\u0000-\u001F\u007F]*$'
+- name: github_read_pr
+  description: Read a pull request and one bounded page of changed files.
+  activity_label: Reading GitHub pull request
+  auth: [github_installation]
+  input_schema_ref: null
+  output_schema_ref: null
+  export: call-tool
+  operation: github.read_pr
+  allowed_agent_roles: []
+  side_effect: external_read
+  limits:
+    max_response_bytes: 1048576
+    max_component_ms: null
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [owner, repository, number]
+    properties:
+      owner:
+        type: string
+        minLength: 1
+        maxLength: 100
+        pattern: '^[A-Za-z0-9]([A-Za-z0-9-]{0,98}[A-Za-z0-9])?$'
+      repository:
+        type: string
+        minLength: 1
+        maxLength: 100
+        pattern: '^[A-Za-z0-9._-]+$'
+        not:
+          enum: ['.', '..']
+      number:
+        type: integer
+        minimum: 1
+        maximum: 2147483647
+      include_files:
+        type: boolean
+      files_page:
+        type: integer
+        minimum: 1
+        maximum: 2147483647
+      files_per_page:
+        type: integer
+        minimum: 1
+        maximum: 10
+- name: github_read_issue
+  description: Read an issue and one bounded page of comments.
+  activity_label: Reading GitHub issue
+  auth: [github_installation]
+  input_schema_ref: null
+  output_schema_ref: null
+  export: call-tool
+  operation: github.read_issue
+  allowed_agent_roles: []
+  side_effect: external_read
+  limits:
+    max_response_bytes: 1048576
+    max_component_ms: null
+  input_schema:
+    type: object
+    additionalProperties: false
+    required: [owner, repository, number]
+    properties:
+      owner:
+        type: string
+        minLength: 1
+        maxLength: 100
+        pattern: '^[A-Za-z0-9]([A-Za-z0-9-]{0,98}[A-Za-z0-9])?$'
+      repository:
+        type: string
+        minLength: 1
+        maxLength: 100
+        pattern: '^[A-Za-z0-9._-]+$'
+        not:
+          enum: ['.', '..']
+      number:
+        type: integer
+        minimum: 1
+        maximum: 2147483647
+      include_comments:
+        type: boolean
+      comments_page:
+        type: integer
+        minimum: 1
+        maximum: 2147483647
+      comments_per_page:
+        type: integer
+        minimum: 1
+        maximum: 10
+ingress:
+- id: github_events
+  kind: webhook
+  provider: github
+  allowed_headers:
+  - x-github-delivery
+  - x-github-event
+  - x-hub-signature-256
+  auth:
+  - github_installation
+  verify_export: verify-webhook
+  normalize_export: normalize-event
+  response_export: webhook-response
+  credential_kinds:
+  - webhook_secret
+  max_payload_bytes: 262144
+  events:
+  - id: push
+    provider_type: push
+    description: A selected GitHub repository branch or tag changed.
+    contract_version: 1
+  - id: pull_request
+    provider_type: pull_request
+    description: A pull request changed in a selected GitHub repository.
+    contract_version: 1
+  - id: pull_request_review
+    provider_type: pull_request_review
+    description: A pull request review changed in a selected GitHub repository.
+    contract_version: 1
+  - id: pull_request_review_comment
+    provider_type: pull_request_review_comment
+    description: A pull request review comment changed in a selected GitHub repository.
+    contract_version: 1
+  - id: issues
+    provider_type: issues
+    description: An issue changed in a selected GitHub repository.
+    contract_version: 1
+  - id: issue_comment
+    provider_type: issue_comment
+    description: An issue or pull request comment changed in a selected GitHub repository.
+    contract_version: 1
