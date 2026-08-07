@@ -53,8 +53,8 @@ acknowledgement. Installation creation, restoration, permission changes, and
 repository-selection changes invalidate cached tokens and reconcile coverage;
 suspension and deletion revoke provider access.
 
-The production GitHub App registration is owned by the `Firna-AI`
-organization:
+The GitHub App registrations are owned by the `Firna-AI` organization.
+Production uses:
 
 - App ID: `4504159`
 - Client ID: `Iv23lidBdZ0I2rgwjhXB`
@@ -64,17 +64,39 @@ organization:
 - Callback URL: <https://firna.ai/apps/github/install/callback>
 - Webhook URL: <https://api.firna.ai/apps/github/webhooks/github_events>
 
-The registration permissions must match the manifest: Contents write, Issues
-read, Metadata read, and Pull requests write. Select only Push, Pull request,
-Pull request review, Pull request review comment, Issues, and Issue comment as
+The stable `br-main` preview uses its own registration:
+
+- App ID: `4515873`
+- Client ID: `Iv23liSZsLmwSZrxxpzm`
+- Slug: `firna-ai-preview`
+- Public page: <https://github.com/apps/firna-ai-preview>
+- Setup URL: <https://br-main.preview.firna.ai/apps/github/install/setup>
+- Callback URL: <https://br-main.preview.firna.ai/apps/github/install/callback>
+- Webhook URL: <https://br-main.api.preview.firna.ai/apps/github/webhooks/github_events>
+
+Both registrations must match the manifest: Contents write, Issues read,
+Metadata read, and Pull requests write. Select only Push, Pull request, Pull
+request review, Pull request review comment, Issues, and Issue comment as
 configurable webhook events; GitHub sends installation lifecycle events
-implicitly.
+implicitly. The package targets production and the stable preview, but excludes
+ephemeral `pr-N` previews because their callback and webhook URLs are not
+registered.
 
-The manifest declares three deployment-owned secret names:
+The manifest declares seven deployment-owned values:
 
+- `app_slug`
+- `callback_url`
+- `client_id`
 - `client_secret`
 - `private_key`
+- `setup_url`
 - `webhook_secret`
+
+The deployment supplies `app_slug`, `callback_url`, `client_id`, and
+`setup_url` for the target registration. They are public registration values,
+but use the app-owned environment boundary so the same package can run in both
+environments. The remaining three values are sensitive and must stay in Secret
+Manager.
 
 The webhook secret must be a high-entropy value shared only with the GitHub App
 registration. Firna accepts exactly one `x-hub-signature-256`,

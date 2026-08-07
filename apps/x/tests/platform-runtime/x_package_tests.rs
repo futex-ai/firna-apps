@@ -15,7 +15,7 @@ fn x_manifest_declares_exact_oauth_and_host_contract() {
     manifest.validate().expect("X manifest should validate");
     assert_eq!(manifest.id, "x");
     assert_eq!(manifest.name, "X");
-    assert_eq!(manifest.version, "1.0.8");
+    assert_eq!(manifest.version, "1.0.9");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.source.package, None);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);

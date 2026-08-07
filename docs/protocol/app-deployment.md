@@ -93,9 +93,10 @@ operational metadata for Futex's release automation; it is intentionally not
 part of the platform manifest contract and the platform never reads it. It
 is not package content either: a change that touches only
 `apps/<app_id>/deploy.toml` does not require a manifest version bump.
-`x` is the only current exception: its production and stable-preview X
-developer apps register fixed callbacks, but ephemeral `pr-N` callbacks are
-never registered, so it declares `classes = ["production", "preview"]`.
+`github` and `x` use separate provider registrations for production and stable
+preview. Their fixed callbacks are registered for both long-lived instances,
+but ephemeral `pr-N` callbacks are not, so both declare
+`classes = ["production", "preview"]`.
 
 `cargo xtask check` validates both files: the root file must declare exactly
 the instances above with well-formed URLs and prefixes, and per-app files

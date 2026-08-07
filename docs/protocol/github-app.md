@@ -1,6 +1,6 @@
 # GitHub App Protocol
 
-Status: implemented by GitHub package `2.0.0`.
+Status: implemented by GitHub package `2.0.2`.
 
 This protocol defines the Firna-owned GitHub package boundary. The platform
 owns installation routing, provider-installation records, token minting,
@@ -18,10 +18,16 @@ Provider references:
 
 ## Registration And Authentication
 
-The production registration has App ID `4504159`, client ID
-`Iv23lidBdZ0I2rgwjhXB`, and slug `firna-ai`. Setup returns to
-`https://firna.ai/apps/github/install/setup`; callback completion uses
-`https://firna.ai/apps/github/install/callback`.
+Production has App ID `4504159`, client ID `Iv23lidBdZ0I2rgwjhXB`, and slug
+`firna-ai`. Setup returns to `https://firna.ai/apps/github/install/setup`;
+callback completion uses `https://firna.ai/apps/github/install/callback`.
+
+The stable `br-main` preview has App ID `4515873`, client ID
+`Iv23liSZsLmwSZrxxpzm`, and slug `firna-ai-preview`. Setup returns to
+`https://br-main.preview.firna.ai/apps/github/install/setup`; callback
+completion uses
+`https://br-main.preview.firna.ai/apps/github/install/callback`. Ephemeral
+`pr-N` previews do not install GitHub because their URLs are not registered.
 
 The manifest retains Contents write and Pull requests write for the external
 repository workflow. It adds Issues read and retains Metadata read. The five
@@ -33,10 +39,11 @@ the Firna installation id to the trusted host. The host resolves an
 `installation_token` credential and injects it as bearer authorization; the
 component never receives or serializes the token.
 
-The manifest declares `client_secret`, `private_key`, and
-`webhook_secret` names only. Values are deployment-owned and must not appear
-in manifests, packages, logs, fixtures, prompts, command arguments, or Wasm
-artifacts.
+The manifest resolves `app_slug`, `callback_url`, `client_id`, and `setup_url`
+from deployment-owned app values, allowing one immutable package to select the
+correct registration per environment. It also declares `client_secret`,
+`private_key`, and `webhook_secret`. Values must not appear in manifests,
+packages, logs, fixtures, prompts, command arguments, or Wasm artifacts.
 
 ## Tool Contract
 
@@ -115,9 +122,10 @@ must not be copied into errors.
 
 ## Webhook Trust Contract
 
-The public endpoint is
-`POST /apps/github/webhooks/github_events`; production registers
-`https://api.firna.ai/apps/github/webhooks/github_events`.
+The public endpoint is `POST /apps/github/webhooks/github_events`. Production
+registers `https://api.firna.ai/apps/github/webhooks/github_events`; stable
+preview registers
+`https://br-main.api.preview.firna.ai/apps/github/webhooks/github_events`.
 
 The edge forwards only these ordered, duplicate-preserving raw headers:
 
@@ -175,10 +183,10 @@ event per eligible subscription.
 
 ## Operations
 
-GitHub App registration must enable the webhook URL, configure the same
-high-entropy secret as Firna's `webhook_secret`, and select only the six
-subscribable events. GitHub supplies installation and
-installation-repositories events implicitly.
+Each GitHub App registration must enable its environment's webhook URL,
+configure the same high-entropy secret as that environment's
+`webhook_secret`, and select only the six subscribable events. GitHub supplies
+installation and installation-repositories events implicitly.
 
 Rotate the webhook secret in a maintenance window because GitHub and Firna each
 use one active value. Update both sides, redeliver authenticated ping and one

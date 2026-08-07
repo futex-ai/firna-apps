@@ -43,7 +43,7 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev a59d30891868aaabbb8c675f70307fa192ee22f5 \
+  --rev 4b4ac44076085c99fb11f78512ef1c2e48828c49 \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```
@@ -78,10 +78,10 @@ and on manual dispatch with optional `app` and `instance` inputs to force
 resubmission.
 
 Apps target environment classes through per-app `deploy.toml` files. `github`
-deploys only to production because its registration uses the production setup
-and callback URLs. `x` deploys to production and the stable `br-main` preview,
-whose fixed OAuth callbacks its provider registers, while ephemeral `pr-N`
-previews exclude it. Deployment authenticates per instance as that
+and `x` deploy to production and the stable `br-main` preview, using separate
+provider registrations whose fixed callbacks are registered for each long-lived
+environment. Ephemeral `pr-N` previews exclude both apps. Deployment
+authenticates per instance as that
 instance's admin and uses `firna admin apps submit`. That operator-controlled
 route builds, approves, and promotes these trusted packages in one operation;
 it deliberately does not use the community submission/review path. App secret
