@@ -6,9 +6,10 @@ Status: implemented by X package `1.1.0` on the platform revision pinned in
 ## Purpose
 
 The first-party `x` app lets an explicitly authorized Firna workspace read a
-bounded set of X posts, search X's recent post index, and publish one text post
-or reply. Every provider request is initiated by a tool call or by the minimum
-OAuth token lifecycle work needed to keep the connection usable.
+bounded set of X posts, inspect current Post metrics, search X's recent post
+index, and publish one text post or reply. Every provider request is initiated
+by a tool call or by the minimum OAuth token lifecycle work needed to keep the
+connection usable.
 
 V1 is an explicit-install, first-party public-catalog app. It charges the
 workspace credit wallet at declared X list rates for successful calls while
@@ -132,7 +133,8 @@ Successful read outputs may contain:
 - `result_count`: the number of posts in this response
 
 Successful creation returns `post` with the provider-confirmed `id` and
-`text`. Components do not synthesize provider data or metrics.
+`text`. Compact Post tools do not expose metrics. The separate metrics tool
+maps only the fields defined by the [X Post metrics protocol](x-app-metrics.md).
 
 Handled failures use the platform app-error contract with `ok: false`, a stable
 `error` code, and only the code-specific safe fields. The component reports
@@ -228,7 +230,7 @@ interruption result must inspect X before deliberately issuing a new operation.
 
 ## Firna Usage Charges
 
-The manifest prices all three tools and therefore uses `source.kind: built_in`;
+The manifest prices all four tools and therefore uses `source.kind: built_in`;
 V1 platform policy rejects priced community packages. Firna takes a bounded
 wallet hold before invoking X, settles only a successful result, and releases
 the hold without charging on component, provider, timeout, or malformed-result
@@ -240,11 +242,13 @@ Read tools report metered units from the validated provider response:
 - `post_read`: $0.005 (5,000 micro-USD) for each returned Post
 - `user_read`: $0.010 (10,000 micro-USD) for each returned expanded author
 
-`x_get_posts` caps both units at 10 per call. `x_search_recent_posts` caps both
-at 25. Missing requested ids and empty search pages add no read units. X's
-daily resource deduplication is not observable in an individual response, so
-Firna charges each returned resource at the declared app rate even when X may
-deduplicate its upstream charge.
+`x_get_posts` caps both units at 10 per call. `x_get_post_metrics` caps
+`post_read` at 10 and never reports `user_read`; its exact field and omission
+contract is defined separately in the [X Post metrics protocol].
+`x_search_recent_posts` caps both units at 25. Missing requested ids and empty
+search pages add no read units. X's daily resource deduplication is not
+observable in an individual response, so Firna charges each returned resource
+at the declared app rate even when X may deduplicate its upstream charge.
 
 `x_create_post` reports its successful call cost with a $0.200 cap. A text-only
 Post reports $0.015 (15,000 micro-USD); input containing case-insensitive
@@ -268,9 +272,10 @@ already have accepted the Post. There is no background polling, streaming,
 webhook, automatic pagination, or scheduled read behavior.
 
 Author expansion is opt-in because expanded users are separate billable
-resources. Defaults omit engagement metrics and user expansions. Get-by-id is
-limited to 10 posts, recent search to 25 posts, and creation to one post or one
-reply. The console spending limit is the hard account-level control.
+resources. Private metrics and user expansions are opt-in. Get-by-id and
+metrics reads are limited to 10 posts, recent search to 25 posts, and creation
+to one post or one reply. The console spending limit is the hard account-level
+control.
 
 Before credits are purchased, the operator must confirm the exact initial
 credit amount, billing-cycle spending limit, and any auto-recharge amount and
@@ -288,8 +293,9 @@ X because their variable callbacks are not registered. Live smoke validation
 runs in the nominated environment against its intended X account.
 
 Current prices must be rechecked in the console immediately before purchase.
-References are [X API pricing], [OAuth 2.0 user access tokens], [get my user],
-[OAuth API reference], [get posts by ids], [recent search], and [create post].
+The public documentation references are [X API pricing], [OAuth 2.0 user access
+tokens], [get my user], [OAuth API reference], [get posts by ids],
+[X Post metrics protocol](x-app-metrics.md), [recent search], and [create post].
 
 [X API pricing]: https://docs.x.com/x-api/getting-started/pricing
 [OAuth 2.0 user access tokens]: https://docs.x.com/fundamentals/authentication/oauth-2-0/user-access-token

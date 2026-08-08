@@ -15,7 +15,7 @@ The current catalog packages are:
 - HTTP: workspace-default, first-party arbitrary-host HTTP requests.
 - Slack: explicitly installed Slack tools, OAuth, webhooks, and event handling.
 - X: explicitly installed, multi-account workspace-authorized, usage-priced
-  Post reads, recent search, and single-Post publishing.
+  Post reads and current metrics, recent search, and single-Post publishing.
 
 Each package is an isolated Rust WebAssembly component under
 [`apps/`](apps/README.md). Production deployment uploads source bundles to the

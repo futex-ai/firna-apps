@@ -1,8 +1,9 @@
 # X App
 
 `apps/x` is the repo-owned X integration package. It gives an explicitly
-authorized Firna workspace bounded Post lookup, recent search, and one-Post
-publishing without exposing OAuth tokens to the component or agents.
+authorized Firna workspace bounded Post lookup, current engagement metrics,
+recent search, and one-Post publishing without exposing OAuth tokens to the
+component or agents.
 
 Package `1.1.0` opts into the platform's generic multi-connection OAuth
 contract, so one workspace can authorize several independently managed X
@@ -17,7 +18,7 @@ accounts without giving the component or agent access to their tokens.
   identity and username to public display label.
 - Opt into the platform's 25-account workspace limit while keeping add,
   reconnect, disable, agent access, refresh, and disconnect installation-scoped.
-- Expose only the three reviewed V1 tools and keep every billed request bounded.
+- Expose only the four reviewed tools and keep every billed request bounded.
 - Build a Wasm component that validates inputs and returns compact typed data.
 - Keep client credentials and workspace tokens behind opaque host credentials.
 - Report bounded usage so successful calls settle against the workspace wallet.
@@ -27,11 +28,14 @@ accounts without giving the component or agent access to their tokens.
 | Tool | Behavior |
 | --- | --- |
 | `x_get_posts` | Reads 1-10 Post ids; author expansion is opt-in. |
+| `x_get_post_metrics` | Reads current public metrics for 1-10 Posts; owned-Post private metrics are opt-in. |
 | `x_search_recent_posts` | Reads one explicit 10-25-result recent-search page. |
 | `x_create_post` | Publishes one text Post or reply with no component retry. |
 
 The app requests `tweet.read`, `tweet.write`, `users.read`, and
-`offline.access`. It does not expose media, threads, deletion, editing,
+`offline.access`. Profile clicks are clicks from one Post to its author's
+profile, not total profile views. The app does not expose media analytics,
+historical time series, Ads/Enterprise analytics, threads, deletion, editing,
 streams, automatic pagination, or background polling.
 
 ### Multiple Accounts
@@ -94,11 +98,11 @@ Never add either credential value to this package.
 ## Cost and Write Safety
 
 Firna prepays X and charges the authorizing workspace only after a successful
-tool call. Post reads cost $0.005 per returned Post, expanded User reads cost
-$0.010 per returned author, text-only creation costs $0.015, and link-bearing
-creation costs $0.200. Failed calls are uncharged. Prices are fixed for the
-installed app version; changing them requires a new version and explicit
-workspace consent.
+tool call. Post reads, including metrics reads, cost $0.005 per returned Post;
+private metric fields do not add another unit. Expanded User reads cost $0.010
+per returned author, text-only creation costs $0.015, and link-bearing creation
+costs $0.200. Failed calls are uncharged. Prices are fixed for the installed app
+version; changing them requires a new version and explicit workspace consent.
 
 The one `/2/users/me` identity request made during install, add, reconnect, or
 upgrade is control-plane work, not a billed tool call. Firna absorbs any X cost
@@ -124,13 +128,16 @@ purchased.
 - `manifest.yaml` owns OAuth, tool schemas, host permissions, and runtime limits.
 - [`assets/README.md`](assets/README.md) documents the icon source and how to
   regenerate the PNG, its base64 sidecar, and the embedded manifest value.
-- `component/src/x/service.rs` validates calls and builds bounded requests.
+- `component/src/x/service` validates calls and builds bounded requests.
+- `component/src/x/metrics_types.rs` owns the typed provider and metric output
+  boundary.
 - `component/src/x/response.rs` maps typed provider responses to stable results.
 - `tests/platform-runtime` exercises the built component through the pinned host.
 
 ### Related Docs
 
 - [X app protocol](../../docs/protocol/x-app.md)
+- [X Post metrics protocol](../../docs/protocol/x-app-metrics.md)
 - [Firna app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md)
 - [X API pricing](https://docs.x.com/x-api/getting-started/pricing)
 - [X OAuth user access](https://docs.x.com/fundamentals/authentication/oauth-2-0/user-access-token)

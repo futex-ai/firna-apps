@@ -139,7 +139,8 @@ the same immutable package.
   login/password pair through Settings; the package declares no app-owned or
   deployment secret.
 - `apps/x`: explicit-install X integration with independently selectable
-  workspace-owned OAuth accounts, bounded Post lookup and recent search,
+  workspace-owned OAuth accounts, bounded Post lookup, current public and
+  opt-in owned-Post metrics, recent search,
   single-Post publishing, workspace-wallet usage charging, and operator
   spending controls defined by the
   [X app protocol](../docs/protocol/x-app.md).

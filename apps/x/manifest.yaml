@@ -122,6 +122,36 @@ tools:
           pattern: ^[0-9]{1,19}$
       include_authors:
         type: boolean
+- name: x_get_post_metrics
+  description: Read current engagement metrics for up to 10 X posts.
+  activity_label: Reading X post metrics
+  auth:
+  - x_workspace
+  input_schema_ref: null
+  output_schema_ref: null
+  export: call-tool
+  operation: x.get_post_metrics
+  allowed_agent_roles: []
+  side_effect: external_read
+  limits:
+    max_response_bytes: 262144
+    max_component_ms: 30000
+  input_schema:
+    type: object
+    additionalProperties: false
+    required:
+    - ids
+    properties:
+      ids:
+        type: array
+        minItems: 1
+        maxItems: 10
+        uniqueItems: true
+        items:
+          type: string
+          pattern: ^[0-9]{1,19}$
+      include_private_metrics:
+        type: boolean
 - name: x_search_recent_posts
   description: Search one page of recent X posts with explicit result and pagination limits.
   activity_label: Searching X posts
@@ -210,6 +240,13 @@ pricing:
       label: User read
       price_usd_micros: 10000
       max_units_per_call: 25
+  - tool: x_get_post_metrics
+    kind: metered
+    units:
+    - unit: post_read
+      label: Post read
+      price_usd_micros: 5000
+      max_units_per_call: 10
   - tool: x_create_post
     kind: usage_reported
     max_cost_usd_micros_per_call: 200000
