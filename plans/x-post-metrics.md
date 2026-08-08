@@ -180,13 +180,11 @@ Require the repository to remain green before committing the feature.
 - [x] For each recommendation, assess whether a direct fix is sufficient or a
   broader test, lint, rule, abstraction, or architectural change would better
   prevent the same class of defect.
-- [ ] Wait for the user's decision on the P2 claim that X does not return
-  `non_public_metrics.engagements`. X's current Metrics guide and Data
-  Dictionary explicitly document that field, so the recommendation is to
-  reject the finding and retain the existing typed field and regression tests.
-  If a fix is approved, add a new milestone rather than reopening a completed
-  milestone, implement regression coverage, rerun the relevant gates, commit
-  and push, and rerun review.
+- [x] Classify the P2 claim that X does not return
+  `non_public_metrics.engagements` as invalid. X's current Metrics guide and
+  Data Dictionary explicitly document that field, the typed mapping has
+  regression coverage, and the explicit Codex review found no actionable
+  correctness issue. Retain the field and its tests.
 
 ## Milestone 7: Release and Live Read Smoke Test
 
