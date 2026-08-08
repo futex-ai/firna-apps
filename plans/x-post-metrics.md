@@ -171,19 +171,22 @@ Require the repository to remain green before committing the feature.
 
 ## Milestone 6: Run Post-Push Review
 
-- [ ] After the push, run `cargo xtask review` so the AI reviewer evaluates the
+- [x] After the push, run `cargo xtask review` so the AI reviewer evaluates the
   committed local diff against `origin/main`.
-- [ ] Independently investigate every finding, but do not automatically change
+- [x] Independently investigate every finding, but do not automatically change
   reviewed code. Report each finding as a numbered item with severity,
   codebase and feature context, the impact of doing nothing, lettered solution
   options, and a clearly recommended option.
-- [ ] For each recommendation, assess whether a direct fix is sufficient or a
+- [x] For each recommendation, assess whether a direct fix is sufficient or a
   broader test, lint, rule, abstraction, or architectural change would better
   prevent the same class of defect.
-- [ ] Wait for the user's decision on review findings. If fixes are approved,
-  add a new milestone rather than reopening a completed milestone, implement
-  regression coverage, rerun the relevant gates, commit and push, and rerun
-  review.
+- [ ] Wait for the user's decision on the P2 claim that X does not return
+  `non_public_metrics.engagements`. X's current Metrics guide and Data
+  Dictionary explicitly document that field, so the recommendation is to
+  reject the finding and retain the existing typed field and regression tests.
+  If a fix is approved, add a new milestone rather than reopening a completed
+  milestone, implement regression coverage, rerun the relevant gates, commit
+  and push, and rerun review.
 
 ## Milestone 7: Release and Live Read Smoke Test
 
