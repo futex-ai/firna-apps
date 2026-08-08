@@ -6,6 +6,7 @@ use serde_json::Value;
 
 use crate::x::errors::{InvalidInputReason, ToolError};
 use crate::x::host::HostHttpResponse;
+use crate::x::metrics_types::ProviderPostMetricsResponse;
 use crate::x::types::{ProviderCreateResponse, ProviderErrorResponse, ProviderReadResponse};
 
 pub(super) fn decode_read_response(
@@ -25,6 +26,16 @@ pub(super) fn decode_create_response(
     match serde_json::from_value(body) {
         Ok(response) => Ok(response),
         Err(_) => Err(ToolError::WriteOutcomeUnknown),
+    }
+}
+
+pub(super) fn decode_metrics_response(
+    response: HostHttpResponse,
+) -> Result<ProviderPostMetricsResponse, ToolError> {
+    let body = validated_body(response, false)?;
+    match serde_json::from_value(body) {
+        Ok(response) => Ok(response),
+        Err(_) => Err(ToolError::ProviderResponseInvalid),
     }
 }
 

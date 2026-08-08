@@ -3,9 +3,10 @@
 ## Purpose
 
 The first-party `x` app lets an explicitly authorized Firna workspace read a
-bounded set of X posts, search X's recent post index, and publish one text post
-or reply. Every provider request is initiated by a tool call or by the minimum
-OAuth token lifecycle work needed to keep the connection usable.
+bounded set of X posts, inspect current Post metrics, search X's recent post
+index, and publish one text post or reply. Every provider request is initiated
+by a tool call or by the minimum OAuth token lifecycle work needed to keep the
+connection usable.
 
 V1 is an explicit-install, first-party public-catalog app. It charges the
 workspace credit wallet at declared X list rates for successful calls while
@@ -19,7 +20,7 @@ per-member grants are out of scope.
 The package contract is:
 
 - manifest id and name: `x` and `X`
-- version: `1.0.3`
+- version: `1.0.11`
 - source kind: `built_in`
 - install policy: `explicit`
 - HTTP allowlist: `api.x.com` only
@@ -74,7 +75,8 @@ Successful read outputs may contain:
 - `result_count`: the number of posts in this response
 
 Successful creation returns `post` with the provider-confirmed `id` and
-`text`. Components do not synthesize provider data or metrics.
+`text`. Compact Post tools do not expose metrics. The separate metrics tool
+maps only the fields defined by the [X Post metrics protocol](x-app-metrics.md).
 
 Handled failures use the platform app-error contract with `ok: false`, a stable
 `error` code, and only the code-specific safe fields. The component reports
@@ -170,7 +172,7 @@ interruption result must inspect X before deliberately issuing a new operation.
 
 ## Firna Usage Charges
 
-The manifest prices all three tools and therefore uses `source.kind: built_in`;
+The manifest prices all four tools and therefore uses `source.kind: built_in`;
 V1 platform policy rejects priced community packages. Firna takes a bounded
 wallet hold before invoking X, settles only a successful result, and releases
 the hold without charging on component, provider, timeout, or malformed-result
@@ -182,11 +184,13 @@ Read tools report metered units from the validated provider response:
 - `post_read`: $0.005 (5,000 micro-USD) for each returned Post
 - `user_read`: $0.010 (10,000 micro-USD) for each returned expanded author
 
-`x_get_posts` caps both units at 10 per call. `x_search_recent_posts` caps both
-at 25. Missing requested ids and empty search pages add no read units. X's
-daily resource deduplication is not observable in an individual response, so
-Firna charges each returned resource at the declared app rate even when X may
-deduplicate its upstream charge.
+`x_get_posts` caps both units at 10 per call. `x_get_post_metrics` caps
+`post_read` at 10 and never reports `user_read`; its exact field and omission
+contract is defined separately in the [X Post metrics protocol].
+`x_search_recent_posts` caps both units at 25. Missing requested ids and empty
+search pages add no read units. X's daily resource deduplication is not
+observable in an individual response, so Firna charges each returned resource
+at the declared app rate even when X may deduplicate its upstream charge.
 
 `x_create_post` reports its successful call cost with a $0.200 cap. A text-only
 Post reports $0.015 (15,000 micro-USD); input containing case-insensitive
@@ -197,7 +201,7 @@ any uncharged provider cost.
 
 Every successful component result uses the priced envelope
 `{"output": <tool output>, "usage": <report>}`. The host removes `usage` before
-returning `output` to the agent. Prices are immutable for app version `1.0.3`;
+returning `output` to the agent. Prices are immutable for app version `1.0.11`;
 any price change requires a new version and explicit workspace update consent.
 
 ## Limits and Cost Controls
@@ -210,9 +214,10 @@ already have accepted the Post. There is no background polling, streaming,
 webhook, automatic pagination, or scheduled read behavior.
 
 Author expansion is opt-in because expanded users are separate billable
-resources. Defaults omit engagement metrics and user expansions. Get-by-id is
-limited to 10 posts, recent search to 25 posts, and creation to one post or one
-reply. The console spending limit is the hard account-level control.
+resources. Private metrics and user expansions are opt-in. Get-by-id and
+metrics reads are limited to 10 posts, recent search to 25 posts, and creation
+to one post or one reply. The console spending limit is the hard account-level
+control.
 
 Before credits are purchased, the operator must confirm the exact initial
 credit amount, billing-cycle spending limit, and any auto-recharge amount and
@@ -231,7 +236,8 @@ runs in the nominated environment against its intended X account.
 
 Current prices must be rechecked in the console immediately before purchase.
 The public documentation references are [X API pricing], [OAuth 2.0 user access
-tokens], [get posts by ids], [recent search], and [create post].
+tokens], [get posts by ids], [X Post metrics protocol](x-app-metrics.md),
+[recent search], and [create post].
 
 [X API pricing]: https://docs.x.com/x-api/getting-started/pricing
 [OAuth 2.0 user access tokens]: https://docs.x.com/fundamentals/authentication/oauth-2-0/user-access-token

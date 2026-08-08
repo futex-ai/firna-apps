@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use unimock::{MockFn as _, Unimock, matching};
 
 use crate::x::host::{HostHttpRequest, HostHttpResponse, XHttpClientSendMock};
-use crate::x::service::call_tool;
+use crate::x::service::runner::call_tool;
 
 pub(super) fn invoke(http: &Unimock, tool_name: &str, input: Value) -> Value {
     invoke_raw(
@@ -103,6 +103,16 @@ pub(super) fn assert_read_usage(output: &Value, posts: u64, users: u64) {
                 {"unit": "post_read", "quantity": posts},
                 {"unit": "user_read", "quantity": users}
             ]
+        })
+    );
+}
+
+pub(super) fn assert_post_usage(output: &Value, posts: u64) {
+    assert_eq!(
+        output["usage"],
+        json!({
+            "kind": "metered",
+            "units": [{"unit": "post_read", "quantity": posts}]
         })
     );
 }

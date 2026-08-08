@@ -3,6 +3,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::x::metrics_types::GetPostMetricsOutput;
+
 #[derive(Debug, Deserialize)]
 pub(crate) struct AppToolCall {
     pub(crate) installation_id: String,
@@ -43,6 +45,7 @@ pub(crate) struct CreatePostInput {
 #[serde(untagged)]
 pub(crate) enum ToolSuccess {
     GetPosts(GetPostsOutput),
+    GetPostMetrics(GetPostMetricsOutput),
     SearchRecentPosts(SearchRecentPostsOutput),
     CreatePost(CreatePostOutput),
 }
