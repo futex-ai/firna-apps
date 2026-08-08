@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import app_icons
 import deploy_config
 
 
@@ -45,6 +46,7 @@ def audit_repository(root: Path, base_ref: str) -> list[str]:
     failures = []
     failures.extend(audit_workspace_metadata(root))
     failures.extend(audit_app_layout(root))
+    failures.extend(app_icons.audit_app_icons(root))
     failures.extend(audit_deploy_config(root))
     failures.extend(audit_platform_pins(root))
     failures.extend(audit_static_rust_includes(root))

@@ -68,6 +68,21 @@ six-digit sRGB hex colours. Product surfaces use the package icon and these
 colours together—for example, the animated ring around an app icon while its
 tool runs. Choose a pair that remains distinct around the icon at small sizes.
 
+## Icon Contract
+
+An app that declares an `icon` keeps three views of the same image in step:
+`assets/icon.png`, the `assets/icon.png.base64` sidecar that encodes it, and the
+`icon.data_base64` value the manifest embeds. `cargo xtask check` fails when they
+disagree, so regenerate the sidecar and re-embed it whenever the PNG changes.
+
+Icons are square, at least 64px per side, and framed one of two ways. Most paint
+their own background across the whole canvas—a full-bleed rounded tile, like
+`apps/exa` and `apps/x`—so they read the same on any surface a product view puts
+behind them. The alternative is a bare mark that keeps at least 8% clear space on
+every side, like the `apps/github` Invertocat. An unframed mark that runs to the
+canvas edge is rejected: it has no background of its own and no breathing room,
+so it looks oversized wherever the product draws it.
+
 Every tool declares a public-safe, task-specific `activity_label` for the
 compact chat status shown while that exact tool runs. Labels use two or more
 single-space-separated printable ASCII words, contain no more than 80 bytes,
