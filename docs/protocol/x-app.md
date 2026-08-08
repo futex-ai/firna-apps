@@ -1,5 +1,8 @@
 # X App Protocol
 
+Status: implemented by X package `1.1.0` on the platform revision pinned in
+`platform.toml`.
+
 ## Purpose
 
 The first-party `x` app lets an explicitly authorized Firna workspace read a
@@ -12,17 +15,19 @@ V1 is an explicit-install, first-party public-catalog app. It charges the
 workspace credit wallet at declared X list rates for successful calls while
 Firna's developer account prepays X. Production deployment remains blocked
 until that account has prepaid credit and a human-approved billing-cycle
-spending limit. One workspace installation owns one shared X authorization;
-per-member grants are out of scope.
+spending limit. A workspace may connect 1 through 25 X accounts, with one
+independent workspace installation and token lifecycle per account. Per-member
+grants remain out of scope.
 
 ## Package and Authorization
 
 The package contract is:
 
 - manifest id and name: `x` and `X`
-- version: `1.0.11`
+- version: `1.1.0`
 - source kind: `built_in`
 - install policy: `explicit`
+- connection mode: `multiple`
 - HTTP allowlist: `api.x.com` only
 - OAuth owner: `workspace`
 - authorization URL: `https://x.com/i/oauth2/authorize`
@@ -32,6 +37,10 @@ The package contract is:
 - scope separator: one ASCII space
 - scopes: `tweet.read`, `tweet.write`, `users.read`, `offline.access`
 - required app-owned values: `client_id` and `client_secret`
+- identity URL: `GET https://api.x.com/2/users/me`
+- identity bearer credential: `access_token`
+- provider account id: `$.data.id`
+- provider account label: `$.data.username`
 
 Both OAuth client values are deployment-supplied so one immutable package can
 use distinct provider apps. Deployment reads them from the dedicated
@@ -46,18 +55,67 @@ requests.
 
 The standard OAuth response maps `$.access_token` to `access_token`,
 `$.refresh_token` to `refresh_token`, `$.scope` to granted scopes, and
-`$.expires_in` to the access-token expiry. The token lifecycle declares the
-access-token and refresh-token credential kinds and a five-minute proactive
-refresh window. Refresh reuses the reviewed token URL and client-auth method.
-It atomically replaces the access token and expiry, replaces the refresh token
-when X returns a rotated value, and retains neither superseded value.
+`$.expires_in` to the access-token expiry. X's token response does not establish
+the connected account. Before Firna persists either token, the trusted host
+sends one bounded Bearer `GET` to `/2/users/me`. X documents that endpoint as
+User Context only and returns the authenticated user's `data.id` and
+`data.username` in its default response. The id is immutable connection
+identity; the username is the display label and may be refreshed only after a
+successful reconnect or version-upgrade identity enrichment. The raw identity
+body and bearer token never enter the component, clients, prompts, logs, or
+audit metadata.
 
-Only one refresh may run for an installation at a time. Calls arriving during
-refresh wait for that result and then use the current opaque credential. After
-an observed authentication rejection, the host may refresh and retry the
+The token lifecycle declares the access-token and refresh-token credential
+kinds and a five-minute proactive refresh window. Refresh reuses the reviewed
+token URL and client-auth method. It atomically replaces the access token and
+expiry, replaces the refresh token when X returns a rotated value, and retains
+neither superseded value.
+
+Only one refresh may run for one connection installation at a time. Calls for
+that connection wait for its result and then use its current opaque credential;
+another X account has a separate claim, pair, status, and retry. After an
+observed authentication rejection, the host may refresh and retry the exact
 provider request once. `invalid_grant`, a missing refresh token, or a terminal
-refresh rejection disables usable authorization and produces `auth_required`.
-Refresh bodies and credentials are always redacted.
+refresh rejection makes only that connection `auth_required`. Refresh bodies
+and credentials are always redacted.
+
+## Multiple X Accounts
+
+Owners and admins connect the first X account through normal install and use
+**Connect another account** for each additional account. Add exchanges OAuth,
+calls `/2/users/me`, and creates the identified installation only after both id
+and username are valid. Authorizing an already-active X id returns **This
+account is already connected** without replacing its tokens. Reconnect is
+addressed to one connection and must return the exact stored X user id before
+any credential or label write; signing into a different X account fails and
+leaves the selected connection usable. Disable, enable, agent sharing/links,
+refresh, and disconnect also affect one connection. Disconnecting the last
+account makes X not installed for the workspace.
+
+The `/2/users/me` identity lookup is bounded OAuth control-plane work and does
+not report a `user_read` unit or charge the workspace wallet. Firna absorbs any
+X provider charge for that lookup, so production budget and spending-limit
+review includes first install, add, reconnect, and one-time upgrade enrichment
+identity calls.
+
+Every X tool exposed to an agent has one required host-owned `connection_id`
+choice, even when that agent can see only one X account. Choice titles use only
+the authorized X usernames. The host validates and strips the selector before
+the X component sees its existing input schema, then binds credentials,
+pricing, operation recovery, and audit to that exact installation. There is no
+default account, recent-account fallback, fan-out, cross-post, or account-wide
+mutable session. One tool call reads from or writes to exactly one account.
+
+X's OAuth 2.0 Authorization Code documentation defines the standard authorize
+parameters used by the manifest but does not define an OAuth 2.0 account-forcing
+or username-prefill parameter. The similarly named `force_login` and
+`screen_name` parameters in X's API reference belong to OAuth 1.0a and must not
+be copied into this flow. Before approving **Connect another account**, the
+administrator uses X's own account switcher or signs out and signs into the
+intended account in the system browser. If X immediately returns the current
+account and Firna reports a duplicate, the administrator switches accounts in
+X and starts a fresh authorization. Web and native clients do not clear X
+cookies, embed X login, or claim that an account picker will always appear.
 
 ## Common Data Contract
 
@@ -201,7 +259,7 @@ any uncharged provider cost.
 
 Every successful component result uses the priced envelope
 `{"output": <tool output>, "usage": <report>}`. The host removes `usage` before
-returning `output` to the agent. Prices are immutable for app version `1.0.11`;
+returning `output` to the agent. Prices are immutable for app version `1.1.0`;
 any price change requires a new version and explicit workspace update consent.
 
 ## Limits and Cost Controls
@@ -236,11 +294,13 @@ runs in the nominated environment against its intended X account.
 
 Current prices must be rechecked in the console immediately before purchase.
 The public documentation references are [X API pricing], [OAuth 2.0 user access
-tokens], [get posts by ids], [X Post metrics protocol](x-app-metrics.md),
-[recent search], and [create post].
+tokens], [get my user], [OAuth API reference], [get posts by ids],
+[X Post metrics protocol](x-app-metrics.md), [recent search], and [create post].
 
 [X API pricing]: https://docs.x.com/x-api/getting-started/pricing
 [OAuth 2.0 user access tokens]: https://docs.x.com/fundamentals/authentication/oauth-2-0/user-access-token
+[get my user]: https://docs.x.com/x-api/users/get-my-user
+[OAuth API reference]: https://docs.x.com/fundamentals/authentication/api-reference
 [get posts by ids]: https://docs.x.com/x-api/posts/get-posts-by-ids
 [recent search]: https://docs.x.com/x-api/posts/search/introduction
 [create post]: https://docs.x.com/x-api/posts/create-post

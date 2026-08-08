@@ -98,6 +98,9 @@ fn component_filename() -> String {
 #[path = "../target_directory_tests.rs"]
 mod target_directory_tests;
 #[cfg(test)]
+#[path = "../x_connection_routing_tests.rs"]
+mod x_connection_routing_tests;
+#[cfg(test)]
 #[path = "../x_error_tests.rs"]
 mod x_error_tests;
 #[cfg(test)]
