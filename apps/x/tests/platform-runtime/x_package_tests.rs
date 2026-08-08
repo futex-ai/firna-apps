@@ -15,7 +15,7 @@ fn x_manifest_declares_exact_oauth_and_host_contract() {
     manifest.validate().expect("X manifest should validate");
     assert_eq!(manifest.id, "x");
     assert_eq!(manifest.name, "X");
-    assert_eq!(manifest.version, "1.0.10");
+    assert_eq!(manifest.version, "1.0.11");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.source.package, None);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);
@@ -98,16 +98,17 @@ fn x_manifest_caps_the_exact_v1_charge_schedule() {
     let manifest = manifest();
     let pricing = manifest.pricing.expect("X pricing declaration");
 
-    assert_eq!(pricing.tools.len(), 3);
+    assert_eq!(pricing.tools.len(), 4);
     assert_metered_pricing(
         &pricing,
         "x_get_posts",
-        [("post_read", 5_000, 10), ("user_read", 10_000, 10)],
+        &[("post_read", 5_000, 10), ("user_read", 10_000, 10)],
     );
+    assert_metered_pricing(&pricing, "x_get_post_metrics", &[("post_read", 5_000, 10)]);
     assert_metered_pricing(
         &pricing,
         "x_search_recent_posts",
-        [("post_read", 5_000, 25), ("user_read", 10_000, 25)],
+        &[("post_read", 5_000, 25), ("user_read", 10_000, 25)],
     );
     let create = pricing
         .tools
@@ -125,7 +126,7 @@ fn x_manifest_caps_the_exact_v1_charge_schedule() {
 fn assert_metered_pricing(
     pricing: &fna_apps_interface::manifest::AppPricing,
     tool: &str,
-    expected: [(&str, u64, u64); 2],
+    expected: &[(&str, u64, u64)],
 ) {
     let entry = pricing
         .tools
@@ -146,7 +147,7 @@ fn assert_metered_pricing(
                 )
             })
             .collect::<Vec<_>>(),
-        expected
+        expected.to_vec()
     );
 }
 
@@ -154,7 +155,7 @@ fn assert_metered_pricing(
 fn x_manifest_declares_only_the_bounded_v1_tools() {
     let manifest = manifest();
 
-    assert_eq!(manifest.tools.len(), 3);
+    assert_eq!(manifest.tools.len(), 4);
     assert_eq!(
         manifest
             .tools
@@ -171,6 +172,11 @@ fn x_manifest_declares_only_the_bounded_v1_tools() {
             (
                 "x_get_posts",
                 "Reading X posts",
+                &ToolSideEffect::ExternalRead
+            ),
+            (
+                "x_get_post_metrics",
+                "Reading X post metrics",
                 &ToolSideEffect::ExternalRead
             ),
             (
@@ -199,6 +205,26 @@ fn x_manifest_declares_only_the_bounded_v1_tools() {
     assert_eq!(manifest.limits.max_component_ms, Some(30_000));
     assert!(manifest.ingress.is_empty());
     assert!(manifest.events.is_empty());
+
+    let metrics = manifest
+        .tools
+        .iter()
+        .find(|tool| tool.name == "x_get_post_metrics")
+        .expect("metrics tool");
+    assert_eq!(metrics.operation, "x.get_post_metrics");
+    let schema = metrics.input_schema.as_ref().expect("metrics schema");
+    assert_eq!(schema["required"], json!(["ids"]));
+    assert_eq!(schema["properties"]["ids"]["minItems"], 1);
+    assert_eq!(schema["properties"]["ids"]["maxItems"], 10);
+    assert_eq!(schema["properties"]["ids"]["uniqueItems"], true);
+    assert_eq!(
+        schema["properties"]["ids"]["items"]["pattern"],
+        "^[0-9]{1,19}$"
+    );
+    assert_eq!(
+        schema["properties"]["include_private_metrics"]["type"],
+        "boolean"
+    );
 }
 
 #[test]

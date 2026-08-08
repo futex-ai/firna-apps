@@ -2,10 +2,11 @@
 
 mod errors;
 mod host;
+mod metrics_types;
 mod response;
 mod service;
 mod types;
 
 pub(crate) fn call_tool(request: &str) -> String {
-    service::call_tool(request, &host::ImportedXHttpClient)
+    service::runner::call_tool(request, &host::ImportedXHttpClient)
 }

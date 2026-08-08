@@ -60,25 +60,27 @@ future changes.
 Document the contract before production code changes. The existing three-tool
 app remains fully functional at the end of this milestone.
 
-- [ ] Recheck X's official Post metrics, authentication, retention, pricing,
-  and Enterprise-entitlement documentation, recording the verification date
-  and treating the Developer Console as authoritative for current prices.
-- [ ] Add a focused `docs/protocol/x-app-metrics.md` so the existing X protocol
+- [x] Recheck X's official Post metrics, authentication, 30-day retention,
+  public pricing, and Enterprise-entitlement documentation on 2026-08-08.
+- [ ] Confirm the current Post-read price in the X Developer Console before
+  release; no browser session is attached to this Conductor workspace, so the
+  console-authoritative check cannot yet be completed.
+- [x] Add a focused `docs/protocol/x-app-metrics.md` so the existing X protocol
   remains below its approximate 250-line limit; link both documents without
   duplicating or contradicting the shared OAuth, error, and billing contract.
-- [ ] Specify the exact input schema, provider query, public and private metric
+- [x] Specify the exact input schema, provider query, public and private metric
   structs, output ordering, partial results, missing ids, and unavailable-field
   representation.
-- [ ] Specify stable validation and provider-error behavior, including private
+- [x] Specify stable validation and provider-error behavior, including private
   metric omission, malformed metric objects, oversized responses, rate limits,
   budget exhaustion, and authentication loss without exposing provider text.
-- [ ] Specify the verified usage meter, unit price, per-call cap, successful
+- [x] Specify the publicly verified usage meter, unit price, per-call cap, successful
   settlement rules, and behavior if X's console price differs from the public
   documentation or the existing `post_read` unit.
-- [ ] Document that profile clicks are Post-attributed and that total profile
+- [x] Document that profile clicks are Post-attributed and that total profile
   views, historical time series, media analytics, promoted/Ads analytics, and
   automatic collection are unavailable through this tool.
-- [ ] Update the X package README and relevant protocol links only as needed to
+- [x] Update the X package README and relevant protocol links only as needed to
   make the planned boundary discoverable, then validate Markdown links and
   inspect the documentation diff.
 
@@ -88,24 +90,24 @@ Implement the documented tool behind the existing opaque credential boundary.
 At the end of this milestone the X component builds and all component tests
 pass with the new tool available.
 
-- [ ] Add failing component tests for the complete public-metric result,
+- [x] Add failing component tests for the complete public-metric result,
   opt-in private fields, provider-omitted private fields, genuine zero values,
   partial Post results, malformed metrics, and exact metered usage before
   implementing the behavior.
-- [ ] Bump the package version and add the `x_get_post_metrics` manifest schema,
+- [x] Bump the package version and add the `x_get_post_metrics` manifest schema,
   side-effect classification, OAuth requirements, response limit, timeout,
   activity label, and verified bounded pricing declaration.
-- [ ] Add fully typed request, provider-response, output, and error models; do
+- [x] Add fully typed request, provider-response, output, and error models; do
   not pass through arbitrary JSON or expose fields outside the protocol.
-- [ ] Implement strict input validation and one bounded Post lookup using the
+- [x] Implement strict input validation and one bounded Post lookup using the
   existing opaque workspace access-token reference.
-- [ ] Map public and optional private metrics without treating omission as zero,
+- [x] Map public and optional private metrics without treating omission as zero,
   leaking provider data, or changing the existing compact Post tools.
-- [ ] Report usage only after a validated provider success, count only returned
+- [x] Report usage only after a validated provider success, count only returned
   billable resources, and preserve uncharged typed failures.
-- [ ] Keep changed Rust files below 300 lines, split growing modules through the
+- [x] Keep changed Rust files below 300 lines, split growing modules through the
   normal module system, and update module/public API documentation.
-- [ ] Run component format, native unit tests, Wasm clippy, and the locked
+- [x] Run component format, native unit tests, Wasm clippy, and the locked
   `wasm32-unknown-unknown` build until they pass with no warnings or failures.
 
 ## Milestone 3: Verify the Runtime Boundary and Documentation
@@ -113,51 +115,51 @@ pass with the new tool available.
 Exercise the packaged component through the pinned Firna runtime. At the end
 of this milestone every tool remains locally usable and documented.
 
-- [ ] Add platform-runtime tests for manifest discovery, exact tool schema,
+- [x] Add platform-runtime tests for manifest discovery, exact tool schema,
   existing OAuth scopes, opaque credential injection, request parameters,
   public/private results, omissions versus zeroes, partial results, response
   bounds, typed errors, usage stripping, and wallet settlement.
-- [ ] Prove that each invocation emits at most one provider request and that no
+- [x] Prove that each invocation emits at most one provider request and that no
   existing read or write tool changes its request or output contract.
-- [ ] Add regressions for missing authorization, missing scopes, provider 4xx,
+- [x] Add regressions for missing authorization, missing scopes, provider 4xx,
   429, budget exhaustion, 5xx, malformed/truncated JSON, and redaction of raw
   provider bodies and credentials.
-- [ ] Update `apps/x/README.md`, the component/runtime READMEs, app catalog
+- [x] Update `apps/x/README.md`, the component/runtime READMEs, app catalog
   documentation, and the analytics protocol with the final implemented
   behavior, price, limits, and non-goals.
-- [ ] Run the X component and platform-runtime format, clippy, build, and test
+- [x] Run the X component and platform-runtime format, clippy, build, and test
   commands with a 100% pass rate.
-- [ ] Run `firna apps validate apps/x` and `firna apps package apps/x`, then
+- [x] Run `firna apps validate apps/x` and `firna apps package apps/x`, then
   smoke the tool through the real Wasm component with public metrics, private
   metrics, and an unavailable-private-metrics response.
-- [ ] If the pinned platform cannot express the documented typed result or
-  bounded charge, stop and add a new platform-prerequisite milestone followed
-  by a replacement component milestone; do not mix platform work into the
-  current app milestone.
+- [x] Confirm the pinned platform expresses the documented typed result and
+  bounded charge; no platform-prerequisite milestone is required.
 
 ## Milestone 4: Run the Complete Repository Gate
 
 Require the repository to remain green before committing the feature.
 
-- [ ] Run `cargo fmt --all -- --check`; if it fails, run `cargo fmt --all` and
+- [x] Run `cargo fmt --all -- --check`; if it fails, run `cargo fmt --all` and
   rerun the check before proceeding.
-- [ ] Run `cargo xtask rust-file-length-lint --all` and the repository
-  structural audit.
-- [ ] Run every relevant targeted test discovered during implementation, then
+- [x] Attempt `cargo xtask rust-file-length-lint --all`; this repository revision
+  has no such subcommand, so run its supported `cargo xtask repository-audit
+  --base origin/main` replacement, which includes Rust file-length and
+  structural checks.
+- [x] Run every relevant targeted test discovered during implementation, then
   run `cargo xtask check` and require a 100% pass rate.
-- [ ] Resolve every compile, lint, test, package, documentation, or local smoke
+- [x] Resolve every compile, lint, test, package, documentation, or local smoke
   failure. If an external provider blocks live verification, record the exact
   blocker and all checks that succeeded.
-- [ ] Fetch `origin/main`, capture the source tip before integration, audit
+- [x] Fetch `origin/main`, capture the source tip before integration, audit
   mainline additions from the merge base, and resolve any overlap path by path
   without deleting or overriding mainline behavior.
-- [ ] Inspect `git diff --check`, the complete diff, `git diff --name-status
+- [x] Inspect `git diff --check`, the complete diff, `git diff --name-status
   origin/main`, and `git diff --diff-filter=D --name-status origin/main`; stop
   unless every deletion is explicitly authorized.
 
 ## Milestone 5: Commit and Push the Checked Work
 
-- [ ] Run `git add -A` so the manifest, component, tests, protocol, READMEs,
+- [x] Run `git add -A` so the manifest, component, tests, protocol, READMEs,
   lockfiles, and plan updates are all tracked.
 - [ ] Commit the completed feature using a Conventional Commit title no longer
   than 50 characters and a body describing the metric boundary, pricing,

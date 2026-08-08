@@ -16,8 +16,10 @@ platform.
 
 ## What This Crate Does
 
-Read tests cover bounded Post lookup and one-page recent search. Write tests
-prove that one component invocation sends at most one create request and never
+Read tests cover bounded Post lookup, public and opt-in private Post metrics,
+and one-page recent search. They distinguish missing private fields from real
+zeroes and verify exact metered usage. Write tests prove that one component
+invocation sends at most one create request and never
 forwards Firna's operation id. The OAuth lifecycle test uses the credential-
 scoped host to replace a rejected bearer token and retry the exact request once.
 Platform-owned refresh-token rotation and durable operation-ledger behavior are
@@ -63,8 +65,10 @@ recovery semantics.
 ### Key Code
 
 - `src/lib.rs` builds the package and component used by every test.
-- `x_read_smoke_tests.rs` and `x_write_smoke_tests.rs` cover all three tools.
+- `x_read_smoke_tests.rs`, `x_metrics_smoke_tests.rs`, and
+  `x_write_smoke_tests.rs` cover all four tools.
 - `x_error_tests.rs` covers provider failures, truncation, and redaction.
+- `x_metrics_error_tests.rs` applies those failure guarantees to metrics reads.
 - `x_oauth_lifecycle_tests.rs` covers host-owned bearer refresh and retry.
 
 ### Related Docs
@@ -72,4 +76,5 @@ recovery semantics.
 - [X package](../../README.md)
 - [X component](../../component/README.md)
 - [X app protocol](../../../../docs/protocol/x-app.md)
+- [X Post metrics protocol](../../../../docs/protocol/x-app-metrics.md)
 - [Firna app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md)

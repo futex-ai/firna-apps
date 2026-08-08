@@ -101,6 +101,12 @@ mod target_directory_tests;
 #[path = "../x_error_tests.rs"]
 mod x_error_tests;
 #[cfg(test)]
+#[path = "../x_metrics_error_tests.rs"]
+mod x_metrics_error_tests;
+#[cfg(test)]
+#[path = "../x_metrics_smoke_tests.rs"]
+mod x_metrics_smoke_tests;
+#[cfg(test)]
 #[path = "../x_oauth_lifecycle_tests.rs"]
 mod x_oauth_lifecycle_tests;
 #[cfg(test)]

@@ -6,8 +6,8 @@ storage, refresh, and durable tool recovery belong to the Firna platform.
 
 ## Responsibilities
 
-- Decode and validate the three declared X tool calls.
-- Build bounded lookup, recent-search, and create-Post requests.
+- Decode and validate the four declared X tool calls.
+- Build bounded lookup, metrics, recent-search, and create-Post requests.
 - Request opaque host bearer-token injection for the workspace installation.
 - Return compact typed results, bounded usage reports, and stable redacted
   failures.
@@ -16,8 +16,9 @@ storage, refresh, and durable tool recovery belong to the Firna platform.
 
 The component exports `call-tool` and imports only `host-http-request`. Its HTTP
 boundary is a trait, so unit tests use `unimock` without network or credential
-access. Reads issue one provider request for one bounded page. Create issues at
-most one request and maps an ambiguous transport result to
+access. Reads issue one provider request for one bounded page or metrics
+snapshot. Metrics preserve unavailable private fields separately from real
+zeroes. Create issues at most one request and maps an ambiguous transport result to
 `write_outcome_unknown`. Successful calls use the platform's priced envelope:
 reads report returned Post and User counts, while creation reports the
 manifest-capped text or link rate. Typed failures remain outside that envelope
@@ -41,7 +42,8 @@ must never appear in returned errors.
 ### Key Code
 
 - `src/lib.rs` defines the WIT import and `call-tool` export.
-- `src/x/service.rs` owns validation and request construction.
+- `src/x/service` owns dispatch, validation, and bounded request construction.
+- `src/x/metrics_types.rs` owns the typed Post-metrics mapping.
 - `src/x/host.rs` owns the opaque host HTTP trait and request DTOs.
 - `src/x/response.rs` owns provider status and response mapping.
 - `src/x/_tests_/service` covers reads, writes, and error behavior.
@@ -50,4 +52,5 @@ must never appear in returned errors.
 
 - [X package](../README.md)
 - [X app protocol](../../../docs/protocol/x-app.md)
+- [X Post metrics protocol](../../../docs/protocol/x-app-metrics.md)
 - [Firna app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md)
