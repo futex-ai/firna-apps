@@ -8,6 +8,9 @@ post-push review has been completed.
 
 - [X API access](x-api-access.md): add a cost-bounded, workspace-authorized X
   app for reading and publishing posts through X's pay-per-use API.
+- [X post metrics](x-post-metrics.md): add bounded public and owned-Post
+  engagement metrics without implying total profile views or Enterprise
+  analytics support.
 
 ## Completed
 
