@@ -15,7 +15,7 @@ fn x_manifest_declares_exact_oauth_and_host_contract() {
     manifest.validate().expect("X manifest should validate");
     assert_eq!(manifest.id, "x");
     assert_eq!(manifest.name, "X");
-    assert_eq!(manifest.version, "1.0.9");
+    assert_eq!(manifest.version, "1.0.10");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.source.package, None);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);
@@ -215,6 +215,14 @@ fn x_manifest_embeds_the_repo_owned_png_source() {
     assert_eq!(icon.color_pair.secondary, "#FFFFFF");
     assert_eq!(&png[..8], b"\x89PNG\r\n\x1a\n");
     assert!(png.len() < 64 * 1_024);
+    assert_eq!(
+        u32::from_be_bytes(png[16..20].try_into().expect("width")),
+        128
+    );
+    assert_eq!(
+        u32::from_be_bytes(png[20..24].try_into().expect("height")),
+        128
+    );
 }
 
 #[test]
