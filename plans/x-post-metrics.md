@@ -161,12 +161,12 @@ Require the repository to remain green before committing the feature.
 
 - [x] Run `git add -A` so the manifest, component, tests, protocol, READMEs,
   lockfiles, and plan updates are all tracked.
-- [ ] Commit the completed feature using a Conventional Commit title no longer
+- [x] Commit the completed feature using a Conventional Commit title no longer
   than 50 characters and a body describing the metric boundary, pricing,
   privacy behavior, tests, and non-goals. A suitable title is
   `feat(x): add post metrics tool`.
-- [ ] Push the current branch without renaming it.
-- [ ] Inspect `git diff --name-status origin/main..HEAD` and the deletion diff
+- [x] Push the current branch without renaming it.
+- [x] Inspect `git diff --name-status origin/main..HEAD` and the deletion diff
   after the commit; stop if an unauthorized mainline removal is present.
 
 ## Milestone 6: Run Post-Push Review
