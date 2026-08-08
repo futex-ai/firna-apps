@@ -9,7 +9,7 @@ fn dataforseo_manifest_is_explicit_built_in_and_credential_free_at_deploy() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "dataforseo");
-    assert_eq!(manifest.version, "1.0.12");
+    assert_eq!(manifest.version, "1.0.13");
     assert_eq!(
         manifest.icon.as_ref().unwrap().color_pair.primary,
         "#2563EB"

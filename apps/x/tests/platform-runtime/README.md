@@ -11,6 +11,8 @@ platform.
 - Validate the package manifest, icon, OAuth lifecycle, schemas, and limits.
 - Exercise every X tool through the real Wasm runtime and mocked host imports.
 - Verify exact provider requests, stable redacted errors, and OAuth host retry.
+- Prove two installation ids inject distinct bearer tokens and refreshing one
+  connection does not rotate or retry the other.
 - Verify priced-result decoding, exact bounded usage, and typed uncharged
   failures.
 
@@ -27,14 +29,17 @@ pending; reclaimed agent turns consume that stored tool history; and an
 ambiguous pending installed-app execution fails closed without reconstructing
 or invoking the app tool. Together with this crate's one-request X write test,
 those regressions prove that recovery cannot send a second create-Post request.
+The pinned platform OAuth suite also proves that duplicate identities are
+rejected before credential publication and that a targeted reconnect cannot
+replace one connection with another provider account. Its settings suite keeps
+the remaining live connections available after one connection is disconnected.
 Runtime assertions also prove that usage is separated from the agent-visible
 output, empty search results report zero units, and text and link creation
 report their exact manifest-capped costs.
 
 ## Quick Start
 
-Once the reviewed platform refresh change is merged and this crate's manifest
-is pinned to that revision, run:
+Run against the canonical platform revision pinned by this repository:
 
 ```bash
 cargo fmt --manifest-path apps/x/tests/platform-runtime/Cargo.toml -- --check
@@ -66,6 +71,7 @@ recovery semantics.
 - `x_read_smoke_tests.rs` and `x_write_smoke_tests.rs` cover all three tools.
 - `x_error_tests.rs` covers provider failures, truncation, and redaction.
 - `x_oauth_lifecycle_tests.rs` covers host-owned bearer refresh and retry.
+- `x_connection_routing_tests.rs` covers installation-scoped bearer isolation.
 
 ### Related Docs
 

@@ -1,7 +1,7 @@
 use std::fs;
 
 use fna_apps_interface::manifest::{
-    AppSourceKind, AppToolPricingStructure, AuthOwner, InstallPolicy,
+    AppConnectionMode, AppSourceKind, AppToolPricingStructure, AuthOwner, InstallPolicy,
     StandardOAuthClientAuthMethod, StandardOAuthPkceMethod, StandardOAuthPkceMode, ToolSideEffect,
 };
 use serde_json::json;
@@ -15,10 +15,14 @@ fn x_manifest_declares_exact_oauth_and_host_contract() {
     manifest.validate().expect("X manifest should validate");
     assert_eq!(manifest.id, "x");
     assert_eq!(manifest.name, "X");
-    assert_eq!(manifest.version, "1.0.10");
+    assert_eq!(manifest.version, "1.1.0");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.source.package, None);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);
+    assert_eq!(
+        manifest.install.connection_mode,
+        AppConnectionMode::Multiple
+    );
     assert!(manifest.env.is_empty());
     assert_eq!(
         manifest
@@ -65,6 +69,28 @@ fn x_manifest_declares_exact_oauth_and_host_contract() {
     let pkce = flow.pkce.as_ref().expect("required PKCE");
     assert_eq!(pkce.mode, StandardOAuthPkceMode::Required);
     assert_eq!(pkce.method, StandardOAuthPkceMethod::S256);
+
+    let identity = flow.identity.as_ref().expect("X OAuth identity request");
+    assert_eq!(identity.url, "https://api.x.com/2/users/me");
+    assert_eq!(identity.access_token_credential_kind, "access_token");
+    assert_eq!(
+        identity
+            .response_mapping
+            .provider_account_id
+            .as_ref()
+            .expect("provider account id mapping")
+            .selectors(),
+        ["$.data.id"]
+    );
+    assert_eq!(
+        identity
+            .response_mapping
+            .provider_account_label
+            .as_ref()
+            .expect("provider account label mapping")
+            .selectors(),
+        ["$.data.username"]
+    );
 
     let mapping = &flow.response_mapping.requirements[0];
     assert_eq!(mapping.auth_requirement_id, "x_workspace");
@@ -193,6 +219,12 @@ fn x_manifest_declares_only_the_bounded_v1_tools() {
         assert_eq!(
             tool.input_schema.as_ref().expect("inline schema")["additionalProperties"],
             json!(false)
+        );
+        assert!(
+            tool.input_schema.as_ref().expect("inline schema")["properties"]
+                .get("connection_id")
+                .is_none(),
+            "the host-owned connection selector must not reach the X component schema"
         );
     }
     assert_eq!(manifest.limits.max_tool_response_bytes, Some(262_144));

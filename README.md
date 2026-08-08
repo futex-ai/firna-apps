@@ -14,8 +14,8 @@ The current catalog packages are:
   credentials, five bounded read tools, and signed repository events.
 - HTTP: workspace-default, first-party arbitrary-host HTTP requests.
 - Slack: explicitly installed Slack tools, OAuth, webhooks, and event handling.
-- X: explicitly installed, workspace-authorized, usage-priced Post reads,
-  recent search, and single-Post publishing.
+- X: explicitly installed, multi-account workspace-authorized, usage-priced
+  Post reads, recent search, and single-Post publishing.
 
 Each package is an isolated Rust WebAssembly component under
 [`apps/`](apps/README.md). Production deployment uploads source bundles to the
@@ -43,7 +43,7 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev 4b4ac44076085c99fb11f78512ef1c2e48828c49 \
+  --rev 733d089519f799b78f52a173db5cc1507fd72e65 \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```

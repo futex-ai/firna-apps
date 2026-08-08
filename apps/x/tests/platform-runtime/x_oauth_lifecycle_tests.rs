@@ -2,10 +2,6 @@ use std::collections::VecDeque;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use fna_apps::credentials::{
-    AppCredentialVault, PutInstallationCredential, PutInstallationCredentialPair,
-    PutUserGrantCredential,
-};
 use fna_apps::host::{
     AppHostInvocation, CredentialScopedWasmHost, ProviderArtifactHttpResult, ProviderHttpClient,
 };
@@ -13,17 +9,14 @@ use fna_apps::oauth_tokens::{
     AppOAuthAccessToken, AppOAuthTokenMode, AppOAuthTokenRequest, AppOAuthTokenResult,
     AppOAuthTokenService,
 };
-use fna_apps_interface::Result;
 use fna_apps_interface::runtime::{AppRuntime, AppToolCall, AppToolUsageReport};
-use fna_apps_store_interface::{
-    AppCredentialRecord, AppCredentialRefreshInvalidation, AppCredentialRefreshRelease,
-};
-use fna_apps_wasm::{HostCredentialReference, HostHttpRequest, HostHttpResponse};
+use fna_apps_wasm::{HostHttpRequest, HostHttpResponse};
 use serde_json::json;
 use uuid::Uuid;
 
 use crate::manifest;
 use crate::x_runtime_support::runtime_with_host;
+use crate::x_test_support::UnusedCredentialVault;
 
 #[tokio::test]
 async fn x_host_refreshes_and_retries_once_after_unauthorized() {
@@ -196,69 +189,6 @@ impl AppOAuthTokenService for SequencedOAuth {
             .expect("OAuth token lock")
             .pop_front()
             .expect("OAuth access token should exist"))
-    }
-}
-
-struct UnusedCredentialVault;
-
-impl AppCredentialVault for UnusedCredentialVault {
-    fn put_installation_credential(
-        &self,
-        _input: PutInstallationCredential,
-    ) -> Result<AppCredentialRecord> {
-        panic!("OAuth lifecycle should own installation credentials")
-    }
-
-    fn remove_installation_credential(
-        &self,
-        _workspace_id: Uuid,
-        _installation_id: Uuid,
-        _credential_kind: &str,
-    ) -> Result<bool> {
-        panic!("OAuth lifecycle should own installation credentials")
-    }
-
-    fn put_installation_credential_pair(
-        &self,
-        _input: PutInstallationCredentialPair,
-    ) -> Result<Vec<AppCredentialRecord>> {
-        panic!("OAuth lifecycle should own installation credentials")
-    }
-
-    fn put_claimed_installation_credential_pair(
-        &self,
-        _input: PutInstallationCredentialPair,
-        _fence: &AppCredentialRefreshRelease,
-    ) -> Result<Option<Vec<AppCredentialRecord>>> {
-        panic!("OAuth lifecycle should own installation credentials")
-    }
-
-    fn invalidate_claimed_installation_credential_pair(
-        &self,
-        _workspace_id: Uuid,
-        _app_id: &str,
-        _invalidation: &AppCredentialRefreshInvalidation,
-    ) -> Result<bool> {
-        panic!("OAuth lifecycle test does not exercise terminal invalidation")
-    }
-
-    fn put_user_grant_credential(
-        &self,
-        _input: PutUserGrantCredential,
-    ) -> Result<AppCredentialRecord> {
-        panic!("X V1 has no user-owned credential grants")
-    }
-
-    fn resolve_for_host(
-        &self,
-        _reference: &HostCredentialReference,
-        _app_secret_storage_id: &str,
-    ) -> Result<Option<String>> {
-        panic!("lifecycle-managed X access tokens must bypass basic vault resolution")
-    }
-
-    fn resolve_record(&self, _credential: &AppCredentialRecord) -> Result<Option<String>> {
-        panic!("lifecycle-managed X access tokens resolve through the token service")
     }
 }
 

@@ -1,7 +1,7 @@
 # X App Protocol
 
-Status: target for X package `1.1.0`; checked-in `1.0.9` stays single-connection
-until the generic platform is merged and pinned and package adoption lands.
+Status: implemented by X package `1.1.0` on the platform revision pinned in
+`platform.toml`.
 
 ## Purpose
 
@@ -23,7 +23,7 @@ grants remain out of scope.
 The package contract is:
 
 - manifest id and name: `x` and `X`
-- target version: `1.1.0` (current pre-adoption manifest: `1.0.9`)
+- version: `1.1.0`
 - source kind: `built_in`
 - install policy: `explicit`
 - connection mode: `multiple`

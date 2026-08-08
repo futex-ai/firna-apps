@@ -4,9 +4,9 @@
 authorized Firna workspace bounded Post lookup, recent search, and one-Post
 publishing without exposing OAuth tokens to the component or agents.
 
-The multi-account behavior below is the target for package `1.1.0`. The
-checked-in `1.0.9` manifest remains single-connection until the corresponding
-generic Firna platform revision is merged and pinned in this repository.
+Package `1.1.0` opts into the platform's generic multi-connection OAuth
+contract, so one workspace can authorize several independently managed X
+accounts without giving the component or agent access to their tokens.
 
 ## Responsibilities
 

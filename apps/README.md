@@ -138,7 +138,8 @@ the same immutable package.
   AI visibility tools. The installer supplies the workspace's DataForSEO API
   login/password pair through Settings; the package declares no app-owned or
   deployment secret.
-- `apps/x`: explicit-install X integration with workspace-owned OAuth, bounded
-  Post lookup and recent search, single-Post publishing, workspace-wallet usage
-  charging, and operator spending controls defined by the
+- `apps/x`: explicit-install X integration with independently selectable
+  workspace-owned OAuth accounts, bounded Post lookup and recent search,
+  single-Post publishing, workspace-wallet usage charging, and operator
+  spending controls defined by the
   [X app protocol](../docs/protocol/x-app.md).

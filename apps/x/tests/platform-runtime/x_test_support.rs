@@ -1,8 +1,16 @@
 use std::collections::BTreeMap;
 
+use fna_apps::credentials::{
+    AppCredentialVault, PutInstallationCredential, PutInstallationCredentialPair,
+    PutOAuthConnectionCredentials, PutUserGrantCredential,
+};
 use fna_apps_interface::runtime::{AppRuntime, AppToolCall, AppToolResult};
 use fna_apps_interface::{Error, Result};
-use fna_apps_wasm::{HostHttpResponse, WasmComponentRuntime};
+use fna_apps_store_interface::{
+    AppCredentialRecord, AppCredentialRefreshInvalidation, AppCredentialRefreshRelease,
+    AppInstallationRecord,
+};
+use fna_apps_wasm::{HostCredentialReference, HostHttpResponse, WasmComponentRuntime};
 use serde_json::Value;
 use uuid::Uuid;
 
@@ -93,5 +101,75 @@ pub(crate) fn assert_no_null_fields(value: &Value) {
             }
         }
         _ => {}
+    }
+}
+
+pub(crate) struct UnusedCredentialVault;
+
+impl AppCredentialVault for UnusedCredentialVault {
+    fn put_installation_credential(
+        &self,
+        _input: PutInstallationCredential,
+    ) -> Result<AppCredentialRecord> {
+        panic!("OAuth lifecycle should own installation credentials")
+    }
+
+    fn remove_installation_credential(
+        &self,
+        _workspace_id: Uuid,
+        _installation_id: Uuid,
+        _credential_kind: &str,
+    ) -> Result<bool> {
+        panic!("OAuth lifecycle should own installation credentials")
+    }
+
+    fn put_installation_credential_pair(
+        &self,
+        _input: PutInstallationCredentialPair,
+    ) -> Result<Vec<AppCredentialRecord>> {
+        panic!("OAuth lifecycle should own installation credentials")
+    }
+
+    fn publish_oauth_connection_credentials(
+        &self,
+        _input: PutOAuthConnectionCredentials,
+    ) -> Result<AppInstallationRecord> {
+        panic!("OAuth lifecycle should own connection publication")
+    }
+
+    fn put_claimed_installation_credential_pair(
+        &self,
+        _input: PutInstallationCredentialPair,
+        _fence: &AppCredentialRefreshRelease,
+    ) -> Result<Option<Vec<AppCredentialRecord>>> {
+        panic!("OAuth lifecycle should own installation credentials")
+    }
+
+    fn invalidate_claimed_installation_credential_pair(
+        &self,
+        _workspace_id: Uuid,
+        _app_id: &str,
+        _invalidation: &AppCredentialRefreshInvalidation,
+    ) -> Result<bool> {
+        panic!("OAuth lifecycle test does not exercise terminal invalidation")
+    }
+
+    fn put_user_grant_credential(
+        &self,
+        _input: PutUserGrantCredential,
+    ) -> Result<AppCredentialRecord> {
+        panic!("X V1 has no user-owned credential grants")
+    }
+
+    fn resolve_for_host(
+        &self,
+        _reference: &HostCredentialReference,
+        _app_secret_storage_id: &str,
+    ) -> Result<Option<String>> {
+        panic!("lifecycle-managed X access tokens must bypass basic vault resolution")
+    }
+
+    fn resolve_record(&self, _credential: &AppCredentialRecord) -> Result<Option<String>> {
+        panic!("lifecycle-managed X access tokens resolve through the token service")
     }
 }
