@@ -132,3 +132,7 @@ preview can use separate provider apps with the same immutable package. The
 tool, signed-event, lifecycle, and redaction contract. The
 [app deployment protocol](docs/protocol/app-deployment.md) defines the
 provisioning and deployment automation contract.
+The planned [Browser Use app protocol](docs/protocol/browser-use-app.md)
+defines its one-off cloud-task, ownership, recovery, and workspace-wallet
+billing contract; implementation is tracked in the
+[Browser Use app plan](plans/browser-use-app.md).

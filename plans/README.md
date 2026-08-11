@@ -6,6 +6,9 @@ post-push review has been completed.
 
 ## Active
 
+- [Browser Use app](browser-use-app.md): add a bounded asynchronous Browser
+  Use Cloud app with installation-owned task handles and exact workspace-wallet
+  settlement of provider-reported run cost.
 - [X API access](x-api-access.md): add a cost-bounded, workspace-authorized X
   app for reading and publishing posts through X's pay-per-use API.
 - [X post metrics](x-post-metrics.md): add bounded public and owned-Post
