@@ -49,8 +49,9 @@ The OAuth requirement requests exactly these implemented permissions:
 `offline.access`.
 
 The workspace OAuth access token serves user-context tools. Full-archive Post
-search, all-history Post counts, and location trends accept only X app-only
-authentication, so those modes use the app-owned `bearer_token`; they never
+search and all-history Post counts require X app-only authentication. The
+package also keeps recent counts and location trends in that same public,
+app-context boundary. Those modes use the app-owned `bearer_token` and never
 fall back to a connected account token. Production reads
 `prod-app-x-bearer-token`; stable preview reads
 `preview-app-x-bearer-token`. Secret values never enter source, component

@@ -137,6 +137,10 @@ pinned platform runtime and all documentation matches behavior.
 
 ## Milestone 8: Run Post-Push Review
 
+Current blocker: the sandbox `codex` CLI is not logged in and has no
+`OPENAI_API_KEY`. Two post-push `cargo xtask review` attempts returned HTTP 401
+before producing findings; rerun after reviewer authentication is available.
+
 - [ ] After push, run `cargo xtask review` against `origin/main`.
 - [ ] Investigate every finding without automatically changing reviewed code.
 - [ ] Report each finding as a numbered item with severity, feature context,
