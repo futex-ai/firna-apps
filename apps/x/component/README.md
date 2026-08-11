@@ -6,9 +6,9 @@ storage, refresh, and durable tool recovery belong to the Firna platform.
 
 ## Responsibilities
 
-- Decode and validate the four declared X tool calls.
-- Build bounded lookup, metrics, recent-search, and create-Post requests.
-- Request opaque host bearer-token injection for the workspace installation.
+- Decode and validate all 23 declared X tool calls and their closed modes.
+- Build bounded typed requests for X reads and one-request account actions.
+- Select installation OAuth or the app-owned bearer without reading a token.
 - Return compact typed results, bounded usage reports, and stable redacted
   failures.
 
@@ -18,11 +18,10 @@ The component exports `call-tool` and imports only `host-http-request`. Its HTTP
 boundary is a trait, so unit tests use `unimock` without network or credential
 access. Reads issue one provider request for one bounded page or metrics
 snapshot. Metrics preserve unavailable private fields separately from real
-zeroes. Create issues at most one request and maps an ambiguous transport result to
+zeroes. Every action issues at most one request and maps an ambiguous result to
 `write_outcome_unknown`. Successful calls use the platform's priced envelope:
-reads report returned Post and User counts, while creation reports the
-manifest-capped text or link rate. Typed failures remain outside that envelope
-and therefore cannot be charged.
+reads report returned resource counts and actions report their exact bounded
+rate. Typed failures remain outside that envelope and cannot be charged.
 
 ## Quick Start
 
@@ -43,6 +42,7 @@ must never appear in returned errors.
 
 - `src/lib.rs` defines the WIT import and `call-tool` export.
 - `src/x/service` owns dispatch, validation, and bounded request construction.
+- `src/x/types` owns domain request, provider, result, and action DTOs.
 - `src/x/metrics_types.rs` owns the typed Post-metrics mapping.
 - `src/x/host.rs` owns the opaque host HTTP trait and request DTOs.
 - `src/x/response.rs` owns provider status and response mapping.

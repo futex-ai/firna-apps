@@ -32,7 +32,8 @@ impl XHttpClient for ImportedXHttpClient {
 pub(crate) struct HostCredentialReference {
     pub(crate) app_id: String,
     pub(crate) credential_kind: String,
-    pub(crate) installation_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) installation_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -77,7 +78,7 @@ impl HostHttpResponse {
     }
 }
 
-pub(crate) fn request(
+pub(crate) fn user_request(
     method: &str,
     url: &str,
     installation_id: &str,
@@ -103,10 +104,22 @@ pub(crate) fn request(
         credential: HostCredentialReference {
             app_id: String::from("x"),
             credential_kind: String::from("access_token"),
-            installation_id: installation_id.to_owned(),
+            installation_id: Some(installation_id.to_owned()),
         },
         credential_injection: HostCredentialInjection {
             kind: String::from("bearer_authorization"),
         },
     }
+}
+
+pub(crate) fn app_request(
+    method: &str,
+    url: &str,
+    query: BTreeMap<String, String>,
+    body_json: Option<Value>,
+) -> HostHttpRequest {
+    let mut request = user_request(method, url, "", query, body_json);
+    request.credential.credential_kind = String::from("bearer_token");
+    request.credential.installation_id = None;
+    request
 }

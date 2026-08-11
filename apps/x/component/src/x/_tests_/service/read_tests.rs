@@ -45,7 +45,10 @@ fn get_posts_sends_bounded_lookup_and_returns_compact_partial_result() {
     assert_eq!(request.query["expansions"], "author_id");
     assert_eq!(request.query["user.fields"], "id,name,username");
     assert_eq!(request.credential.credential_kind, "access_token");
-    assert_eq!(request.credential.installation_id, "018f-installation");
+    assert_eq!(
+        request.credential.installation_id.as_deref(),
+        Some("018f-installation")
+    );
     assert_eq!(request.credential_injection.kind, "bearer_authorization");
     assert_eq!(request.response_body_limit_bytes, 262_144);
     assert_eq!(request.timeout_seconds, 30);

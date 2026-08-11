@@ -18,11 +18,12 @@ platform.
 
 ## What This Crate Does
 
-Read tests cover bounded Post lookup, public and opt-in private Post metrics,
-and one-page recent search. They distinguish missing private fields from real
-zeroes and verify exact metered usage. Write tests prove that one component
-invocation sends at most one create request and never
-forwards Firna's operation id. The OAuth lifecycle test uses the credential-
+Read tests cover all declared domains, app-only credential routing, bounded
+Post lookup, public and opt-in private Post metrics, and one-page search. They
+distinguish missing private fields from real zeroes and verify exact metered
+usage. Write tests smoke every added action through the real Wasm boundary and
+prove that one invocation never forwards Firna's operation id or retries an
+ambiguous request. The OAuth lifecycle test uses the credential-
 scoped host to replace a rejected bearer token and retry the exact request once.
 Platform-owned refresh-token rotation and durable operation-ledger behavior are
 covered at the pinned platform boundary. The platform store proves that a
@@ -70,8 +71,10 @@ recovery semantics.
 ### Key Code
 
 - `src/lib.rs` builds the package and component used by every test.
+- `x_coverage_smoke_tests.rs` invokes every expanded tool through real Wasm.
 - `x_read_smoke_tests.rs`, `x_metrics_smoke_tests.rs`, and
-  `x_write_smoke_tests.rs` cover all four tools.
+  `x_write_smoke_tests.rs` retain the original-tool regressions.
+- `x_package/` verifies the 23-tool schema, OAuth scope, and pricing catalog.
 - `x_error_tests.rs` covers provider failures, truncation, and redaction.
 - `x_metrics_error_tests.rs` applies those failure guarantees to metrics reads.
 - `x_oauth_lifecycle_tests.rs` covers host-owned bearer refresh and retry.

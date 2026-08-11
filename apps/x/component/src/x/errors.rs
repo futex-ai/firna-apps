@@ -41,8 +41,52 @@ pub(crate) enum InvalidInputReason {
     PaginationToken,
     #[error("invalid post text")]
     PostText,
+    #[error("invalid Post options")]
+    PostOptions,
+    #[error("invalid poll")]
+    Poll,
     #[error("invalid reply target")]
     ReplyTarget,
+    #[error("invalid time range")]
+    TimeRange,
+    #[error("invalid count query")]
+    CountQuery,
+    #[error("invalid user selector")]
+    UserSelector,
+    #[error("invalid username")]
+    Username,
+    #[error("invalid user query")]
+    UserQuery,
+    #[error("invalid user id")]
+    UserId,
+    #[error("invalid feed selector")]
+    FeedSelector,
+    #[error("invalid engagement selector")]
+    EngagementSelector,
+    #[error("invalid List selector")]
+    ListSelector,
+    #[error("invalid Space selector")]
+    SpaceSelector,
+    #[error("invalid Community selector")]
+    CommunitySelector,
+    #[error("invalid trend selector")]
+    TrendSelector,
+    #[error("invalid media keys")]
+    MediaKeys,
+    #[error("invalid media action")]
+    MediaAction,
+    #[error("invalid Direct Message selector")]
+    DmSelector,
+    #[error("invalid Post action")]
+    PostAction,
+    #[error("invalid relationship action")]
+    RelationshipAction,
+    #[error("invalid List action")]
+    ListAction,
+    #[error("invalid Direct Message action")]
+    DmAction,
+    #[error("invalid bookmark folder")]
+    BookmarkFolder,
     #[error("link acknowledgement required")]
     LinkAcknowledgementRequired,
     #[error("provider rejected request")]
@@ -131,7 +175,29 @@ impl InvalidInputReason {
             Self::SearchPageSize => "invalid_search_page_size",
             Self::PaginationToken => "invalid_pagination_token",
             Self::PostText => "invalid_post_text",
+            Self::PostOptions => "invalid_post_options",
+            Self::Poll => "invalid_poll",
             Self::ReplyTarget => "invalid_reply_target",
+            Self::TimeRange => "invalid_time_range",
+            Self::CountQuery => "invalid_count_query",
+            Self::UserSelector => "invalid_user_selector",
+            Self::Username => "invalid_username",
+            Self::UserQuery => "invalid_user_query",
+            Self::UserId => "invalid_user_id",
+            Self::FeedSelector => "invalid_feed_selector",
+            Self::EngagementSelector => "invalid_engagement_selector",
+            Self::ListSelector => "invalid_list_selector",
+            Self::SpaceSelector => "invalid_space_selector",
+            Self::CommunitySelector => "invalid_community_selector",
+            Self::TrendSelector => "invalid_trend_selector",
+            Self::MediaKeys => "invalid_media_keys",
+            Self::MediaAction => "invalid_media_action",
+            Self::DmSelector => "invalid_dm_selector",
+            Self::PostAction => "invalid_post_action",
+            Self::RelationshipAction => "invalid_relationship_action",
+            Self::ListAction => "invalid_list_action",
+            Self::DmAction => "invalid_dm_action",
+            Self::BookmarkFolder => "invalid_bookmark_folder",
             Self::LinkAcknowledgementRequired => "link_acknowledgement_required",
             Self::ProviderRejectedRequest => "provider_rejected_request",
         }

@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::x::errors::{ErrorEnvelope, ToolError};
-use crate::x::types::PricedToolSuccess;
+use crate::x::types::common::PricedToolSuccess;
 
 #[derive(Serialize)]
 #[serde(untagged)]

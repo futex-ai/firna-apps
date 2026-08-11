@@ -101,6 +101,9 @@ mod target_directory_tests;
 #[path = "../x_connection_routing_tests.rs"]
 mod x_connection_routing_tests;
 #[cfg(test)]
+#[path = "../x_coverage_smoke_tests.rs"]
+mod x_coverage_smoke_tests;
+#[cfg(test)]
 #[path = "../x_error_tests.rs"]
 mod x_error_tests;
 #[cfg(test)]
@@ -113,8 +116,8 @@ mod x_metrics_smoke_tests;
 #[path = "../x_oauth_lifecycle_tests.rs"]
 mod x_oauth_lifecycle_tests;
 #[cfg(test)]
-#[path = "../x_package_tests.rs"]
-mod x_package_tests;
+#[path = "../x_package/mod.rs"]
+mod x_package;
 #[cfg(test)]
 #[path = "../x_read_smoke_tests.rs"]
 mod x_read_smoke_tests;

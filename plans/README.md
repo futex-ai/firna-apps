@@ -6,6 +6,9 @@ post-push review has been completed.
 
 ## Active
 
+- [Comprehensive X API coverage](x-api-comprehensive-coverage.md): expand the
+  X app across bounded posts, users, social graph, lists, discovery, messaging,
+  and account actions with explicit OAuth consent and app-only reads.
 - [X API access](x-api-access.md): add a cost-bounded, workspace-authorized X
   app for reading and publishing posts through X's pay-per-use API.
 - [X post metrics](x-post-metrics.md): add bounded public and owned-Post

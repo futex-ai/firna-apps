@@ -124,6 +124,20 @@ fn malformed_truncated_and_transport_read_responses_are_stable() {
 }
 
 #[test]
+fn provider_collections_cannot_exceed_the_requested_billing_bound() {
+    let posts = (1..=11)
+        .map(|id| json!({"id": id.to_string(), "text": "bounded"}))
+        .collect::<Vec<_>>();
+    let output = call_with_response(
+        "x_search_recent_posts",
+        json!({"query": "rust", "max_results": 10}),
+        response(200, Some(json!({"data": posts}))),
+    );
+
+    assert_error(&output, "provider_contract_error");
+}
+
+#[test]
 fn missing_or_terminal_credentials_require_reauthorization() {
     for error in [
         "credential_not_found",
