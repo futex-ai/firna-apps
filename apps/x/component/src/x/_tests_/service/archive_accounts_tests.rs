@@ -38,6 +38,27 @@ fn full_archive_search_uses_the_app_bearer_and_reports_resources() {
 }
 
 #[test]
+fn archive_search_and_counts_translate_web_engagement_operator_aliases() {
+    let search_query = captured_query(
+        "x_search_all_posts",
+        json!({"query": "AI min_faves:1000", "max_results": 10}),
+        json!({"data": [], "meta": {}}),
+    );
+    assert_eq!(search_query, "AI min_likes:1000");
+
+    let count_query = captured_query(
+        "x_get_post_counts",
+        json!({
+            "range": "recent",
+            "query": "AI min_retweets:50",
+            "granularity": "hour"
+        }),
+        json!({"data": [], "meta": {}}),
+    );
+    assert_eq!(count_query, "AI min_reposts:50");
+}
+
+#[test]
 fn all_history_counts_use_app_auth_and_exact_request_cost() {
     let (http, requests) = capturing_http(response(
         200,
@@ -147,4 +168,15 @@ fn affiliate_read_routes_through_the_relationship_tool() {
     assert_eq!(success_output(&output)["users"][0]["id"], "8");
     let requests = requests.lock().expect("request capture lock");
     assert_eq!(requests[0].url, "https://api.x.com/2/users/7/affiliates");
+}
+
+fn captured_query(
+    tool: &str,
+    input: serde_json::Value,
+    provider_body: serde_json::Value,
+) -> String {
+    let (http, requests) = capturing_http(response(200, Some(provider_body)));
+    let output = invoke(&http, tool, input);
+    assert!(output.get("output").is_some(), "{output}");
+    requests.lock().expect("request capture lock")[0].query["query"].clone()
 }

@@ -12,7 +12,7 @@ fn x_manifest_declares_comprehensive_oauth_and_host_contract() {
     manifest.validate().expect("X manifest should validate");
     assert_eq!(manifest.id, "x");
     assert_eq!(manifest.name, "X");
-    assert_eq!(manifest.version, "2.0.0");
+    assert_eq!(manifest.version, "2.0.1");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.source.package, None);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);

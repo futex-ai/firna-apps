@@ -15,8 +15,8 @@ use crate::x::types::success::ToolSuccess;
 use super::runner::ConfiguredXToolRunner;
 use super::usage::{POST_READ, USER_READ, metered, reported_cost};
 use super::validation::{
-    decode_input, ensure_provider_count, normalized_token, optional_trimmed_bounded,
-    trimmed_bounded, validate_page,
+    decode_input, ensure_provider_count, normalized_search_query, normalized_token,
+    optional_trimmed_bounded, validate_page,
 };
 
 const ALL_SEARCH_URL: &str = "https://api.x.com/2/tweets/search/all";
@@ -31,7 +31,8 @@ impl ConfiguredXToolRunner<'_> {
         call: AppToolCall,
     ) -> Result<PricedToolSuccess, ToolError> {
         let input: SearchAllPostsInput = decode_input(call.input, InvalidInputReason::SearchQuery)?;
-        let query_text = trimmed_bounded(input.query, 4_096, InvalidInputReason::SearchQuery)?;
+        let query_text =
+            normalized_search_query(input.query, 4_096, InvalidInputReason::SearchQuery)?;
         validate_page(input.max_results)?;
         let token = normalized_token(input.pagination_token)?;
         let start_time =
@@ -77,7 +78,8 @@ impl ConfiguredXToolRunner<'_> {
             CountRange::Recent => 512,
             CountRange::All => 4_096,
         };
-        let query_text = trimmed_bounded(input.query, maximum, InvalidInputReason::CountQuery)?;
+        let query_text =
+            normalized_search_query(input.query, maximum, InvalidInputReason::CountQuery)?;
         let token = normalized_token(input.pagination_token)?;
         if matches!(input.range, CountRange::Recent) && token.is_some() {
             return Err(ToolError::InvalidInput(InvalidInputReason::PaginationToken));

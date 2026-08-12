@@ -27,10 +27,7 @@ where
 pub(super) fn normalize_search(
     input: SearchRecentPostsInput,
 ) -> Result<NormalizedSearch, ToolError> {
-    let query = input.query.trim().to_owned();
-    if query.is_empty() || query.chars().count() > 512 {
-        return Err(ToolError::InvalidInput(InvalidInputReason::SearchQuery));
-    }
+    let query = normalized_search_query(input.query, 512, InvalidInputReason::SearchQuery)?;
     if !(10..=25).contains(&input.max_results) {
         return Err(ToolError::InvalidInput(InvalidInputReason::SearchPageSize));
     }
@@ -50,6 +47,15 @@ pub(super) fn normalize_search(
         next_token,
         include_authors: input.include_authors,
     })
+}
+
+pub(super) fn normalized_search_query(
+    value: String,
+    maximum: usize,
+    reason: InvalidInputReason,
+) -> Result<String, ToolError> {
+    let query = trimmed_bounded(value, maximum, reason)?;
+    Ok(translate_engagement_aliases(&query))
 }
 
 pub(super) fn validate_ids(ids: &[String]) -> Result<(), ToolError> {
@@ -126,6 +132,57 @@ pub(super) fn optional_trimmed_bounded(
         Some(value) => Ok(Some(trimmed_bounded(value, maximum, reason)?)),
         None => Ok(None),
     }
+}
+
+fn translate_engagement_aliases(query: &str) -> String {
+    let mut normalized = String::with_capacity(query.len());
+    let mut quoted = false;
+    let mut escaped = false;
+    let mut index = 0;
+    while index < query.len() {
+        let remaining = &query[index..];
+        if !quoted
+            && at_operator_boundary(query, index)
+            && starts_with_ascii_case_insensitive(remaining, "min_faves:")
+        {
+            normalized.push_str("min_likes:");
+            index += "min_faves:".len();
+            continue;
+        }
+        if !quoted
+            && at_operator_boundary(query, index)
+            && starts_with_ascii_case_insensitive(remaining, "min_retweets:")
+        {
+            normalized.push_str("min_reposts:");
+            index += "min_retweets:".len();
+            continue;
+        }
+        let Some(character) = remaining.chars().next() else {
+            break;
+        };
+        normalized.push(character);
+        index += character.len_utf8();
+        if character == '"' && !escaped {
+            quoted = !quoted;
+        }
+        escaped = character == '\\' && !escaped;
+    }
+    normalized
+}
+
+fn starts_with_ascii_case_insensitive(value: &str, prefix: &str) -> bool {
+    value
+        .as_bytes()
+        .get(..prefix.len())
+        .is_some_and(|candidate| candidate.eq_ignore_ascii_case(prefix.as_bytes()))
+}
+
+fn at_operator_boundary(query: &str, index: usize) -> bool {
+    index == 0
+        || query[..index]
+            .chars()
+            .next_back()
+            .is_some_and(|character| character.is_whitespace() || character == '(')
 }
 
 pub(super) fn valid_username(username: &str) -> bool {

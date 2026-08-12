@@ -2,7 +2,7 @@
 
 ## Scope
 
-Package version `2.0.0` retains `x_get_post_metrics` in the expanded first-party
+Package version `2.0.1` retains `x_get_post_metrics` in the expanded first-party
 X app. The tool reads a current metrics snapshot for explicitly selected Posts
 through the standard Post lookup endpoint. Shared installation, OAuth,
 host-credential, error, response-limit, and wallet behavior remains defined by

@@ -110,6 +110,28 @@ fn recent_search_sends_one_explicit_page_and_returns_next_token() {
 }
 
 #[test]
+fn recent_search_translates_web_engagement_operator_aliases() {
+    let (http, requests) = capturing_http(response(200, Some(json!({"data": []}))));
+
+    let output = invoke(
+        &http,
+        "x_search_recent_posts",
+        json!({
+            "query": "(AI OR \"min_faves:unchanged\" OR min_favesse:unchanged) lang:en -is:retweet min_faves:1000 MIN_RETWEETS:50",
+            "max_results": 25,
+            "include_authors": true
+        }),
+    );
+
+    assert_eq!(success_output(&output)["result_count"], 0);
+    let requests = requests.lock().expect("request capture lock");
+    assert_eq!(
+        requests[0].query["query"],
+        "(AI OR \"min_faves:unchanged\" OR min_favesse:unchanged) lang:en -is:retweet min_likes:1000 min_reposts:50"
+    );
+}
+
+#[test]
 fn read_validation_rejects_duplicate_ids_and_invalid_search_bounds() {
     let http = Unimock::new(());
 

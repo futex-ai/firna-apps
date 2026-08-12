@@ -5,7 +5,7 @@ authorized Firna workspace bounded access to X Posts, accounts, timelines,
 engagement, relationships, Lists, Spaces, Communities, trends, media, and
 Direct Messages without exposing OAuth tokens to the component or agents.
 
-Package `2.0.0` opts into the platform's generic multi-connection OAuth
+Package `2.0.1` opts into the platform's generic multi-connection OAuth
 contract, so one workspace can authorize several independently managed X
 accounts without giving the component or agent access to their tokens.
 
@@ -41,6 +41,10 @@ search, Post counts, and location trends use a deployment-owned app bearer.
 Profile clicks are clicks from one Post to its author's profile, not total
 profile views. The app does not expose binary media upload, Ads/Enterprise
 analytics, streams, automatic pagination, or background polling.
+
+Post search and count queries accept X API v2 engagement operators as well as
+the common X web-search aliases: `min_faves:` is translated to `min_likes:`,
+and `min_retweets:` to `min_reposts:` before the provider request.
 
 ### Multiple Accounts
 
