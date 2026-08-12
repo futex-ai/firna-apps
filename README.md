@@ -125,10 +125,10 @@ targeting. The full contract is
 The platform-side manifest, runtime, and admin submission contracts remain in
 the [Firna platform app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md).
 The repository-specific [X app protocol](docs/protocol/x-app.md) defines its
-OAuth, read, publishing, recovery, and cost-control contract. X OAuth client
-credentials are deployment-supplied so production and the stable `br-main`
-preview can use separate provider apps with the same immutable package. The
-[GitHub app protocol](docs/protocol/github-app.md) defines its installation,
+OAuth, app-bearer, read, account-action, recovery, and cost-control contract. X
+OAuth client credentials are deployment-supplied so production and the stable
+`br-main` preview can use separate provider apps with the same immutable
+package. The [GitHub app protocol](docs/protocol/github-app.md) defines its installation,
 tool, signed-event, lifecycle, and redaction contract. The
 [app deployment protocol](docs/protocol/app-deployment.md) defines the
 provisioning and deployment automation contract.

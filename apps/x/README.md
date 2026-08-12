@@ -1,11 +1,11 @@
 # X App
 
 `apps/x` is the repo-owned X integration package. It gives an explicitly
-authorized Firna workspace bounded Post lookup, current engagement metrics,
-recent search, and one-Post publishing without exposing OAuth tokens to the
-component or agents.
+authorized Firna workspace bounded access to X Posts, accounts, timelines,
+engagement, relationships, Lists, Spaces, Communities, trends, media, and
+Direct Messages without exposing OAuth tokens to the component or agents.
 
-Package `1.1.0` opts into the platform's generic multi-connection OAuth
+Package `2.0.0` opts into the platform's generic multi-connection OAuth
 contract, so one workspace can authorize several independently managed X
 accounts without giving the component or agent access to their tokens.
 
@@ -18,25 +18,29 @@ accounts without giving the component or agent access to their tokens.
   identity and username to public display label.
 - Opt into the platform's 25-account workspace limit while keeping add,
   reconnect, disable, agent access, refresh, and disconnect installation-scoped.
-- Expose only the four reviewed tools and keep every billed request bounded.
+- Expose 23 reviewed domain tools and keep every billed request bounded.
+- Use an app-owned bearer secret only for X endpoints that reject user tokens.
 - Build a Wasm component that validates inputs and returns compact typed data.
 - Keep client credentials and workspace tokens behind opaque host credentials.
 - Report bounded usage so successful calls settle against the workspace wallet.
 
 ## What This App Does
 
-| Tool | Behavior |
+| Area | Tools and behavior |
 | --- | --- |
-| `x_get_posts` | Reads 1-10 Post ids; author expansion is opt-in. |
-| `x_get_post_metrics` | Reads current public metrics for 1-10 Posts; owned-Post private metrics are opt-in. |
-| `x_search_recent_posts` | Reads one explicit 10-25-result recent-search page. |
-| `x_create_post` | Publishes one text Post or reply with no component retry. |
+| Posts | Lookup and metrics, recent/full search, counts, engagement, feeds, expanded create/edit, and Post actions. |
+| Accounts | Self/id/username lookup, profile search, affiliates, relationships, and follow/mute/DM-block actions. |
+| Lists | List lookup and collections plus create, update, delete, member, follow, and pin actions. |
+| Discovery | Space lookup/search/Posts/buyers, Community lookup/search, and personalized or location trends. |
+| Messaging | Bounded DM event reads, sends, group creation, deletion, and bookmark-folder creation. |
+| Media | Metadata lookup plus alt-text and subtitle management for existing media ids. |
 
-The app requests `tweet.read`, `tweet.write`, `users.read`, and
-`offline.access`. Profile clicks are clicks from one Post to its author's
-profile, not total profile views. The app does not expose media analytics,
-historical time series, Ads/Enterprise analytics, threads, deletion, editing,
-streams, automatic pagination, or background polling.
+The manifest requests only the OAuth scopes consumed by these modes; the exact
+list is in the [X app protocol](../../docs/protocol/x-app.md). Full-archive
+search, Post counts, and location trends use a deployment-owned app bearer.
+Profile clicks are clicks from one Post to its author's profile, not total
+profile views. The app does not expose binary media upload, Ads/Enterprise
+analytics, streams, automatic pagination, or background polling.
 
 ### Multiple Accounts
 
@@ -89,6 +93,8 @@ both required manifest values through Google Secret Manager:
 - production: `prod-app-x-client-id` and `prod-app-x-client-secret`;
 - stable preview: `preview-app-x-client-id` and
   `preview-app-x-client-secret`.
+- app-only API access: `prod-app-x-bearer-token` and
+  `preview-app-x-bearer-token`, respectively.
 
 Both live in the dedicated app-secrets Google Cloud project defined by
 [`docs/protocol/app-deployment.md`](../../docs/protocol/app-deployment.md).
@@ -98,11 +104,12 @@ Never add either credential value to this package.
 ## Cost and Write Safety
 
 Firna prepays X and charges the authorizing workspace only after a successful
-tool call. Post reads, including metrics reads, cost $0.005 per returned Post;
-private metric fields do not add another unit. Expanded User reads cost $0.010
-per returned author, text-only creation costs $0.015, and link-bearing creation
-costs $0.200. Failed calls are uncharged. Prices are fixed for the installed app
-version; changing them requires a new version and explicit workspace consent.
+tool call. Reads report X's documented resource category, and actions report
+their exact successful request cost; the immutable per-unit schedule and every
+worst-case hold are defined in the manifest and
+[protocol](../../docs/protocol/x-app.md). Text-only creation costs $0.015 and
+link-bearing creation costs $0.200. Failed calls are uncharged. Changing any
+price requires a new version and explicit workspace consent.
 
 The one `/2/users/me` identity request made during install, add, reconnect, or
 upgrade is control-plane work, not a billed tool call. Firna absorbs any X cost
@@ -137,7 +144,11 @@ purchased.
 ### Related Docs
 
 - [X app protocol](../../docs/protocol/x-app.md)
-- [X Post metrics protocol](../../docs/protocol/x-app-metrics.md)
+- [X Posts and feeds](../../docs/protocol/x-app-posts.md)
+- [X accounts and relationships](../../docs/protocol/x-app-accounts.md)
+- [X Lists and discovery](../../docs/protocol/x-app-lists-discovery.md)
+- [X Direct Messages](../../docs/protocol/x-app-messaging.md)
+- [X Post metrics](../../docs/protocol/x-app-metrics.md)
 - [Firna app protocol](https://github.com/futex-ai/firna/blob/main/docs/protocol/apps.md)
 - [X API pricing](https://docs.x.com/x-api/getting-started/pricing)
 - [X OAuth user access](https://docs.x.com/fundamentals/authentication/oauth-2-0/user-access-token)

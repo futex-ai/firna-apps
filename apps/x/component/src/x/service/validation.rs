@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use serde_json::Value;
 
 use crate::x::errors::{InvalidInputReason, ToolError};
-use crate::x::types::{CreatePostInput, SearchRecentPostsInput};
+use crate::x::types::posts::{CreatePostInput, SearchRecentPostsInput};
 
 pub(super) struct NormalizedSearch {
     pub(super) query: String,
@@ -53,18 +53,105 @@ pub(super) fn normalize_search(
 }
 
 pub(super) fn validate_ids(ids: &[String]) -> Result<(), ToolError> {
-    let unique: HashSet<&str> = ids.iter().map(String::as_str).collect();
-    if !(1..=10).contains(&ids.len())
-        || unique.len() != ids.len()
-        || ids.iter().any(|id| !valid_post_id(id))
-    {
-        return Err(ToolError::InvalidInput(InvalidInputReason::PostIds));
-    }
-    Ok(())
+    validate_decimal_ids(ids, 10, InvalidInputReason::PostIds)
 }
 
 pub(super) fn valid_post_id(id: &str) -> bool {
     (1..=19).contains(&id.len()) && id.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+pub(super) fn validate_decimal_id(id: &str, reason: InvalidInputReason) -> Result<(), ToolError> {
+    if valid_post_id(id) {
+        Ok(())
+    } else {
+        Err(ToolError::InvalidInput(reason))
+    }
+}
+
+pub(super) fn validate_decimal_ids(
+    ids: &[String],
+    maximum: usize,
+    reason: InvalidInputReason,
+) -> Result<(), ToolError> {
+    let unique: HashSet<&str> = ids.iter().map(String::as_str).collect();
+    if !(1..=maximum).contains(&ids.len())
+        || unique.len() != ids.len()
+        || ids.iter().any(|id| !valid_post_id(id))
+    {
+        return Err(ToolError::InvalidInput(reason));
+    }
+    Ok(())
+}
+
+pub(super) fn validate_page(max_results: u64) -> Result<(), ToolError> {
+    if (10..=25).contains(&max_results) {
+        Ok(())
+    } else {
+        Err(ToolError::InvalidInput(InvalidInputReason::SearchPageSize))
+    }
+}
+
+pub(super) fn normalized_token(token: Option<String>) -> Result<Option<String>, ToolError> {
+    let supplied = token.is_some();
+    let normalized = token
+        .map(|value| value.trim().to_owned())
+        .filter(|value| !value.is_empty());
+    if supplied && normalized.is_none()
+        || normalized.as_ref().is_some_and(|value| value.len() > 1_024)
+    {
+        return Err(ToolError::InvalidInput(InvalidInputReason::PaginationToken));
+    }
+    Ok(normalized)
+}
+
+pub(super) fn trimmed_bounded(
+    value: String,
+    maximum: usize,
+    reason: InvalidInputReason,
+) -> Result<String, ToolError> {
+    let value = value.trim().to_owned();
+    if value.is_empty() || value.chars().count() > maximum {
+        Err(ToolError::InvalidInput(reason))
+    } else {
+        Ok(value)
+    }
+}
+
+pub(super) fn optional_trimmed_bounded(
+    value: Option<String>,
+    maximum: usize,
+    reason: InvalidInputReason,
+) -> Result<Option<String>, ToolError> {
+    match value {
+        Some(value) => Ok(Some(trimmed_bounded(value, maximum, reason)?)),
+        None => Ok(None),
+    }
+}
+
+pub(super) fn valid_username(username: &str) -> bool {
+    (1..=50).contains(&username.len())
+        && username
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+}
+
+pub(super) fn valid_media_key(media_key: &str) -> bool {
+    let Some((prefix, suffix)) = media_key.split_once('_') else {
+        return false;
+    };
+    !prefix.is_empty()
+        && !suffix.is_empty()
+        && !suffix.contains('_')
+        && prefix.bytes().all(|byte| byte.is_ascii_digit())
+        && suffix.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+pub(super) fn ensure_provider_count(actual: usize, maximum: usize) -> Result<(), ToolError> {
+    if actual <= maximum {
+        Ok(())
+    } else {
+        Err(ToolError::ProviderResponseInvalid)
+    }
 }
 
 pub(super) fn validate_post_text(input: &CreatePostInput) -> Result<(), ToolError> {

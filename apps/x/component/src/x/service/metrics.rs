@@ -3,14 +3,13 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::x::errors::{InvalidInputReason, ToolError};
-use crate::x::host::request;
+use crate::x::host::user_request;
 use crate::x::metrics_types::{
     GetPostMetricsInput, GetPostMetricsOutput, ProviderPostMetrics, ProviderPostMetricsResponse,
 };
 use crate::x::response::decode_metrics_response;
-use crate::x::types::{
-    AppToolCall, PricedToolSuccess, ToolSuccess, ToolUsageReport, ToolUsageUnit,
-};
+use crate::x::types::common::{AppToolCall, PricedToolSuccess, ToolUsageReport, ToolUsageUnit};
+use crate::x::types::success::ToolSuccess;
 
 use super::runner::ConfiguredXToolRunner;
 use super::validation::{decode_input, validate_ids};
@@ -32,7 +31,7 @@ impl ConfiguredXToolRunner<'_> {
                 metric_fields(input.include_private_metrics),
             ),
         ]);
-        let response = self.http.send(request(
+        let response = self.http.send(user_request(
             "GET",
             POSTS_URL,
             &call.installation_id,

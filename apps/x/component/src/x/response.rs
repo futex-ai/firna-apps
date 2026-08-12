@@ -2,27 +2,36 @@
 
 use std::collections::BTreeMap;
 
+use serde::de::DeserializeOwned;
 use serde_json::Value;
 
 use crate::x::errors::{InvalidInputReason, ToolError};
 use crate::x::host::HostHttpResponse;
 use crate::x::metrics_types::ProviderPostMetricsResponse;
-use crate::x::types::{ProviderCreateResponse, ProviderErrorResponse, ProviderReadResponse};
+use crate::x::types::common::ProviderErrorResponse;
 
-pub(super) fn decode_read_response(
+pub(super) fn decode_read_response<T>(
     response: HostHttpResponse,
-) -> Result<ProviderReadResponse, ToolError> {
-    let body = validated_body(response, false)?;
+    required_scope: &'static str,
+) -> Result<T, ToolError>
+where
+    T: DeserializeOwned,
+{
+    let body = validated_body(response, false, required_scope)?;
     match serde_json::from_value(body) {
         Ok(response) => Ok(response),
         Err(_) => Err(ToolError::ProviderResponseInvalid),
     }
 }
 
-pub(super) fn decode_create_response(
+pub(super) fn decode_write_response<T>(
     response: HostHttpResponse,
-) -> Result<ProviderCreateResponse, ToolError> {
-    let body = validated_body(response, true)?;
+    required_scope: &'static str,
+) -> Result<T, ToolError>
+where
+    T: DeserializeOwned,
+{
+    let body = validated_body(response, true, required_scope)?;
     match serde_json::from_value(body) {
         Ok(response) => Ok(response),
         Err(_) => Err(ToolError::WriteOutcomeUnknown),
@@ -32,14 +41,18 @@ pub(super) fn decode_create_response(
 pub(super) fn decode_metrics_response(
     response: HostHttpResponse,
 ) -> Result<ProviderPostMetricsResponse, ToolError> {
-    let body = validated_body(response, false)?;
+    let body = validated_body(response, false, "tweet.read")?;
     match serde_json::from_value(body) {
         Ok(response) => Ok(response),
         Err(_) => Err(ToolError::ProviderResponseInvalid),
     }
 }
 
-fn validated_body(response: HostHttpResponse, is_write: bool) -> Result<Value, ToolError> {
+fn validated_body(
+    response: HostHttpResponse,
+    is_write: bool,
+    required_scope: &'static str,
+) -> Result<Value, ToolError> {
     if response.body_truncated {
         return Err(response_contract_failure(is_write));
     }
@@ -55,6 +68,7 @@ fn validated_body(response: HostHttpResponse, is_write: bool) -> Result<Value, T
             response.headers,
             response.body_json,
             is_write,
+            required_scope,
         ));
     }
     response
@@ -85,6 +99,7 @@ fn provider_failure(
     headers: BTreeMap<String, String>,
     body: Option<Value>,
     is_write: bool,
+    required_scope: &'static str,
 ) -> ToolError {
     let provider_error = body
         .and_then(|body| serde_json::from_value::<ProviderErrorResponse>(body).ok())
@@ -95,11 +110,7 @@ fn provider_failure(
     match status {
         401 => ToolError::AuthRequired,
         403 => ToolError::InsufficientScope {
-            scope: if is_write {
-                "tweet.write"
-            } else {
-                "tweet.read"
-            },
+            scope: required_scope,
         },
         404 => ToolError::NotFound,
         429 => ToolError::RateLimited {

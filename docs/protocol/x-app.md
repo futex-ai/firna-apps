@@ -1,306 +1,162 @@
 # X App Protocol
 
-Status: implemented by X package `1.1.0` on the platform revision pinned in
+Status: implemented by X package `2.0.0` on the platform revision pinned in
 `platform.toml`.
 
 ## Purpose
 
-The first-party `x` app lets an explicitly authorized Firna workspace read a
-bounded set of X posts, inspect current Post metrics, search X's recent post
-index, and publish one text post or reply. Every provider request is initiated
-by a tool call or by the minimum OAuth token lifecycle work needed to keep the
-connection usable.
+The first-party `x` app gives explicitly authorized workspace agents bounded
+access to X posts, accounts, timelines, engagement, bookmarks, relationships,
+Lists, Spaces, Communities, trends, media metadata and management, Direct
+Messages, and account actions. Every provider request is initiated by one tool
+call or the minimum OAuth lifecycle work needed to keep one connection usable.
 
-V1 is an explicit-install, first-party public-catalog app. It charges the
-workspace credit wallet at declared X list rates for successful calls while
-Firna's developer account prepays X. Production deployment remains blocked
-until that account has prepaid credit and a human-approved billing-cycle
-spending limit. A workspace may connect 1 through 25 X accounts, with one
-independent workspace installation and token lifecycle per account. Per-member
-grants remain out of scope.
+The app is explicit-install, priced, and supports 1 through 25 independently
+authorized X accounts per workspace. One call always selects exactly one
+agent-visible connection. It never fans out across accounts, auto-paginates,
+polls, or starts background provider work.
+
+Tool contracts are split by domain:
+
+- [Posts and feeds](x-app-posts.md)
+- [Accounts and relationships](x-app-accounts.md)
+- [Lists and discovery](x-app-lists-discovery.md)
+- [Direct Messages](x-app-messaging.md)
+- [Post metrics](x-app-metrics.md)
 
 ## Package and Authorization
 
 The package contract is:
 
-- manifest id and name: `x` and `X`
-- version: `1.1.0`
-- source kind: `built_in`
-- install policy: `explicit`
-- connection mode: `multiple`
-- HTTP allowlist: `api.x.com` only
-- OAuth owner: `workspace`
+- id/name/version: `x`, `X`, `2.0.0`
+- source/install/connection: `built_in`, `explicit`, `multiple`
+- provider hosts and methods: `api.x.com`; `GET`, `POST`, `PUT`, `DELETE`
+- OAuth owner: workspace
 - authorization URL: `https://x.com/i/oauth2/authorize`
-- token URL: `https://api.x.com/2/oauth2/token`
-- client authentication: `client_secret_basic`
-- PKCE: required, `S256`
-- scope separator: one ASCII space
-- scopes: `tweet.read`, `tweet.write`, `users.read`, `offline.access`
-- required app-owned values: `client_id` and `client_secret`
-- identity URL: `GET https://api.x.com/2/users/me`
-- identity bearer credential: `access_token`
-- provider account id: `$.data.id`
-- provider account label: `$.data.username`
+- token URL and client auth: `https://api.x.com/2/oauth2/token` with
+  `client_secret_basic`
+- PKCE: required `S256`; refresh window: five minutes
+- identity: `GET /2/users/me`, mapping `data.id` and `data.username`
+- OAuth credentials: opaque `access_token` and `refresh_token`
+- required app secrets: `client_id`, `client_secret`, and `bearer_token`
 
-Both OAuth client values are deployment-supplied so one immutable package can
-use distinct provider apps. Deployment reads them from the dedicated
-app-secrets Google Cloud project per
-[app deployment](app-deployment.md): production reads
-`prod-app-x-client-id` and `prod-app-x-client-secret`; the stable br-main
-preview reads `preview-app-x-client-id` and
-`preview-app-x-client-secret`. Neither value, nor an access or
-refresh token, enters source, bundles, logs, component input, or tool output.
-The host injects only an opaque credential reference into provider HTTP
-requests.
+The OAuth requirement requests exactly these implemented permissions:
 
-The standard OAuth response maps `$.access_token` to `access_token`,
-`$.refresh_token` to `refresh_token`, `$.scope` to granted scopes, and
-`$.expires_in` to the access-token expiry. X's token response does not establish
-the connected account. Before Firna persists either token, the trusted host
-sends one bounded Bearer `GET` to `/2/users/me`. X documents that endpoint as
-User Context only and returns the authenticated user's `data.id` and
-`data.username` in its default response. The id is immutable connection
-identity; the username is the display label and may be refreshed only after a
-successful reconnect or version-upgrade identity enrichment. The raw identity
-body and bearer token never enter the component, clients, prompts, logs, or
-audit metadata.
+`tweet.read`, `tweet.write`, `users.read`, `follows.read`, `follows.write`,
+`like.read`, `like.write`, `list.read`, `list.write`, `block.read`, `mute.read`,
+`mute.write`, `bookmark.read`, `bookmark.write`, `dm.read`, `dm.write`,
+`space.read`, `timeline.read`, `tweet.moderate.write`, `media.write`, and
+`offline.access`.
 
-The token lifecycle declares the access-token and refresh-token credential
-kinds and a five-minute proactive refresh window. Refresh reuses the reviewed
-token URL and client-auth method. It atomically replaces the access token and
-expiry, replaces the refresh token when X returns a rotated value, and retains
-neither superseded value.
+The workspace OAuth access token serves user-context tools. Full-archive Post
+search and all-history Post counts require X app-only authentication. The
+package also keeps recent counts and location trends in that same public,
+app-context boundary. Those modes use the app-owned `bearer_token` and never
+fall back to a connected account token. Production reads
+`prod-app-x-bearer-token`; stable preview reads
+`preview-app-x-bearer-token`. Secret values never enter source, component
+memory, logs, prompts, tool input, or output.
 
-Only one refresh may run for one connection installation at a time. Calls for
-that connection wait for its result and then use its current opaque credential;
-another X account has a separate claim, pair, status, and retry. After an
-observed authentication rejection, the host may refresh and retry the exact
-provider request once. `invalid_grant`, a missing refresh token, or a terminal
-refresh rejection makes only that connection `auth_required`. Refresh bodies
-and credentials are always redacted.
+## OAuth and Multiple Accounts
 
-## Multiple X Accounts
+Before publishing new or refreshed tokens, the trusted host calls `/2/users/me`
+with the candidate access token. The immutable X user id identifies the
+connection and the current username labels it. Duplicate ids are rejected;
+reconnect must return the selected connection's stored id. Token refresh,
+disable, sharing, and disconnect remain installation-scoped.
 
-Owners and admins connect the first X account through normal install and use
-**Connect another account** for each additional account. Add exchanges OAuth,
-calls `/2/users/me`, and creates the identified installation only after both id
-and username are valid. Authorizing an already-active X id returns **This
-account is already connected** without replacing its tokens. Reconnect is
-addressed to one connection and must return the exact stored X user id before
-any credential or label write; signing into a different X account fails and
-leaves the selected connection usable. Disable, enable, agent sharing/links,
-refresh, and disconnect also affect one connection. Disconnecting the last
-account makes X not installed for the workspace.
+Every agent tool receives a required host-owned `connection_id`. The host
+validates and removes it before invoking the component, binds the invocation to
+that installation, and resolves only credentials allowed by the manifest. The
+component receives the opaque installation UUID but never a token. The
+app-owned bearer reference deliberately omits installation identity and can
+resolve only the manifest-declared app secret.
 
-The `/2/users/me` identity lookup is bounded OAuth control-plane work and does
-not report a `user_read` unit or charge the workspace wallet. Firna absorbs any
-X provider charge for that lookup, so production budget and spending-limit
-review includes first install, add, reconnect, and one-time upgrade enrichment
-identity calls.
+X documents no OAuth 2.0 account-forcing parameter. Administrators use X's
+browser account switcher before authorizing another account. OAuth 1.0a
+`force_login` and `screen_name` parameters are not part of this flow.
 
-Every X tool exposed to an agent has one required host-owned `connection_id`
-choice, even when that agent can see only one X account. Choice titles use only
-the authorized X usernames. The host validates and strips the selector before
-the X component sees its existing input schema, then binds credentials,
-pricing, operation recovery, and audit to that exact installation. There is no
-default account, recent-account fallback, fan-out, cross-post, or account-wide
-mutable session. One tool call reads from or writes to exactly one account.
+## Common Data and Pagination
 
-X's OAuth 2.0 Authorization Code documentation defines the standard authorize
-parameters used by the manifest but does not define an OAuth 2.0 account-forcing
-or username-prefill parameter. The similarly named `force_login` and
-`screen_name` parameters in X's API reference belong to OAuth 1.0a and must not
-be copied into this flow. Before approving **Connect another account**, the
-administrator uses X's own account switcher or signs out and signs into the
-intended account in the system browser. If X immediately returns the current
-account and Firna reports a duplicate, the administrator switches accounts in
-X and starts a fresh authorization. Web and native clients do not clear X
-cookies, embed X login, or claim that an account picker will always appear.
+Post, user, List, Space, Community, media, DM, and provider resource ids are
+strings, never JSON numbers. Decimal X ids match `^[0-9]{1,19}$`; media keys
+match `^[0-9]+_[0-9]+$`. Optional fields absent from X are omitted rather than
+invented or emitted as `null`.
 
-## Common Data Contract
+New paged tools accept one explicit `max_results` from 10 through 25 and an
+optional non-blank `pagination_token` of at most 1,024 bytes. Existing recent
+search retains its `next_token` field. A success returns only the current page,
+its `result_count`, and a provider token when another page exists. Empty pages
+are successful with zero usage unless a lookup contract explicitly requires a
+resource and returns `not_found`.
 
-Post ids and reply ids are decimal strings matching `^[0-9]{1,19}$`; they are
-never JSON numbers. A compact post has `id`, `text`, and, when returned by X,
-`author_id` and `created_at`. A compact author has `id`, `name`, and `username`.
-Absent optional fields are omitted rather than emitted as `null`.
+Compact Posts contain `id`, `text`, and optional `author_id` and `created_at`.
+Account profiles contain provider-returned identity, bio, verification,
+protection, profile URL/image, location, creation time, and public counts.
+Domain documents define the remaining compact result types and mode-specific
+collections.
 
-Successful read outputs may contain:
+## Errors and Write Recovery
 
-- `posts`: ordered compact posts returned by X
-- `authors`: compact expanded authors, only when requested
-- `missing_ids`: requested ids X did not return, only when non-empty
-- `next_token`: an X pagination token, only when another page exists
-- `result_count`: the number of posts in this response
+Handled failures return `ok: false` with stable codes: `invalid_request`,
+`auth_required`, `missing_scope`, `not_found`, `rate_limited`,
+`provider_budget_exhausted`, `provider_unavailable`,
+`provider_contract_error`, or `write_outcome_unknown`. Safe fields are limited
+to a validation reason, auth id, missing scope, or retry delay.
 
-Successful creation returns `post` with the provider-confirmed `id` and
-`text`. Compact Post tools do not expose metrics. The separate metrics tool
-maps only the fields defined by the [X Post metrics protocol](x-app-metrics.md).
+Validation reasons identify the invalid field family or incompatible action
+shape; otherwise-unmapped provider 4xx responses use
+`provider_rejected_request`. Raw provider bodies, credentials, request
+signatures, developer-account ids, and billing identifiers never reach the
+agent.
 
-Handled failures use the platform app-error contract with `ok: false`, a stable
-`error` code, and only the code-specific safe fields. The component reports
-invalid requests, missing authorization or scopes, rate limits, provider
-budget exhaustion, provider unavailability, invalid provider responses, and
-ambiguous writes without raw provider text. The host turns these responses
-into typed tool failures before attempting priced-result decoding.
+Reads map network loss and 5xx responses to `provider_unavailable`; malformed,
+missing, or truncated 2xx bodies map to `provider_contract_error`. Every write
+issues at most one provider request. Transport loss, missing status, 5xx,
+truncation, or a malformed success after dispatch becomes
+`write_outcome_unknown`. Firna's durable operation ledger replays completed
+results and fails crash-ambiguous pending writes closed without reinvocation.
 
-The stable raw component codes and host results are:
+## Pricing and Limits
 
-| Component code | Host result |
-| --- | --- |
-| `invalid_request` | typed invalid request with a stable reason code |
-| `auth_required` | typed authorization required for `x_workspace` |
-| `missing_scope` | typed missing `tweet.read` or `tweet.write` scope |
-| `not_found` | stable runtime rejection |
-| `rate_limited` | typed rate limit |
-| `provider_budget_exhausted` | typed provider budget exhaustion |
-| `provider_unavailable` | typed provider unavailability |
-| `provider_contract_error` | typed provider contract failure |
-| `write_outcome_unknown` | stable fail-closed runtime rejection |
+X uses pay-per-use pricing. The manifest declares these public units:
 
-`invalid_request` includes a stable reason: `malformed_tool_call`,
-`unknown_tool`, `invalid_post_ids`, `invalid_search_query`,
-`invalid_search_page_size`, `invalid_pagination_token`, `invalid_post_text`,
-`invalid_reply_target`, `link_acknowledgement_required`, or
-`provider_rejected_request`. The last reason represents an otherwise-unmapped
-provider 4xx and is non-retryable. `rate_limited` may add
-`retry_after_seconds` derived from an X response header.
-No handled failure includes a raw provider body, token, request signature,
-developer account id, or billing identifier. Unknown 4xx responses become
-`invalid_request` with `provider_rejected_request` and no provider text;
-timeouts and 5xx responses become `provider_unavailable` for reads. A create
-timeout, transport loss, missing HTTP status, 5xx response, or malformed,
-missing, or truncated success body after dispatch becomes
-`write_outcome_unknown`.
+| Unit | Price |
+| --- | ---: |
+| Post or analytics read | $0.005 per returned resource |
+| User, relationship, DM-event, or trend read | $0.010 per resource |
+| List, Space, Community, or media read | $0.005 per resource |
+| Content create | $0.015, or $0.200 when Post text contains a URL |
+| User/DM interaction create | $0.015 per request |
+| Interaction delete | $0.010 per request |
+| Content/List/Bookmark/Media manage | $0.005 per request |
+| List create or privacy update | $0.010 per request |
+| Recent/all count request | $0.005/$0.010 per request |
 
-## `x_get_posts`
+Each tool declares a finite cap from its maximum page size or most expensive
+action. The component reports only validated successful resources or the exact
+successful action cost. Errors settle at zero. Provider-side daily
+deduplication is not observable per response, so Firna charges each returned
+resource at the installed version's declared price.
 
-Input:
+Every tool and provider response is capped at 262,144 bytes and 30 seconds.
+The provider spending limit remains the hard account-level control. Prices are
+immutable for package `2.0.0` and require explicit update consent.
 
-- `ids`: required array of 1-10 unique post-id strings
-- `include_authors`: optional boolean, default `false`
+## Deliberate Exclusions
 
-The component sends one `GET https://api.x.com/2/tweets` request with the ids
-joined in request order and `tweet.fields=author_id,created_at,text`. When
-`include_authors` is true it also sends `expansions=author_id` and
-`user.fields=id,name,username`; otherwise it requests no user expansion.
+Synchronous tools exclude streams, webhooks, account-activity subscriptions,
+compliance jobs, and background collection. Enterprise analytics, encrypted X
+Chat key management, broadcasts, Articles, News, and Community Notes
+remain excluded until production access and exact pricing are verified.
 
-The output contains `posts`, optional `authors`, optional `missing_ids`, and
-`result_count`. A completely missing id set becomes `not_found`; a provider
-partial result remains a success with `missing_ids`.
+X media upload needs multipart file construction. The pinned attachment bridge
+streams only an exact raw attachment body and does not expose bytes to the
+component, so it cannot safely form X's multipart `media` field. The app can
+read media metadata, attach existing media ids to a Post, and use `media.write`
+for JSON-only alt text and subtitle management, but it does not pretend to
+upload files.
 
-## `x_search_recent_posts`
-
-Input:
-
-- `query`: required non-blank string, at most 512 Unicode scalar values
-- `max_results`: required integer from 10 through 25
-- `next_token`: optional non-blank X pagination token, at most 1,024 bytes
-- `include_authors`: optional boolean, default `false`
-
-The component sends one `GET https://api.x.com/2/tweets/search/recent` request
-with the explicit query and page size, optional pagination token, and
-`tweet.fields=author_id,created_at,text`. Author expansion uses the same
-opt-in parameters as `x_get_posts`.
-
-The output contains `posts`, `result_count`, and optional `authors` and
-`next_token`. The component never follows `next_token`; each page requires a
-new tool invocation.
-
-## `x_create_post`
-
-Input:
-
-- `text`: required non-blank string, at most 280 Unicode scalar values
-- `reply_to_post_id`: optional post-id string
-- `allow_link`: optional boolean, default `false`
-
-The component sends one `POST https://api.x.com/2/tweets` with JSON `text` and,
-for a reply, `reply.in_reply_to_tweet_id`. It rejects text containing a
-case-insensitive `http://` or `https://` sequence unless `allow_link` is true.
-This acknowledgement is a cost warning, not a billing oracle; the X console is
-authoritative.
-
-The component never automatically retries this endpoint. X does not document
-an idempotency key for post creation, so Firna does not forward its durable
-`operation_id` as one. The agent runtime durably records the operation before
-dispatch, replays an already completed result from its ledger, and fails a
-crash-ambiguous pending call closed without invoking the component again. A
-caller that receives `write_outcome_unknown` or the runtime's fail-closed
-interruption result must inspect X before deliberately issuing a new operation.
-
-## Firna Usage Charges
-
-The manifest prices all four tools and therefore uses `source.kind: built_in`;
-V1 platform policy rejects priced community packages. Firna takes a bounded
-wallet hold before invoking X, settles only a successful result, and releases
-the hold without charging on component, provider, timeout, or malformed-result
-failure. If app charging is disabled or the wallet lacks enough spendable
-credit, the provider request is not sent.
-
-Read tools report metered units from the validated provider response:
-
-- `post_read`: $0.005 (5,000 micro-USD) for each returned Post
-- `user_read`: $0.010 (10,000 micro-USD) for each returned expanded author
-
-`x_get_posts` caps both units at 10 per call. `x_get_post_metrics` caps
-`post_read` at 10 and never reports `user_read`; its exact field and omission
-contract is defined separately in the [X Post metrics protocol].
-`x_search_recent_posts` caps both units at 25. Missing requested ids and empty
-search pages add no read units. X's daily resource deduplication is not
-observable in an individual response, so Firna charges each returned resource
-at the declared app rate even when X may deduplicate its upstream charge.
-
-`x_create_post` reports its successful call cost with a $0.200 cap. A text-only
-Post reports $0.015 (15,000 micro-USD); input containing case-insensitive
-`http://` or `https://` reports $0.200 (200,000 micro-USD). The same detector
-requires `allow_link: true`, making the price visible in the caller's action.
-X remains authoritative if it classifies content differently, and Firna bears
-any uncharged provider cost.
-
-Every successful component result uses the priced envelope
-`{"output": <tool output>, "usage": <report>}`. The host removes `usage` before
-returning `output` to the agent. Prices are immutable for app version `1.1.0`;
-any price change requires a new version and explicit workspace update consent.
-
-## Limits and Cost Controls
-
-Each tool declares a 262,144-byte raw response limit and a 30-second component
-limit. The component also stops reading a provider response at 262,144 bytes.
-Oversized, malformed, or truncated read JSON becomes `provider_contract_error`;
-the equivalent create response becomes `write_outcome_unknown` because X may
-already have accepted the Post. There is no background polling, streaming,
-webhook, automatic pagination, or scheduled read behavior.
-
-Author expansion is opt-in because expanded users are separate billable
-resources. Private metrics and user expansions are opt-in. Get-by-id and
-metrics reads are limited to 10 posts, recent search to 25 posts, and creation
-to one post or one reply. The console spending limit is the hard account-level
-control.
-
-Before credits are purchased, the operator must confirm the exact initial
-credit amount, billing-cycle spending limit, and any auto-recharge amount and
-trigger. Before the live write smoke test, the operator must confirm the exact
-text and destination account. Redacted handoff evidence may record app id,
-callback, app type, secret version, budget, credit balance, and usage totals,
-but never credential values.
-
-Local component and runtime checks do not deploy the app. The reviewed package
-is released through the standard production workflow after it merges to
-`main`. The stable `br-main` preview deploys the same package with a dedicated X
-Web App whose only callback is
-`https://br-main.preview.firna.ai/oauth/x/callback`. Labelled PR previews exclude
-X because their variable callbacks are not registered. Live smoke validation
-runs in the nominated environment against its intended X account.
-
-Current prices must be rechecked in the console immediately before purchase.
-The public documentation references are [X API pricing], [OAuth 2.0 user access
-tokens], [get my user], [OAuth API reference], [get posts by ids],
-[X Post metrics protocol](x-app-metrics.md), [recent search], and [create post].
-
-[X API pricing]: https://docs.x.com/x-api/getting-started/pricing
-[OAuth 2.0 user access tokens]: https://docs.x.com/fundamentals/authentication/oauth-2-0/user-access-token
-[get my user]: https://docs.x.com/x-api/users/get-my-user
-[OAuth API reference]: https://docs.x.com/fundamentals/authentication/api-reference
-[get posts by ids]: https://docs.x.com/x-api/posts/get-posts-by-ids
-[recent search]: https://docs.x.com/x-api/posts/search/introduction
-[create post]: https://docs.x.com/x-api/posts/create-post
+Local tests never contact X or deploy. Production and stable preview release
+through their normal `main` workflows after review, with separate OAuth apps,
+callbacks, secrets, prepaid credit, and spending limits.
