@@ -53,7 +53,7 @@ async fn x_component_smokes_bounded_lookup_and_recent_search() {
         "x.search_recent_posts",
         None,
         json!({
-            "query": "  rust lang:en  ",
+            "query": "  rust lang:en min_faves:1000  ",
             "max_results": 10,
             "next_token": " current-page "
         }),
@@ -209,7 +209,10 @@ fn assert_search_request(request: &HostHttpRequest, installation_id: Uuid) {
         BTreeMap::from([
             (String::from("max_results"), String::from("10")),
             (String::from("next_token"), String::from("current-page")),
-            (String::from("query"), String::from("rust lang:en")),
+            (
+                String::from("query"),
+                String::from("rust lang:en min_likes:1000")
+            ),
             (
                 String::from("tweet.fields"),
                 String::from("author_id,created_at,text")

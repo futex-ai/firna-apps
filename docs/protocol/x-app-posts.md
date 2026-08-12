@@ -24,6 +24,11 @@ metrics, one lookup, and only `post_read` usage.
 optional `include_authors`. It sends `GET /2/tweets/search/recent` and returns
 `posts`, optional `authors` and `next_token`, and `result_count`.
 
+All Post search and count tools accept X's web-search engagement aliases for
+compatibility. Outside quoted phrases, the component translates `min_faves:`
+to the X API v2 `min_likes:` operator and `min_retweets:` to `min_reposts:`.
+Already-canonical operators and alias text inside quoted phrases are unchanged.
+
 `x_search_all_posts` accepts:
 
 - `query`: 1-4,096 characters
