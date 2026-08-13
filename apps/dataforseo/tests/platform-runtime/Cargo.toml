@@ -8,8 +8,8 @@ authors = ["Polybase"]
 [workspace]
 
 [dependencies]
-fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "733d089519f799b78f52a173db5cc1507fd72e65" }
-fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "733d089519f799b78f52a173db5cc1507fd72e65" }
+fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "e30b02d70f7380197b108a3b5d8964a72e14db15" }
+fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "e30b02d70f7380197b108a3b5d8964a72e14db15" }
 serde_json = "1.0.150"
 tokio = { version = "1.53.0", features = ["macros", "rt-multi-thread"] }
 unimock = "0.6.8"

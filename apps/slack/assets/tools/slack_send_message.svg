@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Send Slack message">
+  <rect width="128" height="128" rx="28" fill="#36C5F0"/>
+  <path d="M31 34h66a11 11 0 0 1 11 11v36a11 11 0 0 1-11 11H62L42 108V92H31a11 11 0 0 1-11-11V45a11 11 0 0 1 11-11Z" fill="#FFFFFF"/>
+  <path d="m48 63 32-17-8 36-10-11-9 8-2-12-11-3 8-1Zm5 2 6 2 13-12-17 9-2 1Z" fill="#E01E5A"/>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Search Slack messages">
+  <rect width="128" height="128" rx="28" fill="#2EB67D"/>
+  <path d="M29 31h58a11 11 0 0 1 11 11v34a11 11 0 0 1-11 11H58L39 103V87H29a11 11 0 0 1-11-11V42a11 11 0 0 1 11-11Z" fill="#FFFFFF"/>
+  <circle cx="74" cy="68" r="17" fill="none" stroke="#ECB22E" stroke-width="9"/>
+  <path d="m86 80 21 21" stroke="#ECB22E" stroke-width="10" stroke-linecap="round"/>
+</svg>

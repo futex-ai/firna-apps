@@ -9,7 +9,8 @@ Cargo workspace, so platform crates cannot depend on Slack source directly.
   secret names.
 - `component/`: Rust guest source and `Cargo.lock` that Firna servers build
   into the production Wasm component.
-- `assets/`: app-owned icon source and rendered catalog icon.
+- `assets/`: package and optional command-image sources, rendered PNGs, and
+  exact manifest base64 sidecars; see the [asset guide](assets/README.md).
 - `tests/platform-runtime/`: standalone app-side tests that build the component
   source and exercise it through the platform Wasm host.
 - Slack message sends pass the durable tool `operation_id` through as
@@ -42,6 +43,10 @@ can be promoted live.
 | slack | `slack_read_channel_history` | `channel_id`, `cursor?`, `oldest?`, `latest?`, `limit?` | Read recent Slack channel messages visible to the app bot. | Active Slack install with `slack_bot` workspace auth. |
 | slack | `slack_send_message` | `channel_id`, `text`, `thread_ts?` | Send a Slack message as the workspace app bot. | Active Slack install with `slack_bot` workspace auth. |
 | slack | `slack_search_messages` | `query`, `cursor?`, `limit?`, `sort?`, `sort_dir?` | Search Slack messages using a user-authorized Slack grant. | Active Slack install with `slack_bot` workspace auth and `slack_user_search` user grant. |
+
+Send and search use distinct command images in activity and app-management
+surfaces. List and history intentionally omit command overrides and therefore
+use Slack's package image. All four retain the package cyan/magenta accents.
 
 ## Events
 

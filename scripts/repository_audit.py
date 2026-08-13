@@ -206,6 +206,7 @@ def audit_changed_versions(root: Path, base_ref: str) -> list[str]:
         if len(components := Path(path).parts) > 2
         and components[0] == "apps"
         and components[2:] != ("deploy.toml",)
+        and not is_platform_runtime_pin_path(components[2:])
     )
     failures = []
     for app_id in sorted(set(app_ids)):
@@ -227,6 +228,10 @@ def audit_changed_versions(root: Path, base_ref: str) -> list[str]:
                 f"apps/{app_id} changed but version `{current_version}` is not above `{base_version}`"
             )
     return failures
+
+
+def is_platform_runtime_pin_path(relative_parts: tuple[str, ...]) -> bool:
+    return relative_parts[:2] == ("tests", "platform-runtime")
 
 
 def audit_rust_file_lengths(root: Path) -> list[str]:
