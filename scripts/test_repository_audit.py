@@ -84,6 +84,31 @@ class RepositoryAuditTests(unittest.TestCase):
 
             self.assertEqual(failures, [])
 
+    def test_platform_runtime_pin_only_change_skips_version_bump(self) -> None:
+        with TestRepository() as repository:
+            repository.write("apps/slack/manifest.yaml", "id: slack\nversion: 1.0.0\n")
+            repository.write(
+                "apps/slack/tests/platform-runtime/Cargo.toml",
+                'fna-apps-interface = { rev = "old" }\n',
+            )
+            repository.commit("seed")
+            repository.write(
+                "apps/slack/tests/platform-runtime/Cargo.toml",
+                'fna-apps-interface = { rev = "new" }\n',
+            )
+            repository.write(
+                "apps/slack/tests/platform-runtime/Cargo.lock",
+                'source = "git+platform#new"\n',
+            )
+            repository.write(
+                "apps/slack/tests/platform-runtime/asset_tests.rs",
+                "assert_eq!(icon.image.data_base64, expected);\n",
+            )
+
+            failures = repository_audit.audit_changed_versions(repository.root, "HEAD")
+
+            self.assertEqual(failures, [])
+
     def test_deploy_config_change_beside_code_change_requires_bump(self) -> None:
         with TestRepository() as repository:
             repository.write("apps/slack/manifest.yaml", "id: slack\nversion: 1.0.0\n")

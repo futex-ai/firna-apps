@@ -14,7 +14,8 @@ Each app lives at `apps/<app_id>`. The directory name must match the manifest
   validation rejects an app containing both formats.
 - `component/`: source and `Cargo.lock` that the isolated Firna app-builder
   service compiles to Wasm.
-- `assets/`: app-owned images or static files.
+- `assets/`: app-owned images or static files. Optional command artwork lives
+  under `assets/tools/` using the tool name as its filename.
 
 The source bundle uploaded by `firna apps package` must be a deterministic
 `.tar.gz` archive rooted at the app directory. Production CI uploads source and
@@ -82,6 +83,19 @@ behind them. The alternative is a bare mark that keeps at least 8% clear space o
 every side, like the `apps/github` Invertocat. An unframed mark that runs to the
 canvas edge is rejected: it has no background of its own and no breathing room,
 so it looks oversized wherever the product draws it.
+
+A tool may override the package image by declaring `tools[].icon`. Declared
+command artwork uses
+`assets/tools/<tool-name>.{svg,png,png.base64}`: the SVG is the editable source,
+the PNG is a deterministic 128x128 render, and the base64 sidecar is embedded
+verbatim in the matching manifest entry. The same PNG media, square-size, and
+framing rules apply. Command artwork does not define separate accent colours;
+the package `color_pair` remains authoritative.
+
+The override is optional. A tool with no `icon` needs no placeholder files and
+uses the package image. `scripts/app_icons.py` audits only declared overrides,
+requires their expected tool-name paths, compares PNG/sidecar/manifest bytes,
+and rejects duplicate command artwork within a package.
 
 Every tool declares a public-safe, task-specific `activity_label` for the
 compact chat status shown while that exact tool runs. Labels use two or more

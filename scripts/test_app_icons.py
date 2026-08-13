@@ -1,12 +1,15 @@
 """Tests for the packaged app icon contract audit."""
 
+from __future__ import annotations
+
 import base64
+import json
 import tempfile
 import unittest
-import zlib
 from pathlib import Path
 
 import app_icons
+from icon_test_support import bare_mark, rgba_png, rounded_tile
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -129,6 +132,62 @@ class AppIconContractTests(unittest.TestCase):
             self.assertEqual(len(failures), 1, failures)
             self.assertIn("data_base64 does not embed assets/icon.png", failures[0])
 
+    def test_tool_icon_matches_named_assets_and_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            png = tile_png()
+            write_app(root, "slack", png)
+            add_yaml_tool_icon(root, "slack", "slack_send_message", png)
+
+            self.assertEqual(app_icons.audit_app_icons(root), [])
+
+    def test_tool_without_icon_needs_no_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_app(root, "slack", tile_png())
+            append_tool(root, "slack", "slack_list_channels")
+
+            self.assertEqual(app_icons.audit_app_icons(root), [])
+
+    def test_tool_icon_requires_tool_name_asset_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            png = tile_png()
+            write_app(root, "slack", png)
+            add_yaml_tool_icon(root, "slack", "slack_send_message", png, write_assets=False)
+
+            failures = app_icons.audit_app_icons(root)
+
+            self.assertEqual(len(failures), 3, failures)
+            self.assertIn("assets/tools/slack_send_message.svg is required", failures[0])
+            self.assertIn("assets/tools/slack_send_message.png is required", failures[1])
+            self.assertIn("assets/tools/slack_send_message.png.base64 is required", failures[2])
+
+    def test_tool_icon_requires_editable_svg_source(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            png = tile_png()
+            write_app(root, "slack", png)
+            add_yaml_tool_icon(root, "slack", "slack_send_message", png)
+            (root / "apps/slack/assets/tools/slack_send_message.svg").unlink()
+
+            failures = app_icons.audit_app_icons(root)
+
+            self.assertEqual(len(failures), 1, failures)
+            self.assertIn("slack_send_message.svg is required", failures[0])
+
+    def test_duplicate_declared_tool_artwork_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            png = tile_png()
+            write_app(root, "slack", png)
+            add_yaml_tool_icon(root, "slack", "slack_send_message", png)
+            add_yaml_tool_icon(root, "slack", "slack_search_messages", png)
+
+            failures = app_icons.audit_app_icons(root)
+
+            self.assertEqual(len(failures), 1, failures)
+            self.assertIn("duplicate command artwork", failures[0])
 
 def write_app(
     root: Path,
@@ -146,6 +205,54 @@ def write_app(
     write(root / "apps" / app_id / "assets/icon.png.base64", encoded + "\n")
 
 
+def append_tool(root: Path, app_id: str, tool_name: str, icon: bytes | None = None) -> None:
+    manifest_path = root / "apps" / app_id / "manifest.yaml"
+    contents = manifest_path.read_text(encoding="utf-8")
+    declaration = f"- name: {tool_name}\n"
+    if icon is not None:
+        encoded = base64.b64encode(icon).decode("ascii")
+        declaration += (
+            "  icon:\n"
+            "    media_type: image/png\n"
+            f"    data_base64: {encoded}\n"
+        )
+    manifest_path.write_text(
+        contents.replace("tools: []\n", f"tools:\n{declaration}"),
+        encoding="utf-8",
+    )
+
+
+def add_yaml_tool_icon(
+    root: Path,
+    app_id: str,
+    tool_name: str,
+    png: bytes,
+    *,
+    write_assets: bool = True,
+) -> None:
+    manifest_path = root / "apps" / app_id / "manifest.yaml"
+    if "tools: []" in manifest_path.read_text(encoding="utf-8"):
+        append_tool(root, app_id, tool_name, png)
+    else:
+        contents = manifest_path.read_text(encoding="utf-8")
+        encoded = base64.b64encode(png).decode("ascii")
+        contents += (
+            f"- name: {tool_name}\n"
+            "  icon:\n"
+            "    media_type: image/png\n"
+            f"    data_base64: {encoded}\n"
+        )
+        manifest_path.write_text(contents, encoding="utf-8")
+    if write_assets:
+        write_icon_assets(root / "apps" / app_id / "assets/tools", tool_name, png)
+
+
+def write_icon_assets(directory: Path, stem: str, png: bytes) -> None:
+    write(directory / f"{stem}.svg", '<svg xmlns="http://www.w3.org/2000/svg"/>\n')
+    write_bytes(directory / f"{stem}.png", png)
+    write(directory / f"{stem}.png.base64", base64.b64encode(png).decode("ascii") + "\n")
+
+
 def yaml_manifest(app_id: str, encoded: str, media_type: str) -> str:
     return (
         f"id: {app_id}\n"
@@ -161,72 +268,17 @@ def yaml_manifest(app_id: str, encoded: str, media_type: str) -> str:
 
 
 def json_manifest(encoded: str) -> str:
-    return (
-        '{"id":"x","version":"1.0.0",'
-        f'"icon":{{"media_type":"image/png","data_base64":"{encoded}"}}}}'
+    return json.dumps(
+        {
+            "id": "x",
+            "version": "1.0.0",
+            "icon": {"media_type": "image/png", "data_base64": encoded},
+        }
     )
 
 
 def tile_png() -> bytes:
     return rgba_png(128, 128, rounded_tile(128, radius=28))
-
-
-def rounded_tile(size: int, radius: int) -> list[int]:
-    alpha = []
-    for row in range(size):
-        for column in range(size):
-            inset_row = min(row, size - 1 - row)
-            inset_column = min(column, size - 1 - column)
-            if inset_row >= radius or inset_column >= radius:
-                alpha.append(255)
-                continue
-            distance = (radius - inset_row) ** 2 + (radius - inset_column) ** 2
-            alpha.append(255 if distance <= radius**2 else 0)
-    return alpha
-
-
-def bare_mark(size: int, margin: int, thickness: int = 6) -> list[int]:
-    span = size - 2 * margin
-    alpha = []
-    for row in range(size):
-        for column in range(size):
-            inset_row = row - margin
-            inset_column = column - margin
-            inside = 0 <= inset_row < span and 0 <= inset_column < span
-            on_stroke = (
-                abs(inset_column - inset_row) <= thickness
-                or abs(inset_column + inset_row - (span - 1)) <= thickness
-            )
-            alpha.append(255 if inside and on_stroke else 0)
-    return alpha
-
-
-def rgba_png(width: int, height: int, alpha: list[int]) -> bytes:
-    raster = bytearray()
-    for row in range(height):
-        raster.append(0)
-        for column in range(width):
-            raster.extend((0, 0, 0, alpha[row * width + column]))
-    header = width.to_bytes(4, "big") + height.to_bytes(4, "big") + bytes([8, 6, 0, 0, 0])
-    return (
-        png_alpha_signature()
-        + png_chunk(b"IHDR", header)
-        + png_chunk(b"IDAT", zlib.compress(bytes(raster)))
-        + png_chunk(b"IEND", b"")
-    )
-
-
-def png_alpha_signature() -> bytes:
-    return b"\x89PNG\r\n\x1a\n"
-
-
-def png_chunk(kind: bytes, body: bytes) -> bytes:
-    return (
-        len(body).to_bytes(4, "big")
-        + kind
-        + body
-        + zlib.crc32(kind + body).to_bytes(4, "big")
-    )
 
 
 def write(path: Path, contents: str) -> None:

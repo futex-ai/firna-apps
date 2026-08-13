@@ -20,6 +20,10 @@ The current catalog packages are:
 Each package is an isolated Rust WebAssembly component under
 [`apps/`](apps/README.md). Production deployment uploads source bundles to the
 Firna app builder; developer-built Wasm files are never production artifacts.
+Packages may optionally give individual commands their own image under
+`apps/<app>/assets/tools/`; commands without an override use the package image.
+The [app package guide](apps/README.md#icon-contract) defines the audited asset
+and manifest convention.
 
 ## Development
 
@@ -37,13 +41,17 @@ The app platform integration tests use `fna-apps-interface` and
 deployment workflow installs its CLI from the same revision. Update
 `platform.toml`, every standalone runtime test manifest, and the deployment
 workflow together; `cargo xtask check` rejects partial updates.
+Runtime-test manifests and lockfiles are compatibility harness metadata, so a
+pin-only change does not require republishing otherwise untouched app versions.
+Any source, manifest, asset, or app-documentation change still requires that
+app's immutable version to increase.
 
 To install the matching `firna` CLI for local package validation:
 
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev 733d089519f799b78f52a173db5cc1507fd72e65 \
+  --rev e30b02d70f7380197b108a3b5d8964a72e14db15 \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```

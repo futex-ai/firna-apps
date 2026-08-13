@@ -1,5 +1,7 @@
 """Tests for catalog-aware app deployment planning."""
 
+from __future__ import annotations
+
 import json
 import subprocess
 import tempfile
@@ -54,8 +56,30 @@ class PlanAppDeploysTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout.strip(), "slack")
 
+    def test_only_newer_slack_is_selected_once(self) -> None:
+        local_manifests = [
+            self.local_manifest("dataforseo", "1.0.8"),
+            self.local_manifest("slack", "1.1.26"),
+            self.local_manifest("x", "1.2.4"),
+        ]
+        catalog_apps = [
+            self.catalog_app("1.0.8", "dataforseo"),
+            self.catalog_app("1.1.25", "slack"),
+            self.catalog_app("1.2.4", "x"),
+        ]
+
+        result = self.run_plan(catalog_apps, local_manifests=local_manifests)
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.splitlines(), ["slack"])
+        self.assertEqual(result.stderr.count("decision=deploy_local_newer"), 1)
+        self.assertEqual(result.stderr.count("decision=skip"), 2)
+
     def run_plan(
-        self, catalog_apps: list[dict[str, str]], local_version: str = "1.1.3"
+        self,
+        catalog_apps: list[dict[str, str]],
+        local_version: str = "1.1.3",
+        local_manifests: list[dict[str, str]] | None = None,
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -63,15 +87,11 @@ class PlanAppDeploysTests(unittest.TestCase):
             manifests = root / "manifests.jsonl"
             changed = root / "changed"
             catalog.write_text(json.dumps({"apps": catalog_apps}), encoding="utf-8")
+            manifest_rows = local_manifests or [
+                self.local_manifest("slack", local_version)
+            ]
             manifests.write_text(
-                json.dumps(
-                    {
-                        "directory": "slack",
-                        "id": "slack",
-                        "version": local_version,
-                    }
-                )
-                + "\n",
+                "".join(json.dumps(manifest) + "\n" for manifest in manifest_rows),
                 encoding="utf-8",
             )
             changed.write_text("slack\n", encoding="utf-8")
@@ -92,8 +112,12 @@ class PlanAppDeploysTests(unittest.TestCase):
             )
 
     @staticmethod
-    def catalog_app(version: str) -> dict[str, str]:
-        return {"app_id": "slack", "current_version": version}
+    def catalog_app(version: str, app_id: str = "slack") -> dict[str, str]:
+        return {"app_id": app_id, "current_version": version}
+
+    @staticmethod
+    def local_manifest(app_id: str, version: str) -> dict[str, str]:
+        return {"directory": app_id, "id": app_id, "version": version}
 
 
 if __name__ == "__main__":
