@@ -1,6 +1,6 @@
 # X App Protocol
 
-Status: implemented by X package `2.0.1` on the platform revision pinned in
+Status: implemented by X package `2.0.2` on the platform revision pinned in
 `platform.toml`.
 
 ## Purpose
@@ -28,7 +28,7 @@ Tool contracts are split by domain:
 
 The package contract is:
 
-- id/name/version: `x`, `X`, `2.0.1`
+- id/name/version: `x`, `X`, `2.0.2`
 - source/install/connection: `built_in`, `explicit`, `multiple`
 - provider hosts and methods: `api.x.com`; `GET`, `POST`, `PUT`, `DELETE`
 - OAuth owner: workspace
@@ -141,7 +141,7 @@ resource at the installed version's declared price.
 
 Every tool and provider response is capped at 262,144 bytes and 30 seconds.
 The provider spending limit remains the hard account-level control. Prices are
-immutable for package `2.0.1` and require explicit update consent.
+immutable for package `2.0.2` and require explicit update consent.
 
 ## Deliberate Exclusions
 

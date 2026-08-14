@@ -29,7 +29,7 @@ fn x_manifest_prices_every_tool_with_a_finite_cap() {
     assert_metered(
         &pricing,
         "x_get_user_feed",
-        &[('p', 5_000, 25), ('u', 10_000, 25)],
+        &[('p', 5_000, 25), ('u', 10_000, 26)],
     );
     assert_metered(
         &pricing,

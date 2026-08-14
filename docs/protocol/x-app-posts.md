@@ -56,24 +56,30 @@ for all, including an empty count result.
 ## User Feeds
 
 `x_get_user_feed` accepts `feed`, required `max_results` 10-25, optional
-`pagination_token`, and optional `include_authors`. Modes are:
+`user_id`, optional `pagination_token`, and optional `include_authors`. For
+every mode except `reposts_of_me`, an omitted `user_id` targets the selected
+connection by first sending `GET /2/users/me`, validating its decimal id, and
+then sending the mode's page request. An explicit id skips that lookup. Modes
+are:
 
 | Mode | Extra required input | Provider endpoint |
 | --- | --- | --- |
-| `posts` | `user_id` | `GET /2/users/{id}/tweets` |
-| `mentions` | `user_id` | `GET /2/users/{id}/mentions` |
-| `home` | `user_id` | `GET /2/users/{id}/timelines/reverse_chronological` |
-| `liked` | `user_id` | `GET /2/users/{id}/liked_tweets` |
-| `bookmarks` | `user_id` | `GET /2/users/{id}/bookmarks` |
-| `bookmark_folder` | `user_id`, `folder_id` | `GET /2/users/{id}/bookmarks/folders/{folder}` |
-| `bookmark_folders` | `user_id` | `GET /2/users/{id}/bookmarks/folders` |
+| `posts` | none | `GET /2/users/{id}/tweets` |
+| `mentions` | none | `GET /2/users/{id}/mentions` |
+| `home` | none | `GET /2/users/{id}/timelines/reverse_chronological` |
+| `liked` | none | `GET /2/users/{id}/liked_tweets` |
+| `bookmarks` | none | `GET /2/users/{id}/bookmarks` |
+| `bookmark_folder` | `folder_id` | `GET /2/users/{id}/bookmarks/folders/{folder}` |
+| `bookmark_folders` | none | `GET /2/users/{id}/bookmarks/folders` |
 | `reposts_of_me` | none | `GET /2/users/reposts_of_me` |
 
 `exclude_replies` and `exclude_reposts` are accepted only for `posts` or
 `mentions` and map to X's `exclude` query. Bookmark-folder mode returns
 `bookmark_folders`; every other mode returns `posts`, optional `authors`, an
-optional token, and `result_count`. Post modes report up to 25 Post and User
-reads; folder listing reports no provider-billed Post resource.
+optional token, and `result_count`. Post modes report up to 25 Post reads and
+25 expanded-author User reads. Resolving an omitted user id adds one User read,
+for a maximum of 26. Folder listing reports no provider-billed Post resource
+and reports only the optional identity lookup.
 
 ## Post Engagement
 

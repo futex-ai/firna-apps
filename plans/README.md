@@ -6,6 +6,9 @@ post-push review has been completed.
 
 ## Active
 
+- [X feed connected-account default](x-feed-connected-account-default.md): use
+  the selected X connection when a feed call omits its user id, with bounded
+  identity resolution and exact usage reporting.
 - [Comprehensive X API coverage](x-api-comprehensive-coverage.md): expand the
   X app across bounded posts, users, social graph, lists, discovery, messaging,
   and account actions with explicit OAuth consent and app-only reads.

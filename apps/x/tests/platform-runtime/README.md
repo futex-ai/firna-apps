@@ -19,9 +19,11 @@ platform.
 ## What This Crate Does
 
 Read tests cover all declared domains, app-only credential routing, bounded
-Post lookup, public and opt-in private Post metrics, and one-page search. They
-distinguish missing private fields from real zeroes and verify exact metered
-usage. Write tests smoke every added action through the real Wasm boundary and
+Post lookup, public and opt-in private Post metrics, one-page search, and feed
+fallback to the selected connection. They prove that an omitted feed user id
+uses the same installation credential for `/2/users/me` and the requested page,
+then reports both reads exactly. Write tests smoke every added action through
+the real Wasm boundary and
 prove that one invocation never forwards Firna's operation id or retries an
 ambiguous request. The OAuth lifecycle test uses the credential-
 scoped host to replace a rejected bearer token and retry the exact request once.
@@ -74,6 +76,7 @@ recovery semantics.
 - `x_coverage_smoke_tests.rs` invokes every expanded tool through real Wasm.
 - `x_read_smoke_tests.rs`, `x_metrics_smoke_tests.rs`, and
   `x_write_smoke_tests.rs` retain the original-tool regressions.
+- `x_feed_smoke_tests.rs` verifies selected-connection feed fallback and usage.
 - `x_package/` verifies the 23-tool schema, OAuth scope, and pricing catalog.
 - `x_error_tests.rs` covers provider failures, truncation, and redaction.
 - `x_metrics_error_tests.rs` applies those failure guarantees to metrics reads.

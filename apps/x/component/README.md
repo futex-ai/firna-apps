@@ -16,8 +16,10 @@ storage, refresh, and durable tool recovery belong to the Firna platform.
 
 The component exports `call-tool` and imports only `host-http-request`. Its HTTP
 boundary is a trait, so unit tests use `unimock` without network or credential
-access. Reads issue one provider request for one bounded page or metrics
-snapshot. Metrics preserve unavailable private fields separately from real
+access. Reads normally issue one provider request for one bounded page or
+metrics snapshot. A feed without `user_id` first resolves the connected account
+through `/2/users/me`, then issues the page request and reports that lookup as
+one User read. Metrics preserve unavailable private fields separately from real
 zeroes. Every action issues at most one request and maps an ambiguous result to
 `write_outcome_unknown`. Successful calls use the platform's priced envelope:
 reads report returned resource counts and actions report their exact bounded
