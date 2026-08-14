@@ -45,11 +45,15 @@ real Wasm behavior describe one contract.
 
 - [x] Run `git add -A` so every source, test, manifest, protocol, README, lock,
   and plan change is tracked.
-- [ ] Commit with a Conventional Commit message.
-- [ ] Push the current branch without renaming it.
-- [ ] Recheck the committed diff and deletion list against `origin/main`.
+- [x] Commit with a Conventional Commit message.
+- [x] Push the current branch without renaming it.
+- [x] Recheck the committed diff and deletion list against `origin/main`.
 
 ## Milestone 5: Run Post-Push Review
+
+Current blocker: the sandbox `codex` CLI is not authenticated. Two post-push
+`cargo xtask review` attempts reached the reviewer but returned HTTP 401 before
+producing findings. Rerun after reviewer authentication is available.
 
 - [ ] Run `cargo xtask review` against `origin/main` after the push.
 - [ ] Investigate every finding without automatically changing reviewed code.
