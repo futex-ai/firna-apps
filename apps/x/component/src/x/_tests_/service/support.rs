@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Value, json};
@@ -78,6 +78,30 @@ pub(super) fn capturing_http(
                     .expect("request capture lock should be available")
                     .push(request);
                 response.clone()
+            })),
+    );
+    (http, requests)
+}
+
+pub(super) fn capturing_http_responses(
+    responses: Vec<HostHttpResponse>,
+) -> (Unimock, Arc<Mutex<Vec<HostHttpRequest>>>) {
+    let requests = Arc::new(Mutex::new(Vec::new()));
+    let captured = requests.clone();
+    let responses = Arc::new(Mutex::new(VecDeque::from(responses)));
+    let http = Unimock::new(
+        XHttpClientSendMock
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, request| {
+                captured
+                    .lock()
+                    .expect("request capture lock should be available")
+                    .push(request);
+                responses
+                    .lock()
+                    .expect("response queue lock should be available")
+                    .pop_front()
+                    .expect("captured request should have a response")
             })),
     );
     (http, requests)

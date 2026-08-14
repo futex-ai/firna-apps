@@ -2,6 +2,8 @@
 
 mod accounts;
 mod discovery_reads;
+mod feed_identity;
+mod feed_request;
 mod feeds;
 mod list_action_request;
 mod list_actions;

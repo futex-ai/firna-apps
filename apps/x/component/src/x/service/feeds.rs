@@ -10,10 +10,11 @@ use crate::x::types::common::{
 };
 use crate::x::types::posts::{
     BookmarkFolder, EngagementView, GetPostEngagementsInput, GetPostEngagementsOutput,
-    GetUserFeedInput, GetUserFeedOutput, UserFeed,
+    GetUserFeedInput, GetUserFeedOutput,
 };
 use crate::x::types::success::ToolSuccess;
 
+use super::feed_request::{add_exclusions, add_post_fields, feed_route, validate_feed_request};
 use super::runner::ConfiguredXToolRunner;
 use super::usage::{POST_READ, USER_READ, metered};
 use super::validation::{
@@ -21,15 +22,17 @@ use super::validation::{
 };
 
 const API_URL: &str = "https://api.x.com/2";
-const POST_FIELDS: &str = "author_id,created_at,text";
 const USER_FIELDS: &str = "id,name,username,description,created_at,location,url,profile_image_url,protected,verified,verified_type,public_metrics";
 
 impl ConfiguredXToolRunner<'_> {
     pub(super) fn get_user_feed(&self, call: AppToolCall) -> Result<PricedToolSuccess, ToolError> {
-        let input: GetUserFeedInput = decode_input(call.input, InvalidInputReason::FeedSelector)?;
+        let mut input: GetUserFeedInput =
+            decode_input(call.input, InvalidInputReason::FeedSelector)?;
         validate_page(input.max_results)?;
-        let (url, scope, folders) = feed_route(&input)?;
+        validate_feed_request(&input)?;
         let token = normalized_token(input.pagination_token.clone())?;
+        let resolved_user_reads = self.resolve_feed_user_id(&call.installation_id, &mut input)?;
+        let (url, scope, folders) = feed_route(&input)?;
         let mut query = BTreeMap::new();
         query.insert(String::from("max_results"), input.max_results.to_string());
         if let Some(token) = token {
@@ -38,7 +41,7 @@ impl ConfiguredXToolRunner<'_> {
         if !folders {
             add_post_fields(&mut query, input.include_authors);
         }
-        add_exclusions(&mut query, &input)?;
+        add_exclusions(&mut query, &input);
         let response = self.http.send(user_request(
             "GET",
             &url,
@@ -59,7 +62,11 @@ impl ConfiguredXToolRunner<'_> {
                     pagination_token: clean_token(provider.meta.next_token),
                     result_count,
                 }),
-                usage: metered(&[]),
+                usage: if resolved_user_reads == 0 {
+                    metered(&[])
+                } else {
+                    metered(&[(USER_READ, resolved_user_reads)])
+                },
             });
         }
         let provider: ProviderCollection<CompactPost> = decode_read_response(response, scope)?;
@@ -71,7 +78,10 @@ impl ConfiguredXToolRunner<'_> {
         };
         let result_count = provider.data.len();
         ensure_provider_count(authors.len(), result_count)?;
-        let usage = metered(&[(POST_READ, result_count), (USER_READ, authors.len())]);
+        let usage = metered(&[
+            (POST_READ, result_count),
+            (USER_READ, authors.len() + resolved_user_reads),
+        ]);
         Ok(PricedToolSuccess {
             output: ToolSuccess::GetUserFeed(GetUserFeedOutput {
                 posts: provider.data,
@@ -132,108 +142,6 @@ impl ConfiguredXToolRunner<'_> {
         }
         user_engagement_output(response, scope, input.max_results as usize)
     }
-}
-
-fn feed_route(input: &GetUserFeedInput) -> Result<(String, &'static str, bool), ToolError> {
-    if !matches!(input.feed, UserFeed::BookmarkFolder) && input.folder_id.is_some() {
-        return Err(ToolError::InvalidInput(InvalidInputReason::FeedSelector));
-    }
-    if matches!(input.feed, UserFeed::RepostsOfMe) {
-        if input.user_id.is_some() || input.folder_id.is_some() {
-            return Err(ToolError::InvalidInput(InvalidInputReason::FeedSelector));
-        }
-        return Ok((
-            format!("{API_URL}/users/reposts_of_me"),
-            "timeline.read",
-            false,
-        ));
-    }
-    let user_id = input
-        .user_id
-        .as_deref()
-        .ok_or(ToolError::InvalidInput(InvalidInputReason::FeedSelector))?;
-    validate_decimal_id(user_id, InvalidInputReason::UserId)?;
-    let route = match input.feed {
-        UserFeed::Posts => (
-            format!("{API_URL}/users/{user_id}/tweets"),
-            "tweet.read",
-            false,
-        ),
-        UserFeed::Mentions => (
-            format!("{API_URL}/users/{user_id}/mentions"),
-            "tweet.read",
-            false,
-        ),
-        UserFeed::Home => (
-            format!("{API_URL}/users/{user_id}/timelines/reverse_chronological"),
-            "timeline.read",
-            false,
-        ),
-        UserFeed::Liked => (
-            format!("{API_URL}/users/{user_id}/liked_tweets"),
-            "like.read",
-            false,
-        ),
-        UserFeed::Bookmarks => (
-            format!("{API_URL}/users/{user_id}/bookmarks"),
-            "bookmark.read",
-            false,
-        ),
-        UserFeed::BookmarkFolder => {
-            let folder = input
-                .folder_id
-                .as_deref()
-                .ok_or(ToolError::InvalidInput(InvalidInputReason::FeedSelector))?;
-            validate_decimal_id(folder, InvalidInputReason::FeedSelector)?;
-            (
-                format!("{API_URL}/users/{user_id}/bookmarks/folders/{folder}"),
-                "bookmark.read",
-                false,
-            )
-        }
-        UserFeed::BookmarkFolders => (
-            format!("{API_URL}/users/{user_id}/bookmarks/folders"),
-            "bookmark.read",
-            true,
-        ),
-        UserFeed::RepostsOfMe => {
-            return Err(ToolError::InvalidInput(InvalidInputReason::FeedSelector));
-        }
-    };
-    if route.2 && input.include_authors {
-        return Err(ToolError::InvalidInput(InvalidInputReason::FeedSelector));
-    }
-    Ok(route)
-}
-
-fn add_post_fields(query: &mut BTreeMap<String, String>, include_authors: bool) {
-    query.insert(String::from("tweet.fields"), String::from(POST_FIELDS));
-    if include_authors {
-        query.insert(String::from("expansions"), String::from("author_id"));
-        query.insert(String::from("user.fields"), String::from(USER_FIELDS));
-    }
-}
-
-fn add_exclusions(
-    query: &mut BTreeMap<String, String>,
-    input: &GetUserFeedInput,
-) -> Result<(), ToolError> {
-    if (input.exclude_replies || input.exclude_reposts)
-        && !matches!(input.feed, UserFeed::Posts | UserFeed::Mentions)
-    {
-        return Err(ToolError::InvalidInput(InvalidInputReason::FeedSelector));
-    }
-    let mut values = Vec::new();
-    if input.exclude_replies {
-        values.push("replies");
-    }
-    if input.exclude_reposts {
-        values.push("retweets");
-    }
-    if !values.is_empty() {
-        query.insert(String::from("exclude"), values.join(","));
-    }
-    Ok(())
 }
 
 fn post_engagement_output(

@@ -14,14 +14,16 @@ deployment-owned app bearer token for X endpoints that reject user-context
 tokens.
 
 Coverage is domain-oriented rather than one tool per provider endpoint. Each
-tool uses a closed action or mode enum, issues exactly one bounded provider
-request, returns typed compact data, reports exact successful usage, and keeps
-provider credentials and raw failures outside model context.
+tool uses a closed action or mode enum, issues bounded provider requests,
+returns typed compact data, reports exact successful usage, and keeps provider
+credentials and raw failures outside model context. Reads normally issue one
+request; a feed without `user_id` resolves the selected account before reading
+one page. Writes remain limited to one request.
 
 ## Deliberate Boundaries
 
 - Include self-serve JSON endpoints with documented authentication, a bounded
-  one-request execution model, and a public pricing category.
+  execution model, and a public pricing category.
 - Include app-only full-archive search, all-history counts, and location trends
   through an app-owned `bearer_token` secret distinct per deployment class.
 - Expand Post creation for quotes, polls, edits, reply settings, Communities,
@@ -151,8 +153,8 @@ before producing findings; rerun after reviewer authentication is available.
 
 ## Completion Criteria
 
-- Every implemented tool has a closed schema, typed response, exact one-request
-  provider contract, finite charge bound, and component plus runtime coverage.
+- Every implemented tool has a closed schema, typed response, bounded provider
+  contract, finite charge bound, and component plus runtime coverage.
 - Every requested OAuth scope and deployment secret is exercised by at least
   one implemented tool; no unused permission is requested.
 - Existing X installs upgrade only through explicit version and pricing

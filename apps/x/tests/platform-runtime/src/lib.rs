@@ -107,6 +107,9 @@ mod x_coverage_smoke_tests;
 #[path = "../x_error_tests.rs"]
 mod x_error_tests;
 #[cfg(test)]
+#[path = "../x_feed_smoke_tests.rs"]
+mod x_feed_smoke_tests;
+#[cfg(test)]
 #[path = "../x_metrics_error_tests.rs"]
 mod x_metrics_error_tests;
 #[cfg(test)]

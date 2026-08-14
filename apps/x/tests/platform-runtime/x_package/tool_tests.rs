@@ -120,3 +120,21 @@ fn x_manifest_exposes_expanded_create_and_mode_selectors() {
         );
     }
 }
+
+#[test]
+fn x_feed_schema_explains_the_connected_account_default() {
+    let manifest = manifest();
+    let feed = manifest
+        .tools
+        .iter()
+        .find(|tool| tool.name == "x_get_user_feed")
+        .expect("feed tool");
+    let schema = feed.input_schema.as_ref().expect("feed schema");
+
+    assert!(feed.description.contains("connected account"));
+    assert!(
+        schema["properties"]["user_id"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("Omit to use the connected account"))
+    );
+}

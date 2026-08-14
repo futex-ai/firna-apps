@@ -1,6 +1,106 @@
 use serde_json::json;
+use unimock::Unimock;
 
-use super::support::{capturing_http, invoke, response, success_output};
+use super::support::{
+    assert_error, assert_read_usage, capturing_http, capturing_http_responses, invoke, response,
+    success_output,
+};
+
+#[test]
+fn omitted_feed_user_resolves_the_connected_account() {
+    let (http, requests) = capturing_http_responses(vec![
+        response(
+            200,
+            Some(json!({"data": {"id": "7", "name": "Ada", "username": "ada"}})),
+        ),
+        response(
+            200,
+            Some(json!({
+                "data": [{"id": "11", "text": "Post", "author_id": "7"}],
+                "includes": {"users": [{"id": "7", "name": "Ada", "username": "ada"}]}
+            })),
+        ),
+    ]);
+
+    let output = invoke(
+        &http,
+        "x_get_user_feed",
+        json!({"feed": "home", "max_results": 10, "include_authors": true}),
+    );
+
+    assert_eq!(success_output(&output)["posts"][0]["id"], "11");
+    assert_read_usage(&output, 1, 2);
+    let requests = requests.lock().expect("request capture lock");
+    assert_eq!(requests.len(), 2);
+    assert_eq!(requests[0].url, "https://api.x.com/2/users/me");
+    assert_eq!(
+        requests[1].url,
+        "https://api.x.com/2/users/7/timelines/reverse_chronological"
+    );
+}
+
+#[test]
+fn omitted_feed_user_rejects_an_invalid_connected_account_id() {
+    let (http, requests) = capturing_http(response(200, Some(json!({"data": {"id": "invalid"}}))));
+
+    let output = invoke(
+        &http,
+        "x_get_user_feed",
+        json!({"feed": "home", "max_results": 10}),
+    );
+
+    assert_error(&output, "provider_contract_error");
+    let requests = requests.lock().expect("request capture lock");
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].url, "https://api.x.com/2/users/me");
+}
+
+#[test]
+fn connected_account_bookmark_folders_report_the_identity_read() {
+    let (http, requests) = capturing_http_responses(vec![
+        response(200, Some(json!({"data": {"id": "7"}}))),
+        response(
+            200,
+            Some(json!({"data": [{"id": "3", "name": "Research"}]})),
+        ),
+    ]);
+
+    let output = invoke(
+        &http,
+        "x_get_user_feed",
+        json!({"feed": "bookmark_folders", "max_results": 10}),
+    );
+
+    assert_eq!(success_output(&output)["bookmark_folders"][0]["id"], "3");
+    assert_eq!(
+        output["usage"],
+        json!({
+            "kind": "metered",
+            "units": [{"unit": "user_read", "quantity": 1}]
+        })
+    );
+    let requests = requests.lock().expect("request capture lock");
+    assert_eq!(requests.len(), 2);
+    assert_eq!(requests[0].url, "https://api.x.com/2/users/me");
+    assert_eq!(
+        requests[1].url,
+        "https://api.x.com/2/users/7/bookmarks/folders"
+    );
+}
+
+#[test]
+fn invalid_feed_options_fail_before_connected_account_resolution() {
+    let http = Unimock::new(());
+
+    let output = invoke(
+        &http,
+        "x_get_user_feed",
+        json!({"feed": "home", "max_results": 10, "exclude_replies": true}),
+    );
+
+    assert_error(&output, "invalid_request");
+    assert_eq!(output["reason"], "invalid_feed_selector");
+}
 
 #[test]
 fn user_feed_maps_exclusions_authors_and_pagination() {

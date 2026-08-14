@@ -5,7 +5,7 @@ authorized Firna workspace bounded access to X Posts, accounts, timelines,
 engagement, relationships, Lists, Spaces, Communities, trends, media, and
 Direct Messages without exposing OAuth tokens to the component or agents.
 
-Package `2.0.1` opts into the platform's generic multi-connection OAuth
+Package `2.0.2` opts into the platform's generic multi-connection OAuth
 contract, so one workspace can authorize several independently managed X
 accounts without giving the component or agent access to their tokens.
 
@@ -60,8 +60,14 @@ makes the app unavailable until it is installed again.
 Every X tool call explicitly selects one agent-visible `connection_id`; the
 host shows the corresponding X username, validates the selection, and strips
 the reserved field before invoking this component. The component retains its
-current input schemas and never receives an account selector or token. There is
-no default-account fallback, automatic cross-post, or one-call fan-out.
+current input schemas and never receives an account selector or token. It never
+chooses a default connection, automatically cross-posts, or fans one call out
+across accounts.
+
+For `x_get_user_feed`, omitting `user_id` targets the selected connection. The
+component resolves that account with one bounded `/2/users/me` request before
+reading the requested feed page. Supplying a user id retains the direct
+one-request path.
 
 X does not document an account-forcing parameter for this OAuth 2.0 authorize
 endpoint. Before approving another connection, use X's account switcher or
@@ -117,7 +123,9 @@ price requires a new version and explicit workspace consent.
 
 The one `/2/users/me` identity request made during install, add, reconnect, or
 upgrade is control-plane work, not a billed tool call. Firna absorbs any X cost
-for it and includes that bounded overhead in the provider spending limit.
+for it and includes that bounded overhead in the provider spending limit. A
+feed call that omits `user_id` makes a separate data-plane identity lookup and
+reports it as one User read.
 
 Production requires both platform billing and app charging to be enabled. If
 either is disabled, or the wallet cannot cover the declared worst-case hold,
@@ -125,12 +133,12 @@ the call fails before X receives a request.
 
 X may deduplicate repeated resource reads within a UTC day, but that upstream
 decision is not visible per response, so Firna charges each returned resource.
-Author expansion is off by default, link-bearing text requires
-`allow_link: true`, and each component invocation sends at most one provider
-request. Firna's durable operation ledger owns completed-result replay and
-fail-closed recovery for ambiguous pending writes. Current provider prices and
-the developer-account spending limit must still be checked before credits are
-purchased.
+Author expansion is off by default and link-bearing text requires
+`allow_link: true`. Calls normally send one provider request; a feed without a
+user id sends one identity lookup followed by one bounded page request. Firna's
+durable operation ledger owns completed-result replay and fail-closed recovery
+for ambiguous pending writes. Current provider prices and the developer-account
+spending limit must still be checked before credits are purchased.
 
 ## Development
 
