@@ -26,6 +26,7 @@ api_url = "https://api.firna.ai"
 secret_prefix = "prod-app"
 admin_email = "admin"
 bootstrap_password_secret = "firna-prod-runtime-firna-bootstrap-password"
+automatic = true
 
 [environments.br-main]
 class = "preview"
@@ -33,6 +34,15 @@ api_url = "https://br-main.api.preview.firna.ai"
 secret_prefix = "preview-app"
 admin_email = "preview-admin"
 bootstrap_password_secret = "firna-preview-test-runtime-firna-bootstrap-password"
+automatic = true
+
+[environments.br-apps]
+class = "review"
+api_url = "https://br-apps.api.preview.firna.ai"
+secret_prefix = "review-app"
+admin_email = "app-preview-admin"
+bootstrap_password_secret = "firna-app-review-runtime-firna-bootstrap-password"
+automatic = false
 """
 
 
@@ -50,9 +60,13 @@ class LoadRootTests(unittest.TestCase):
             self.assertEqual(config.gcp.platform_project_id, "firna-498513")
             self.assertEqual(
                 [instance.name for instance in config.instances],
-                ["br-main", "production"],
+                ["br-apps", "br-main", "production"],
             )
-            production = config.instances[1]
+            review = config.instances[0]
+            self.assertEqual(review.environment_class, "review")
+            self.assertEqual(review.secret_prefix, "review-app")
+            self.assertFalse(review.automatic)
+            production = config.instances[2]
             self.assertEqual(production.environment_class, "production")
             self.assertEqual(production.api_url, "https://api.firna.ai")
             self.assertEqual(production.secret_prefix, "prod-app")
@@ -61,6 +75,7 @@ class LoadRootTests(unittest.TestCase):
                 production.bootstrap_password_secret,
                 "firna-prod-runtime-firna-bootstrap-password",
             )
+            self.assertTrue(production.automatic)
 
     def test_missing_root_fails(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -88,6 +103,10 @@ class LoadRootTests(unittest.TestCase):
         self.assert_root_failure(contents, "must declare [environments.br-main]")
         self.assert_root_failure(contents, "unknown key `br-2`")
 
+    def test_missing_review_instance_fails(self) -> None:
+        contents = VALID_ROOT.replace("[environments.br-apps]", "[environments.br-2]")
+        self.assert_root_failure(contents, "must declare [environments.br-apps]")
+
     def test_wrong_class_fails(self) -> None:
         contents = VALID_ROOT.replace('class = "preview"', 'class = "production"')
         self.assert_root_failure(contents, "[environments.br-main] class must be `preview`")
@@ -108,6 +127,31 @@ class LoadRootTests(unittest.TestCase):
         self.assert_root_failure(
             contents, "[environments.br-main] secret_prefix must be `preview-app`"
         )
+
+    def test_review_instance_must_be_nonautomatic(self) -> None:
+        contents = VALID_ROOT.replace("automatic = false", "automatic = true")
+        self.assert_root_failure(
+            contents, "[environments.br-apps] automatic must be `false`"
+        )
+
+    def test_automatic_defaults_to_true_for_ordinary_instances(self) -> None:
+        contents = VALID_ROOT.replace("automatic = true\n", "", 1)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write(root / "deploy.toml", contents)
+
+            config, failures = deploy_config.load_root(root)
+
+            self.assertEqual(failures, [])
+            assert config is not None
+            production = next(
+                instance for instance in config.instances if instance.name == "production"
+            )
+            self.assertTrue(production.automatic)
+
+    def test_automatic_must_be_boolean(self) -> None:
+        contents = VALID_ROOT.replace("automatic = false", 'automatic = "false"')
+        self.assert_root_failure(contents, "automatic must be a boolean")
 
     def test_empty_admin_email_fails(self) -> None:
         contents = VALID_ROOT.replace('admin_email = "admin"', 'admin_email = ""')
@@ -153,7 +197,15 @@ class AppClassesTests(unittest.TestCase):
             classes, failures = deploy_config.app_classes(app_root)
 
             self.assertEqual(failures, [])
-            self.assertEqual(classes, ("production", "preview", "ephemeral"))
+            self.assertEqual(
+                classes, ("production", "preview", "review", "ephemeral")
+            )
+
+    def test_review_class_is_accepted(self) -> None:
+        classes, failures = self.load_app('classes = ["review"]\n')
+
+        self.assertEqual(failures, [])
+        self.assertEqual(classes, ("review",))
 
     def test_production_only_app(self) -> None:
         classes, failures = self.load_app('classes = ["production"]\n')

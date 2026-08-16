@@ -1,8 +1,8 @@
 # App-Secrets Project Infrastructure
 
 Terraform for the dedicated Google Cloud project that holds first-party app
-provider secrets (`prod-app-*` and `preview-app-*` containers) and the
-workload identities this repository's automation uses. The contract is
+provider secrets (`prod-app-*`, `preview-app-*`, and `review-app-*`
+containers) and the workload identities this repository's automation uses. The contract is
 defined in [`docs/protocol/app-deployment.md`](../../../docs/protocol/app-deployment.md);
 the project id lives in the repository root [`deploy.toml`](../../../deploy.toml).
 
@@ -18,6 +18,7 @@ nothing else here to create or shadow.
 | `apps-ci` | any ref of `futex-ai/firna-apps` | create containers, read metadata, never values |
 | `apps-deploy` | `refs/heads/main` only | read secret values |
 | platform preview deploy | `futex-ai/firna` preview workflows | read `preview-app-*` values only |
+| platform app-review deploy | `futex-ai/firna` app-review workflow | read `review-app-*` values only |
 
 ## Bootstrap
 
@@ -44,6 +45,11 @@ Terraform authenticates with Application Default Credentials, which can
 differ from the active `gcloud` account. If init or apply is denied, run the
 commands with `GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"`
 exported so Terraform uses the `gcloud` account.
+
+Set `app_review_deploy_service_account_email` from the platform receiver's
+reviewed Terraform output after that identity exists. Its empty default omits
+the grant, so the app-review workflow remains unable to read values until the
+platform side of the rollout is explicit.
 
 After apply, set the GitHub repository variables from the outputs:
 

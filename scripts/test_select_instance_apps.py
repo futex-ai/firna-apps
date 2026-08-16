@@ -22,7 +22,7 @@ select_instance_apps = load_module("select_instance_apps")
 
 
 class SelectAppsTests(unittest.TestCase):
-    def test_github_targets_stable_preview_but_not_ephemeral(self) -> None:
+    def test_github_targets_fixed_environments_but_not_ephemeral(self) -> None:
         root = Path(__file__).resolve().parents[1]
 
         with tempfile.TemporaryDirectory() as directory:
@@ -36,13 +36,18 @@ class SelectAppsTests(unittest.TestCase):
             ephemeral, ephemeral_failures = select_instance_apps.select_apps(
                 root, "ephemeral", candidate_list
             )
+            review, review_failures = select_instance_apps.select_apps(
+                root, "review", candidate_list
+            )
 
         self.assertEqual(production_failures, [])
         self.assertEqual(preview_failures, [])
         self.assertEqual(ephemeral_failures, [])
+        self.assertEqual(review_failures, [])
         self.assertEqual(production, ["github"])
         self.assertEqual(preview, ["github"])
         self.assertEqual(ephemeral, [])
+        self.assertEqual(review, ["github"])
 
     def test_production_only_app_is_excluded_from_preview(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -83,6 +88,21 @@ class SelectAppsTests(unittest.TestCase):
             self.assertEqual(preview_failures, [])
             self.assertEqual(ephemeral, ["exa"])
             self.assertEqual(preview, ["exa", "x"])
+
+    def test_missing_config_targets_review_but_explicit_list_must_include_it(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write(root / "apps/exa/manifest.yaml", "id: exa\nversion: 1.0.0\n")
+            write(root / "apps/x/manifest.yaml", "id: x\nversion: 1.0.0\n")
+            write(root / "apps/x/deploy.toml", 'classes = ["production", "preview"]\n')
+            candidates = write(root / "candidates", "exa\nx\n")
+
+            selected, failures = select_instance_apps.select_apps(
+                root, "review", candidates
+            )
+
+            self.assertEqual(failures, [])
+            self.assertEqual(selected, ["exa"])
 
     def test_unknown_class_fails(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

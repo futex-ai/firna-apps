@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """Emit the GitHub Actions deployment matrix from the root ``deploy.toml``.
 
-Prints a JSON object with one ``include`` entry per environment instance this
-repository deploys, carrying everything the deploy job needs: API URL, secret
-prefix, admin login, bootstrap-password secret, and the two Google Cloud
-project ids. The matrix derives only from the validated deployment
-configuration, so an instance that is not declared (and pinned) there can
-never be deployed to.
+Prints a JSON object with one ``include`` entry per automatic environment
+instance this repository deploys, carrying everything the deploy job needs:
+API URL, secret prefix, admin login, bootstrap-password secret, and the two
+Google Cloud project ids. Dedicated instances such as ``br-apps`` remain in
+the validated configuration but can never enter this matrix.
 """
 
 from __future__ import annotations
@@ -46,7 +45,10 @@ def build_matrix(
     config, failures = deploy_config.load_root(root)
     if failures or config is None:
         return None, failures
-    names = [instance.name for instance in config.instances]
+    automatic_instances = [
+        instance for instance in config.instances if instance.automatic
+    ]
+    names = [instance.name for instance in automatic_instances]
     if instance_filter != "all" and instance_filter not in names:
         return None, [f"unknown instance `{instance_filter}`; known: {names}"]
     include = [
@@ -60,7 +62,7 @@ def build_matrix(
             "apps_project": config.gcp.project_id,
             "platform_project": config.gcp.platform_project_id,
         }
-        for instance in config.instances
+        for instance in automatic_instances
         if instance_filter in ("all", instance.name)
     ]
     return {"include": include}, []

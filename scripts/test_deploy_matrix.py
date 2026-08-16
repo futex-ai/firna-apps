@@ -32,6 +32,7 @@ api_url = "https://api.firna.ai"
 secret_prefix = "prod-app"
 admin_email = "admin"
 bootstrap_password_secret = "firna-prod-runtime-firna-bootstrap-password"
+automatic = true
 
 [environments.br-main]
 class = "preview"
@@ -39,11 +40,20 @@ api_url = "https://br-main.api.preview.firna.ai"
 secret_prefix = "preview-app"
 admin_email = "preview-admin"
 bootstrap_password_secret = "firna-preview-test-runtime-firna-bootstrap-password"
+automatic = true
+
+[environments.br-apps]
+class = "review"
+api_url = "https://br-apps.api.preview.firna.ai"
+secret_prefix = "review-app"
+admin_email = "app-preview-admin"
+bootstrap_password_secret = "firna-app-review-runtime-firna-bootstrap-password"
+automatic = false
 """
 
 
 class BuildMatrixTests(unittest.TestCase):
-    def test_all_instances_are_included(self) -> None:
+    def test_all_automatic_instances_are_included(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             write(root / "deploy.toml", VALID_ROOT)
@@ -54,6 +64,7 @@ class BuildMatrixTests(unittest.TestCase):
             assert matrix is not None
             entries = {entry["instance"]: entry for entry in matrix["include"]}
             self.assertEqual(sorted(entries), ["br-main", "production"])
+            self.assertNotIn("br-apps", entries)
             production = entries["production"]
             self.assertEqual(production["environment_class"], "production")
             self.assertEqual(production["api_url"], "https://api.firna.ai")
@@ -88,6 +99,16 @@ class BuildMatrixTests(unittest.TestCase):
 
             self.assertIsNone(matrix)
             self.assertTrue(any("unknown instance `staging`" in item for item in failures))
+
+    def test_dedicated_review_instance_cannot_be_selected_manually(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write(root / "deploy.toml", VALID_ROOT)
+
+            matrix, failures = deploy_matrix.build_matrix(root, "br-apps")
+
+            self.assertIsNone(matrix)
+            self.assertTrue(any("unknown instance `br-apps`" in item for item in failures))
 
     def test_invalid_config_fails(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

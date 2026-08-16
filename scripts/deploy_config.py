@@ -2,7 +2,7 @@
 """Parse and validate the repository deployment configuration.
 
 The root ``deploy.toml`` declares the app-secrets Google Cloud project and
-the long-lived environment instances this repository deploys. An optional
+the fixed environment topology known to deployment automation. An optional
 ``apps/<app_id>/deploy.toml`` restricts an app to a subset of environment
 classes. The schema and the fixed instance topology are defined by
 ``docs/protocol/app-deployment.md``; anything outside that contract is a
@@ -18,19 +18,32 @@ from pathlib import Path
 
 
 ROOT_FILE = "deploy.toml"
-KNOWN_CLASSES = ("production", "preview", "ephemeral")
+KNOWN_CLASSES = ("production", "preview", "review", "ephemeral")
 CLASS_SECRET_PREFIXES = {
     "production": "prod-app",
     "preview": "preview-app",
+    "review": "review-app",
     "ephemeral": "preview-app",
 }
-INSTANCE_CLASSES = {"production": "production", "br-main": "preview"}
+INSTANCE_CLASSES = {
+    "production": "production",
+    "br-main": "preview",
+    "br-apps": "review",
+}
 INSTANCE_URLS = {
     "production": "https://api.firna.ai",
     "br-main": "https://br-main.api.preview.firna.ai",
+    "br-apps": "https://br-apps.api.preview.firna.ai",
 }
 INSTANCE_KEYS = frozenset(
-    ("class", "api_url", "secret_prefix", "admin_email", "bootstrap_password_secret")
+    (
+        "class",
+        "api_url",
+        "secret_prefix",
+        "admin_email",
+        "bootstrap_password_secret",
+        "automatic",
+    )
 )
 PROJECT_ID_RE = re.compile(r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")
 ADMIN_EMAIL_RE = re.compile(r"^[a-z0-9][a-z0-9._@+-]*$")
@@ -47,7 +60,7 @@ class GcpConfig:
 
 @dataclass(frozen=True)
 class EnvironmentInstance:
-    """One long-lived environment instance deployed by this repository."""
+    """One environment instance known to app deployment automation."""
 
     name: str
     environment_class: str
@@ -55,6 +68,7 @@ class EnvironmentInstance:
     secret_prefix: str
     admin_email: str
     bootstrap_password_secret: str
+    automatic: bool
 
 
 @dataclass(frozen=True)
@@ -141,15 +155,19 @@ def load_instance_table(
         return None, [f"{context} must be a table"]
     failures = unknown_key_failures(context, table, INSTANCE_KEYS)
     values = {}
-    for key in sorted(INSTANCE_KEYS):
+    for key in sorted(INSTANCE_KEYS - {"automatic"}):
         value = table.get(key)
         if not isinstance(value, str) or not value:
             failures.append(f"{context} {key} must be a non-empty string")
             continue
         values[key] = value
+    automatic = table.get("automatic", True)
+    if not isinstance(automatic, bool):
+        failures.append(f"{context} automatic must be a boolean")
     if failures:
         return None, failures
     expected_class = INSTANCE_CLASSES[name]
+    expected_automatic = name != "br-apps"
     checks = (
         ("class", values["class"] == expected_class, f"must be `{expected_class}`"),
         (
@@ -172,6 +190,11 @@ def load_instance_table(
             SECRET_ID_RE.fullmatch(values["bootstrap_password_secret"]) is not None,
             "must be a Secret Manager secret id",
         ),
+        (
+            "automatic",
+            automatic is expected_automatic,
+            f"must be `{str(expected_automatic).lower()}`",
+        ),
     )
     failures.extend(
         f"{context} {key} {message}" for key, valid, message in checks if not valid
@@ -185,6 +208,7 @@ def load_instance_table(
         secret_prefix=values["secret_prefix"],
         admin_email=values["admin_email"],
         bootstrap_password_secret=values["bootstrap_password_secret"],
+        automatic=automatic,
     ), []
 
 

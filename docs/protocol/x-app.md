@@ -1,6 +1,6 @@
 # X App Protocol
 
-Status: implemented by X package `2.0.2` on the platform revision pinned in
+Status: implemented by X package `2.0.3` on the platform revision pinned in
 `platform.toml`.
 
 ## Purpose
@@ -28,7 +28,7 @@ Tool contracts are split by domain:
 
 The package contract is:
 
-- id/name/version: `x`, `X`, `2.0.2`
+- id/name/version: `x`, `X`, `2.0.3`
 - source/install/connection: `built_in`, `explicit`, `multiple`
 - provider hosts and methods: `api.x.com`; `GET`, `POST`, `PUT`, `DELETE`
 - OAuth owner: workspace
@@ -39,6 +39,12 @@ The package contract is:
 - identity: `GET /2/users/me`, mapping `data.id` and `data.username`
 - OAuth credentials: opaque `access_token` and `refresh_token`
 - required app secrets: `client_id`, `client_secret`, and `bearer_token`
+
+Production, stable `br-main`, and static `br-apps` use distinct confidential
+Web Apps with callbacks at `https://firna.ai/oauth/x/callback`,
+`https://br-main.preview.firna.ai/oauth/x/callback`, and
+`https://br-apps.preview.firna.ai/oauth/x/callback`, respectively. Ephemeral
+`pr-N` previews do not target X.
 
 The OAuth requirement requests exactly these implemented permissions:
 
@@ -54,7 +60,8 @@ package also keeps recent counts and location trends in that same public,
 app-context boundary. Those modes use the app-owned `bearer_token` and never
 fall back to a connected account token. Production reads
 `prod-app-x-bearer-token`; stable preview reads
-`preview-app-x-bearer-token`. Secret values never enter source, component
+`preview-app-x-bearer-token`; static app review reads
+`review-app-x-bearer-token`. Secret values never enter source, component
 memory, logs, prompts, tool input, or output.
 
 ## OAuth and Multiple Accounts
@@ -141,7 +148,7 @@ resource at the installed version's declared price.
 
 Every tool and provider response is capped at 262,144 bytes and 30 seconds.
 The provider spending limit remains the hard account-level control. Prices are
-immutable for package `2.0.2` and require explicit update consent.
+immutable for package `2.0.3` and require explicit update consent.
 
 ## Deliberate Exclusions
 
@@ -158,5 +165,6 @@ for JSON-only alt text and subtitle management, but it does not pretend to
 upload files.
 
 Local tests never contact X or deploy. Production and stable preview release
-through their normal `main` workflows after review, with separate OAuth apps,
+through their normal `main` workflows; the static app-review slot deploys only
+through its labelled-PR controller. All three use separate OAuth apps,
 callbacks, secrets, prepaid credit, and spending limits.

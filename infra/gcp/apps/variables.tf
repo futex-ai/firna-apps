@@ -15,3 +15,9 @@ variable "preview_deploy_service_account_email" {
   type        = string
   default     = "github-firna-preview@firna-498513.iam.gserviceaccount.com"
 }
+
+variable "app_review_deploy_service_account_email" {
+  description = "Platform br-apps deploy identity granted read on review-app secrets only. Leave empty until the platform receiver publishes its identity."
+  type        = string
+  default     = ""
+}

@@ -1,6 +1,6 @@
 # GitHub App Protocol
 
-Status: implemented by GitHub package `2.0.2`.
+Status: implemented by GitHub package `2.0.4`.
 
 This protocol defines the Firna-owned GitHub package boundary. The platform
 owns installation routing, provider-installation records, token minting,
@@ -28,6 +28,13 @@ The stable `br-main` preview has App ID `4515873`, client ID
 completion uses
 `https://br-main.preview.firna.ai/apps/github/install/callback`. Ephemeral
 `pr-N` previews do not install GitHub because their URLs are not registered.
+
+The static `br-apps` review slot uses a third test registration. Its setup and
+callback return to `https://br-apps.preview.firna.ai/apps/github/install/setup`
+and `https://br-apps.preview.firna.ai/apps/github/install/callback`; its webhook
+targets `https://br-apps.api.preview.firna.ai/apps/github/webhooks/github_events`.
+Registration identifiers and private values are supplied only through
+`review-app-github-*` secrets.
 
 The manifest retains Contents write and Pull requests write for the external
 repository workflow. It adds Issues read and retains Metadata read. The five

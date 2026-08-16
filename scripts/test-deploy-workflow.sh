@@ -4,6 +4,8 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ci_workflow="$repo_root/.github/workflows/ci.yml"
 deploy_workflow="$repo_root/.github/workflows/deploy-apps.yml"
+preview_request_workflow="$repo_root/.github/workflows/app-preview-request.yml"
+preview_result_workflow="$repo_root/.github/workflows/app-preview-result.yml"
 
 require_line() {
   local file="$1"
@@ -71,5 +73,36 @@ reject_line "$deploy_workflow" 'vars.GCP_WORKLOAD_IDENTITY_PROVIDER'
 reject_line "$deploy_workflow" 'FIRNA_SECRET_MANAGER_PREFIX'
 reject_line "$deploy_workflow" 'FIRNA_SERVER_URL:'
 reject_line "$deploy_workflow" 'FIRNA_BOOTSTRAP_USERNAME'
+
+require_line "$preview_request_workflow" '  workflow_run:'
+require_line "$preview_request_workflow" '  pull_request_target:'
+require_line "$preview_request_workflow" '      - labeled'
+require_line "$preview_request_workflow" '      - unlabeled'
+require_line "$preview_request_workflow" '      - closed'
+require_line "$preview_request_workflow" '      - reopened'
+require_line "$preview_request_workflow" '      - edited'
+reject_line "$preview_request_workflow" '    branches:'
+require_line "$preview_request_workflow" '  actions: read'
+require_line "$preview_request_workflow" '  pull-requests: read'
+require_line "$preview_request_workflow" '  cancel-in-progress: false'
+require_line "$preview_request_workflow" '          ref: main'
+require_line "$preview_request_workflow" '          persist-credentials: false'
+require_line "$preview_request_workflow" 'FIRNA_PLATFORM_PREVIEW_DISPATCH_TOKEN: ${{ secrets.FIRNA_PLATFORM_PREVIEW_DISPATCH_TOKEN }}'
+require_line "$preview_request_workflow" 'run: python3 scripts/app_preview_controller.py'
+reject_line "$preview_request_workflow" 'github.event.pull_request.head.ref'
+reject_line "$preview_request_workflow" 'github.head_ref'
+reject_line "$preview_request_workflow" 'firna apps'
+reject_line "$preview_request_workflow" 'cargo '
+
+require_line "$preview_result_workflow" '  repository_dispatch:'
+require_line "$preview_result_workflow" '      - firna-app-preview-result'
+require_line "$preview_result_workflow" '  checks: write'
+require_line "$preview_result_workflow" '  issues: write'
+require_line "$preview_result_workflow" '  pull-requests: write'
+require_line "$preview_result_workflow" '  cancel-in-progress: false'
+require_line "$preview_result_workflow" '          ref: main'
+require_line "$preview_result_workflow" '          persist-credentials: false'
+require_line "$preview_result_workflow" 'run: python3 scripts/app_preview_feedback.py'
+reject_line "$preview_result_workflow" 'FIRNA_PLATFORM_PREVIEW_DISPATCH_TOKEN'
 
 printf 'deploy_workflow=ok\n'

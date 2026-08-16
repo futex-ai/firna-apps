@@ -1,0 +1,33 @@
+name: App Preview Result
+
+on:
+  repository_dispatch:
+    types:
+      - firna-app-preview-result
+
+permissions:
+  checks: write
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: firna-app-preview-result
+  cancel-in-progress: false
+
+jobs:
+  feedback:
+    name: Validate and publish result
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out trusted result handler
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Publish correlated feedback
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/app_preview_feedback.py

@@ -104,20 +104,21 @@ packages without provider events omit `events` rather than declaring an empty
 catalog. Packages do not declare handlers or subscriptions: agents explicitly
 subscribe themselves after installation.
 
-Production secret IDs use:
+Deployment secret IDs use the environment's root `deploy.toml` prefix:
 
 ```text
-firna-prod-app-<app_id>-<secret-name-kebab>
+<secret-prefix>-<app_id>-<secret-name-kebab>
 ```
 
 For example, `apps/slack` secret `client_secret` maps to
-`firna-prod-app-slack-client-secret`.
+`prod-app-slack-client-secret` in production and
+`review-app-slack-client-secret` in the static app-review slot.
 
 Environment-specific public identifiers may also be required app-owned values
 when they must vary without changing the package. GitHub resolves its app slug,
 client ID, setup URL, and callback URL this way; X does the same for its client
-ID. Production and stable preview can therefore use separate provider apps with
-the same immutable package.
+ID. Production, stable preview, and static app review can therefore use
+separate provider apps with the same immutable package.
 
 ## Repo-Owned Apps
 
@@ -127,7 +128,7 @@ the same immutable package.
   `exa_web_search`; a workspace may supply its own Exa API key, while the
   app-owned `api_key` secret remains the zero-configuration fallback. Both
   values stay behind host-mediated credential injection.
-- `apps/github`: production-and-stable-preview, explicit-install built-in
+- `apps/github`: fixed-environment, explicit-install built-in
   GitHub App package for short-lived repository credentials, five bounded read
   tools, and six signed repository event definitions.
 - `apps/http`: workspace-default built-in HTTP app exposing `http_request`.

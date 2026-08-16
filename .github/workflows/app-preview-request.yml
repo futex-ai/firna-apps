@@ -1,0 +1,49 @@
+name: App Preview Request
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+  pull_request_target:
+    types:
+      - labeled
+      - unlabeled
+      - closed
+      - reopened
+      - edited
+
+permissions:
+  actions: read
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: firna-app-preview-request
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    name: Validate and dispatch request
+    if: >-
+      github.event_name == 'pull_request_target' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'pull_request' &&
+       github.event.workflow_run.status == 'completed' &&
+       github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out trusted controller
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Validate metadata and dispatch
+        env:
+          FIRNA_PLATFORM_PREVIEW_DISPATCH_TOKEN: ${{ secrets.FIRNA_PLATFORM_PREVIEW_DISPATCH_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/app_preview_controller.py

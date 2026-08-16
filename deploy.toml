@@ -8,6 +8,7 @@ api_url = "https://api.firna.ai"
 secret_prefix = "prod-app"
 admin_email = "admin"
 bootstrap_password_secret = "firna-prod-runtime-firna-bootstrap-password"
+automatic = true
 
 [environments.br-main]
 class = "preview"
@@ -15,3 +16,12 @@ api_url = "https://br-main.api.preview.firna.ai"
 secret_prefix = "preview-app"
 admin_email = "preview-admin"
 bootstrap_password_secret = "firna-preview-test-runtime-firna-bootstrap-password"
+automatic = true
+
+[environments.br-apps]
+class = "review"
+api_url = "https://br-apps.api.preview.firna.ai"
+secret_prefix = "review-app"
+admin_email = "app-preview-admin"
+bootstrap_password_secret = "firna-app-review-runtime-firna-bootstrap-password"
+automatic = false

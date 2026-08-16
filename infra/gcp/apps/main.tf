@@ -14,6 +14,14 @@ locals {
     for prefix in local.preview_secret_name_prefixes :
     "resource.name.startsWith(\"${prefix}\")"
   ])
+  review_secret_name_prefixes = [
+    "projects/${var.project_id}/secrets/review-app-",
+    "projects/${data.google_project.current.number}/secrets/review-app-",
+  ]
+  review_secret_condition = join(" || ", [
+    for prefix in local.review_secret_name_prefixes :
+    "resource.name.startsWith(\"${prefix}\")"
+  ])
 }
 
 data "google_project" "current" {
@@ -113,5 +121,19 @@ resource "google_project_iam_member" "platform_preview_secret_accessor" {
     title       = "fna_apps_preview_secret_read"
     description = "Allow platform pr-N seeding to read only preview-app secret values."
     expression  = local.preview_secret_condition
+  }
+}
+
+resource "google_project_iam_member" "platform_app_review_secret_accessor" {
+  count = var.app_review_deploy_service_account_email == "" ? 0 : 1
+
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${var.app_review_deploy_service_account_email}"
+
+  condition {
+    title       = "fna_apps_review_secret_read"
+    description = "Allow the static app-review slot to read only review-app secret values."
+    expression  = local.review_secret_condition
   }
 }

@@ -69,8 +69,8 @@ Active and completed implementation work is tracked in
 
 Pull requests and `main` pushes run [CI](.github/workflows/ci.yml). After a
 successful CI run on `main`, [Deploy Firna Apps](.github/workflows/deploy-apps.yml)
-deploys every environment instance declared in [`deploy.toml`](deploy.toml) —
-currently `production` and the stable `br-main` preview. Per instance it
+deploys every automatic environment instance declared in
+[`deploy.toml`](deploy.toml) — `production` and the stable `br-main` preview. Per instance it
 compares every targeted local manifest with that instance's live catalog and
 submits only missing or newer versions. The workflow also runs on a daily
 schedule (so a reset environment converges without coordination), on the
@@ -79,9 +79,9 @@ and on manual dispatch with optional `app` and `instance` inputs to force
 resubmission.
 
 Apps target environment classes through per-app `deploy.toml` files. `github`
-and `x` deploy to production and the stable `br-main` preview, using separate
-provider registrations whose fixed callbacks are registered for each long-lived
-environment. Ephemeral `pr-N` previews exclude both apps. Deployment
+and `x` target production, stable `br-main`, and the fixed `br-apps` app-review
+slot, using separate provider registrations with fixed callbacks. Ephemeral
+`pr-N` previews exclude both apps. Deployment
 authenticates per instance as that
 instance's admin and uses `firna admin apps submit`. That operator-controlled
 route builds, approves, and promotes these trusted packages in one operation;
@@ -103,10 +103,23 @@ CI and deployment also require the repository Actions secret
 reading the private `futex-ai/firna` platform repository. Google Cloud IAM does
 not grant access to private GitHub source dependencies.
 
+The app-preview controller separately requires
+`FIRNA_PLATFORM_PREVIEW_DISPATCH_TOKEN`, a fine-grained token restricted to
+Contents write on `futex-ai/firna`. It is used only to send the validated
+`firna-app-preview-request` repository dispatch and must not be reused for
+source checkout or environment deployment.
+
 Ephemeral `pr-N` platform previews are seeded by the platform repository from
 a checkout of this repository at `main`, driven by the same `deploy.toml`
 targeting. The full contract is
 [`docs/protocol/app-deployment.md`](docs/protocol/app-deployment.md).
+
+An eligible same-repository pull request can claim the singleton `br-apps`
+slot with the `preview` label after canonical CI succeeds. The trusted
+controller dispatches only immutable PR metadata to the platform; the
+platform owns the disposable environment and returns one correlated
+`app preview` check and PR comment. See the
+[static app preview protocol](docs/protocol/app-pr-previews.md).
 
 ## Key Code
 
@@ -119,6 +132,9 @@ targeting. The full contract is
   production deployment planning.
 - [`deploy.toml`](deploy.toml) and [`scripts/deploy_config.py`](scripts/deploy_config.py):
   environment targeting validated by the repository audit.
+- [`scripts/app_preview_controller.py`](scripts/app_preview_controller.py) and
+  [`scripts/app_preview_feedback.py`](scripts/app_preview_feedback.py): trusted
+  metadata-only preview requests and correlated GitHub feedback.
 - [`infra/gcp/apps/`](infra/gcp/apps/README.md): Terraform for the dedicated
   app-secrets Google Cloud project and its workload identities.
 - [`xtask/`](xtask/README.md): local and CI verification entrypoints.
@@ -133,3 +149,5 @@ package. The [GitHub app protocol](docs/protocol/github-app.md) defines its inst
 tool, signed-event, lifecycle, and redaction contract. The
 [app deployment protocol](docs/protocol/app-deployment.md) defines the
 provisioning and deployment automation contract.
+The [static app preview protocol](docs/protocol/app-pr-previews.md) defines the
+singleton app-PR review slot, security boundary, and rollout contract.

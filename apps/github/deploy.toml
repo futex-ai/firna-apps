@@ -1,1 +1,1 @@
-classes = ["production", "preview"]
+classes = ["production", "preview", "review"]

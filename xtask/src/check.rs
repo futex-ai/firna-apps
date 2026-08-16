@@ -96,6 +96,8 @@ fn check_commands(
             [
                 "-shellcheck",
                 "",
+                ".github/workflows/app-preview-request.yml",
+                ".github/workflows/app-preview-result.yml",
                 ".github/workflows/ci.yml",
                 ".github/workflows/deploy-apps.yml",
             ],

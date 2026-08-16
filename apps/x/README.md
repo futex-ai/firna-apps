@@ -5,7 +5,7 @@ authorized Firna workspace bounded access to X Posts, accounts, timelines,
 engagement, relationships, Lists, Spaces, Communities, trends, media, and
 Direct Messages without exposing OAuth tokens to the component or agents.
 
-Package `2.0.2` opts into the platform's generic multi-connection OAuth
+Package `2.0.3` opts into the platform's generic multi-connection OAuth
 contract, so one workspace can authorize several independently managed X
 accounts without giving the component or agent access to their tokens.
 
@@ -89,22 +89,27 @@ cargo test --manifest-path apps/x/tests/platform-runtime/Cargo.toml --locked
 All commands use the canonical platform revision recorded in
 [`platform.toml`](../../platform.toml).
 
-These commands validate locally and do not deploy. This repository's deploy
-workflow releases to production and the stable `br-main` preview after a
-reviewed change merges to `main` (`apps/x/deploy.toml` targets the
-`production` and `preview` classes); labelled PR previews exclude X because
-arbitrary per-PR callbacks are not registered.
+These commands validate locally and do not deploy. This repository's ordinary
+deploy workflow releases to production and the stable `br-main` preview after
+a reviewed change merges to `main`. The dedicated app-preview controller may
+instead submit an exact labelled PR revision to the fixed `br-apps` slot.
+`apps/x/deploy.toml` targets the `production`, `preview`, and `review` classes;
+arbitrary `pr-N` callbacks remain excluded.
 
 Use separate confidential Web Apps in the X Developer Console. Register
 `https://firna.ai/oauth/x/callback` for production and
-`https://br-main.preview.firna.ai/oauth/x/callback` for stable preview. Supply
-both required manifest values through Google Secret Manager:
+`https://br-main.preview.firna.ai/oauth/x/callback` for stable preview. The
+static app-review registration uses
+`https://br-apps.preview.firna.ai/oauth/x/callback`. Supply the required
+manifest values through Google Secret Manager:
 
 - production: `prod-app-x-client-id` and `prod-app-x-client-secret`;
 - stable preview: `preview-app-x-client-id` and
-  `preview-app-x-client-secret`.
-- app-only API access: `prod-app-x-bearer-token` and
-  `preview-app-x-bearer-token`, respectively.
+  `preview-app-x-client-secret`;
+- static app review: `review-app-x-client-id` and
+  `review-app-x-client-secret`;
+- app-only API access: the matching `prod-app-x-bearer-token`,
+  `preview-app-x-bearer-token`, or `review-app-x-bearer-token`.
 
 Both live in the dedicated app-secrets Google Cloud project defined by
 [`docs/protocol/app-deployment.md`](../../docs/protocol/app-deployment.md).

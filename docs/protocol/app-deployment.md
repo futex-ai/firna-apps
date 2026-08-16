@@ -2,12 +2,14 @@
 
 - Status: implemented 2026-08-05 by
   [`plans/inbuilt-app-deploy-automation.md`](../../plans/inbuilt-app-deploy-automation.md).
+- Static `br-apps` extension: proposed 2026-08-16; see
+  [app PR previews](app-pr-previews.md).
 
-This document defines how first-party app packages reach Firna's long-lived
-environments with no per-app platform-repository changes. After a package
-merges to `main` here, it must appear in every targeted environment either
-immediately (environments this repository deploys) or on the next platform
-deploy (ephemeral previews seeded by `futex-ai/firna`).
+This document defines how first-party app packages reach Firna environments
+with no per-app platform-repository changes. After a package merges to `main`,
+it must appear in every automatic targeted environment. The dedicated static
+app-review slot instead deploys an exact pull-request SHA under the
+[app preview protocol](app-pr-previews.md).
 
 ## Ownership Boundary
 
@@ -18,12 +20,14 @@ deploy (ephemeral previews seeded by `futex-ai/firna`).
   workload identities;
 - the merge gate that blocks a PR until every declared secret has a value;
 - deployment to the long-lived environments `production` and `br-main`.
+- trusted app-preview request and result workflows in this repository.
 
 `futex-ai/firna` owns:
 
 - the platform contract (manifest schema, submit/build/install path);
 - seeding ephemeral `pr-N` previews from a `firna-apps@main` checkout using
   the pull request's own CLI build;
+- owning the fixed `br-apps` receiver, singleton lease, and disposable slot;
 - the two admin bootstrap-password secrets, with per-secret read grants to
   this repository's deploy identity.
 
@@ -45,12 +49,14 @@ an instance receives and which apps may deploy to it. `preview` and
 because only long-lived instances have stable hostnames that OAuth providers
 can register as callbacks, so an app like `x` can target `preview` (br-main)
 while excluding `ephemeral` (pr-N) instances whose callbacks are never
-registered.
+registered. `review` is the fixed, disposable `br-apps` slot and uses its own
+test-provider registrations and secrets.
 
 | Instance   | Class        | Deployed by  | API URL                                  |
 | ---------- | ------------ | ------------ | ---------------------------------------- |
 | production | `production` | `firna-apps` | `https://api.firna.ai`                   |
 | br-main    | `preview`    | `firna-apps` | `https://br-main.api.preview.firna.ai`   |
+| br-apps    | `review`     | `firna`      | `https://br-apps.api.preview.firna.ai`   |
 | pr-N       | `ephemeral`  | `firna`      | `https://pr-N.api.preview.firna.ai`      |
 
 ## Deployment Configuration
@@ -69,6 +75,7 @@ api_url = "https://api.firna.ai"
 secret_prefix = "prod-app"
 admin_email = "admin"
 bootstrap_password_secret = "firna-prod-runtime-firna-bootstrap-password"
+automatic = true
 
 [environments.br-main]
 class = "preview"
@@ -76,11 +83,25 @@ api_url = "https://br-main.api.preview.firna.ai"
 secret_prefix = "preview-app"
 admin_email = "preview-admin"
 bootstrap_password_secret = "firna-preview-test-runtime-firna-bootstrap-password"
+automatic = true
+
+[environments.br-apps]
+class = "review"
+api_url = "https://br-apps.api.preview.firna.ai"
+secret_prefix = "review-app"
+admin_email = "app-preview-admin"
+bootstrap_password_secret = "firna-app-review-runtime-firna-bootstrap-password"
+automatic = false
 ```
 
 `gcp.project_id` is the dedicated app-secrets project. Bootstrap-password
 secrets live in `gcp.platform_project_id` and are the only values read
 outside the app-secrets project.
+
+`automatic` defaults to true. The fixed contract requires it to be true for
+`production` and `br-main` and false for `br-apps`; the ordinary deployment
+matrix includes only automatic instances. The dedicated platform receiver is
+the only path allowed to select `br-apps`.
 
 An app opts out of a class with an optional `apps/<app_id>/deploy.toml`:
 
@@ -90,13 +111,13 @@ classes = ["production"]
 
 A missing per-app file means the app targets every class. Targeting is
 operational metadata for Futex's release automation; it is intentionally not
-part of the platform manifest contract and the platform never reads it. It
-is not package content either: a change that touches only
+part of the runtime manifest contract. Trusted deployment automation reads it,
+but the running platform does not. It is not package content either: a change that touches only
 `apps/<app_id>/deploy.toml` does not require a manifest version bump.
-`github` and `x` use separate provider registrations for production and stable
-preview. Their fixed callbacks are registered for both long-lived instances,
-but ephemeral `pr-N` callbacks are not, so both declare
-`classes = ["production", "preview"]`.
+`github` and `x` use separate provider registrations for production, stable
+preview, and static app review. Their fixed callbacks are registered for those
+three environments, but ephemeral `pr-N` callbacks are not, so both declare
+`classes = ["production", "preview", "review"]`.
 
 `cargo xtask check` validates both files: the root file must declare exactly
 the instances above with well-formed URLs and prefixes, and per-app files
@@ -116,10 +137,13 @@ Its Terraform lives in this repository under `infra/gcp/apps/` and manages:
   `roles/secretmanager.secretAccessor` on the project;
 - a cross-project binding granting `github-firna-preview@firna-498513`
   `roles/secretmanager.secretAccessor` under an IAM condition restricting it
-  to `preview-app-` secret names, for `pr-N` seeding.
+  to `preview-app-` secret names, for `pr-N` seeding;
+- a separate cross-project binding granting the platform app-review identity
+  `roles/secretmanager.secretAccessor` only for `review-app-` names.
 
 Secret containers are named `<secret_prefix>-<app_id>-<secret-name-kebab>`,
-for example `prod-app-x-client-secret` and `preview-app-exa-api-key`.
+for example `prod-app-x-client-secret`, `preview-app-exa-api-key`, and
+`review-app-github-private-key`.
 Manifest secret names use lower snake case and are kebab-cased in container
 ids.
 
@@ -156,7 +180,8 @@ closed at deploy time, which reads values.
 
 ## Deployment Workflow
 
-`deploy-apps.yml` deploys every environment instance in root `deploy.toml`.
+`deploy-apps.yml` deploys every automatic environment instance in root
+`deploy.toml`; `br-apps` cannot enter this matrix, including by manual input.
 Triggers:
 
 - successful `CI` `workflow_run` on `main` (existing);

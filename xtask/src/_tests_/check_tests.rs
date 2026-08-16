@@ -69,6 +69,18 @@ fn check_plan_runs_repository_and_workflow_audits_before_rust() {
         Some("scripts/repository_audit.py")
     );
     assert_eq!(commands[3].program(), "actionlint");
+    assert!(
+        commands[3]
+            .args()
+            .iter()
+            .any(|arg| arg == ".github/workflows/app-preview-request.yml")
+    );
+    assert!(
+        commands[3]
+            .args()
+            .iter()
+            .any(|arg| arg == ".github/workflows/app-preview-result.yml")
+    );
 }
 
 #[test]

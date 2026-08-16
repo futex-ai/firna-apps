@@ -34,6 +34,7 @@ api_url = "https://api.firna.ai"
 secret_prefix = "prod-app"
 admin_email = "admin"
 bootstrap_password_secret = "firna-prod-runtime-firna-bootstrap-password"
+automatic = true
 
 [environments.br-main]
 class = "preview"
@@ -41,6 +42,15 @@ api_url = "https://br-main.api.preview.firna.ai"
 secret_prefix = "preview-app"
 admin_email = "preview-admin"
 bootstrap_password_secret = "firna-preview-test-runtime-firna-bootstrap-password"
+automatic = true
+
+[environments.br-apps]
+class = "review"
+api_url = "https://br-apps.api.preview.firna.ai"
+secret_prefix = "review-app"
+admin_email = "app-preview-admin"
+bootstrap_password_secret = "firna-app-review-runtime-firna-bootstrap-password"
+automatic = false
 """
 
 EXA_MANIFEST = """\
@@ -136,6 +146,8 @@ class RunGateTests(unittest.TestCase):
                     versions("prod-app-exa-api-key"): (True, "1"),
                     describe("preview-app-exa-api-key"): (True, "ok"),
                     versions("preview-app-exa-api-key"): (True, "1"),
+                    describe("review-app-exa-api-key"): (True, "ok"),
+                    versions("review-app-exa-api-key"): (True, "1"),
                     describe("prod-app-x-client-secret"): (True, "ok"),
                     versions("prod-app-x-client-secret"): (True, "1"),
                 }
@@ -153,6 +165,10 @@ class RunGateTests(unittest.TestCase):
                 call for call in runner.calls if call == versions("preview-app-exa-api-key")
             ]
             self.assertEqual(len(exa_preview_checks), 1)
+            self.assertIn(versions("review-app-exa-api-key"), runner.calls)
+            self.assertFalse(
+                any(call[1:4] == ("secrets", "versions", "access") for call in runner.calls)
+            )
 
     def test_missing_value_creates_container_and_fails_with_remediation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
