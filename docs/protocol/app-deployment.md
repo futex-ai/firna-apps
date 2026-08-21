@@ -3,11 +3,11 @@
 - Status: implemented 2026-08-05 by
   [`plans/inbuilt-app-deploy-automation.md`](../../plans/inbuilt-app-deploy-automation.md).
 
-This document defines how first-party app packages reach Firna's long-lived
-environments with no per-app platform-repository changes. After a package
+This document defines how first-party app packages reach Firna's environment
+instances with no per-app platform-repository changes. After a package
 merges to `main` here, it must appear in every targeted environment either
 immediately (environments this repository deploys) or on the next platform
-deploy (ephemeral previews seeded by `futex-ai/firna`).
+deploy (shared static and ephemeral previews seeded by `futex-ai/firna`).
 
 ## Ownership Boundary
 
@@ -22,8 +22,8 @@ deploy (ephemeral previews seeded by `futex-ai/firna`).
 `futex-ai/firna` owns:
 
 - the platform contract (manifest schema, submit/build/install path);
-- seeding ephemeral `pr-N` previews from a `firna-apps@main` checkout using
-  the pull request's own CLI build;
+- seeding `br-preview-static` and ephemeral `pr-N` previews from a
+  `firna-apps@main` checkout using the pull request's own CLI build;
 - the two admin bootstrap-password secrets, with per-secret read grants to
   this repository's deploy identity.
 
@@ -41,17 +41,18 @@ artifacts, credentials).
 
 Each environment instance has a class. The class selects which secret values
 an instance receives and which apps may deploy to it. `preview` and
-`ephemeral` share the `preview-app` secret values; they are distinct classes
-because only long-lived instances have stable hostnames that OAuth providers
-can register as callbacks, so an app like `x` can target `preview` (br-main)
-while excluding `ephemeral` (pr-N) instances whose callbacks are never
-registered.
+`ephemeral` share the `preview-app` values. The shared static preview instead
+uses `preview-static-app`, so its stable hostname can have an independent
+provider registration without sharing the `br-main` registration. Classes
+also control targeting: an app may support a fixed preview hostname while
+excluding `pr-N` instances whose callbacks are never registered.
 
-| Instance   | Class        | Deployed by  | API URL                                  |
-| ---------- | ------------ | ------------ | ---------------------------------------- |
-| production | `production` | `firna-apps` | `https://api.firna.ai`                   |
-| br-main    | `preview`    | `firna-apps` | `https://br-main.api.preview.firna.ai`   |
-| pr-N       | `ephemeral`  | `firna`      | `https://pr-N.api.preview.firna.ai`      |
+| Instance          | Class            | Secret prefix        | Deployed by  | API URL                                           |
+| ----------------- | ---------------- | -------------------- | ------------ | ------------------------------------------------- |
+| production        | `production`     | `prod-app`           | `firna-apps` | `https://api.firna.ai`                            |
+| br-main           | `preview`        | `preview-app`        | `firna-apps` | `https://br-main.api.preview.firna.ai`            |
+| br-preview-static | `preview-static` | `preview-static-app` | `firna`      | `https://br-preview-static.api.preview.firna.ai`  |
+| pr-N              | `ephemeral`      | `preview-app`        | `firna`      | `https://pr-N.api.preview.firna.ai`               |
 
 ## Deployment Configuration
 
@@ -93,14 +94,17 @@ operational metadata for Futex's release automation; it is intentionally not
 part of the platform manifest contract and the platform never reads it. It
 is not package content either: a change that touches only
 `apps/<app_id>/deploy.toml` does not require a manifest version bump.
-`github` and `x` use separate provider registrations for production and stable
-preview. Their fixed callbacks are registered for both long-lived instances,
-but ephemeral `pr-N` callbacks are not, so both declare
-`classes = ["production", "preview"]`.
+`github` uses separate provider registrations for production, stable preview,
+and shared static preview, so it declares
+`classes = ["production", "preview", "preview-static"]`. `x` is registered
+only for production and stable preview and declares
+`classes = ["production", "preview"]`. Both exclude ephemeral `pr-N`
+callbacks.
 
 `cargo xtask check` validates both files: the root file must declare exactly
-the instances above with well-formed URLs and prefixes, and per-app files
-must contain a non-empty `classes` array whose entries are known classes.
+the `production` and `br-main` instances that this repository deploys, with
+well-formed URLs and prefixes, and per-app files must contain a non-empty
+`classes` array whose entries are known classes.
 
 ## App-Secrets Project
 
@@ -116,10 +120,12 @@ Its Terraform lives in this repository under `infra/gcp/apps/` and manages:
   `roles/secretmanager.secretAccessor` on the project;
 - a cross-project binding granting `github-firna-preview@firna-498513`
   `roles/secretmanager.secretAccessor` under an IAM condition restricting it
-  to `preview-app-` secret names, for `pr-N` seeding.
+  to `preview-app-` and `preview-static-app-` secret names, for `pr-N` and
+  shared-static seeding.
 
 Secret containers are named `<secret_prefix>-<app_id>-<secret-name-kebab>`,
-for example `prod-app-x-client-secret` and `preview-app-exa-api-key`.
+for example `prod-app-x-client-secret`, `preview-app-exa-api-key`, and
+`preview-static-app-github-private-key`.
 Manifest secret names use lower snake case and are kebab-cased in container
 ids.
 
@@ -194,11 +200,11 @@ RPCs against both instances daily.
 
 ## Platform Integration (`futex-ai/firna`)
 
-- `pr-N` preview seeding checks out `firna-apps@main`, derives the app list
-  from manifests plus per-app `deploy.toml` (`ephemeral` class only), builds
-  and validates with the pull request's own CLI, and reads values from
-  `preview-app-*` in the app-secrets project. No app-id allowlist
-  environment variables remain.
+- Preview seeding checks out `firna-apps@main`, derives the app list from
+  manifests plus per-app `deploy.toml`, and builds and validates with the pull
+  request's own CLI. A `pr-N` hostname selects `ephemeral` and reads
+  `preview-app-*`; `br-preview-static` selects `preview-static` and reads only
+  `preview-static-app-*`. No app-id allowlist environment variables remain.
 - The platform grants this repository's `apps-deploy` identity per-secret
   read on exactly two secrets: the production and preview-test bootstrap
   passwords.

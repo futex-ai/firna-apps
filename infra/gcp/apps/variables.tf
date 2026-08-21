@@ -11,7 +11,7 @@ variable "repository" {
 }
 
 variable "preview_deploy_service_account_email" {
-  description = "Platform preview deploy identity granted read on preview-app secrets for pr-N seeding."
+  description = "Platform preview deploy identity granted read on preview-app and preview-static-app secrets."
   type        = string
   default     = "github-firna-preview@firna-498513.iam.gserviceaccount.com"
 }

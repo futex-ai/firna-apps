@@ -153,7 +153,20 @@ class AppClassesTests(unittest.TestCase):
             classes, failures = deploy_config.app_classes(app_root)
 
             self.assertEqual(failures, [])
-            self.assertEqual(classes, ("production", "preview", "ephemeral"))
+            self.assertEqual(
+                classes,
+                ("production", "preview", "preview-static", "ephemeral"),
+            )
+
+    def test_preview_static_uses_an_isolated_secret_prefix(self) -> None:
+        classes, failures = self.load_app('classes = ["preview-static"]\n')
+
+        self.assertEqual(failures, [])
+        self.assertEqual(classes, ("preview-static",))
+        self.assertEqual(
+            deploy_config.CLASS_SECRET_PREFIXES["preview-static"],
+            "preview-static-app",
+        )
 
     def test_production_only_app(self) -> None:
         classes, failures = self.load_app('classes = ["production"]\n')

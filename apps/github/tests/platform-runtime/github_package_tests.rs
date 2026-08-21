@@ -39,7 +39,7 @@ fn github_manifest_preserves_installation_access_and_adds_tools_and_events() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "github");
-    assert_eq!(manifest.version, "2.0.3");
+    assert_eq!(manifest.version, "2.0.4");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);
     assert_eq!(

@@ -136,6 +136,8 @@ class RunGateTests(unittest.TestCase):
                     versions("prod-app-exa-api-key"): (True, "1"),
                     describe("preview-app-exa-api-key"): (True, "ok"),
                     versions("preview-app-exa-api-key"): (True, "1"),
+                    describe("preview-static-app-exa-api-key"): (True, "ok"),
+                    versions("preview-static-app-exa-api-key"): (True, "1"),
                     describe("prod-app-x-client-secret"): (True, "ok"),
                     versions("prod-app-x-client-secret"): (True, "1"),
                 }
@@ -153,6 +155,12 @@ class RunGateTests(unittest.TestCase):
                 call for call in runner.calls if call == versions("preview-app-exa-api-key")
             ]
             self.assertEqual(len(exa_preview_checks), 1)
+            exa_static_checks = [
+                call
+                for call in runner.calls
+                if call == versions("preview-static-app-exa-api-key")
+            ]
+            self.assertEqual(len(exa_static_checks), 1)
 
     def test_missing_value_creates_container_and_fails_with_remediation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -1,6 +1,6 @@
 # GitHub App Protocol
 
-Status: implemented by GitHub package `2.0.2`.
+Status: implemented by GitHub package `2.0.4`.
 
 This protocol defines the Firna-owned GitHub package boundary. The platform
 owns installation routing, provider-installation records, token minting,
@@ -26,8 +26,15 @@ The stable `br-main` preview has App ID `4515873`, client ID
 `Iv23liSZsLmwSZrxxpzm`, and slug `firna-ai-preview`. Setup returns to
 `https://br-main.preview.firna.ai/apps/github/install/setup`; callback
 completion uses
-`https://br-main.preview.firna.ai/apps/github/install/callback`. Ephemeral
-`pr-N` previews do not install GitHub because their URLs are not registered.
+`https://br-main.preview.firna.ai/apps/github/install/callback`.
+
+The shared `br-preview-static` preview has its own registration, with identity
+and credentials supplied through `preview-static-app-github-*`. Setup returns
+to `https://br-preview-static.preview.firna.ai/apps/github/install/setup`;
+callback completion uses
+`https://br-preview-static.preview.firna.ai/apps/github/install/callback`.
+Ephemeral `pr-N` previews do not install GitHub because their URLs are not
+registered.
 
 The manifest retains Contents write and Pull requests write for the external
 repository workflow. It adds Issues read and retains Metadata read. The five
@@ -125,7 +132,9 @@ must not be copied into errors.
 The public endpoint is `POST /apps/github/webhooks/github_events`. Production
 registers `https://api.firna.ai/apps/github/webhooks/github_events`; stable
 preview registers
-`https://br-main.api.preview.firna.ai/apps/github/webhooks/github_events`.
+`https://br-main.api.preview.firna.ai/apps/github/webhooks/github_events`;
+shared static preview registers
+`https://br-preview-static.api.preview.firna.ai/apps/github/webhooks/github_events`.
 
 The edge forwards only these ordered, duplicate-preserving raw headers:
 

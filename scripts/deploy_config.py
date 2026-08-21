@@ -18,10 +18,11 @@ from pathlib import Path
 
 
 ROOT_FILE = "deploy.toml"
-KNOWN_CLASSES = ("production", "preview", "ephemeral")
+KNOWN_CLASSES = ("production", "preview", "preview-static", "ephemeral")
 CLASS_SECRET_PREFIXES = {
     "production": "prod-app",
     "preview": "preview-app",
+    "preview-static": "preview-static-app",
     "ephemeral": "preview-app",
 }
 INSTANCE_CLASSES = {"production": "production", "br-main": "preview"}

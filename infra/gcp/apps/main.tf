@@ -6,10 +6,16 @@ locals {
     "secretmanager.googleapis.com",
     "sts.googleapis.com",
   ])
-  preview_secret_name_prefixes = [
-    "projects/${var.project_id}/secrets/preview-app-",
-    "projects/${data.google_project.current.number}/secrets/preview-app-",
-  ]
+  preview_app_secret_prefixes = toset([
+    "preview-app",
+    "preview-static-app",
+  ])
+  preview_secret_name_prefixes = flatten([
+    for prefix in local.preview_app_secret_prefixes : [
+      "projects/${var.project_id}/secrets/${prefix}-",
+      "projects/${data.google_project.current.number}/secrets/${prefix}-",
+    ]
+  ])
   preview_secret_condition = join(" || ", [
     for prefix in local.preview_secret_name_prefixes :
     "resource.name.startsWith(\"${prefix}\")"
@@ -111,7 +117,7 @@ resource "google_project_iam_member" "platform_preview_secret_accessor" {
 
   condition {
     title       = "fna_apps_preview_secret_read"
-    description = "Allow platform pr-N seeding to read only preview-app secret values."
+    description = "Allow platform preview seeding to read only preview app secret values."
     expression  = local.preview_secret_condition
   }
 }

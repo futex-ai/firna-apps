@@ -74,13 +74,21 @@ The stable `br-main` preview uses its own registration:
 - Callback URL: <https://br-main.preview.firna.ai/apps/github/install/callback>
 - Webhook URL: <https://br-main.api.preview.firna.ai/apps/github/webhooks/github_events>
 
-Both registrations must match the manifest: Contents write, Issues read,
+The shared `br-preview-static` preview uses a third registration. Its App ID,
+client ID, slug, and credentials are deployment-owned values under the
+`preview-static-app-github-*` prefix. Configure these fixed URLs:
+
+- Setup URL: <https://br-preview-static.preview.firna.ai/apps/github/install/setup>
+- Callback URL: <https://br-preview-static.preview.firna.ai/apps/github/install/callback>
+- Webhook URL: <https://br-preview-static.api.preview.firna.ai/apps/github/webhooks/github_events>
+
+All three registrations must match the manifest: Contents write, Issues read,
 Metadata read, and Pull requests write. Select only Push, Pull request, Pull
 request review, Pull request review comment, Issues, and Issue comment as
 configurable webhook events; GitHub sends installation lifecycle events
-implicitly. The package targets production and the stable preview, but excludes
-ephemeral `pr-N` previews because their callback and webhook URLs are not
-registered.
+implicitly. The package targets production and both fixed previews, but
+excludes ephemeral `pr-N` previews because their callback and webhook URLs are
+not registered.
 
 The manifest declares seven deployment-owned values:
 
@@ -92,11 +100,22 @@ The manifest declares seven deployment-owned values:
 - `setup_url`
 - `webhook_secret`
 
+For `br-preview-static`, these become
+`preview-static-app-github-app-slug`,
+`preview-static-app-github-callback-url`,
+`preview-static-app-github-client-id`,
+`preview-static-app-github-client-secret`,
+`preview-static-app-github-private-key`,
+`preview-static-app-github-setup-url`, and
+`preview-static-app-github-webhook-secret`. The merge gate creates any missing
+containers and prints the stdin-based `gcloud secrets versions add` command
+for each value that an operator must upload before merge.
+
 The deployment supplies `app_slug`, `callback_url`, `client_id`, and
 `setup_url` for the target registration. They are public registration values,
-but use the app-owned environment boundary so the same package can run in both
-environments. The remaining three values are sensitive and must stay in Secret
-Manager.
+but use the app-owned environment boundary so the same package can run in all
+three fixed-hostname environments. The remaining three values are sensitive
+and must stay in Secret Manager.
 
 The webhook secret must be a high-entropy value shared only with the GitHub App
 registration. Firna accepts exactly one `x-hub-signature-256`,

@@ -79,10 +79,10 @@ and on manual dispatch with optional `app` and `instance` inputs to force
 resubmission.
 
 Apps target environment classes through per-app `deploy.toml` files. `github`
-and `x` deploy to production and the stable `br-main` preview, using separate
-provider registrations whose fixed callbacks are registered for each long-lived
-environment. Ephemeral `pr-N` previews exclude both apps. Deployment
-authenticates per instance as that
+deploys to production, stable `br-main`, and shared `br-preview-static`, using
+a separate provider registration for each fixed hostname. `x` deploys only to
+production and `br-main`. Ephemeral `pr-N` previews exclude both apps.
+Deployment authenticates per instance as that
 instance's admin and uses `firna admin apps submit`. That operator-controlled
 route builds, approves, and promotes these trusted packages in one operation;
 it deliberately does not use the community submission/review path. App secret
@@ -103,9 +103,10 @@ CI and deployment also require the repository Actions secret
 reading the private `futex-ai/firna` platform repository. Google Cloud IAM does
 not grant access to private GitHub source dependencies.
 
-Ephemeral `pr-N` platform previews are seeded by the platform repository from
-a checkout of this repository at `main`, driven by the same `deploy.toml`
-targeting. The full contract is
+The shared `br-preview-static` and ephemeral `pr-N` platform previews are
+seeded by the platform repository from a checkout of this repository at
+`main`, driven by the same `deploy.toml` targeting. Static preview reads
+`preview-static-app-*`; `pr-N` reads `preview-app-*`. The full contract is
 [`docs/protocol/app-deployment.md`](docs/protocol/app-deployment.md).
 
 ## Key Code
