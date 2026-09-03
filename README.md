@@ -10,8 +10,9 @@ The current catalog packages are:
   own DataForSEO credentials.
 - Exa: workspace-default web search with an optional workspace-owned Exa API
   key and a Firna-managed fallback.
-- GitHub: explicit workspace installation for short-lived external-repository
-  credentials, five bounded read tools, and signed repository events.
+- GitHub: explicit workspace installation for short-lived, per-operation
+  narrowed credentials, five bounded read tools, signed published events, and
+  authenticated dormant-event intake.
 - HTTP: workspace-default, first-party arbitrary-host HTTP requests.
 - Slack: explicitly installed Slack tools, OAuth, webhooks, and event handling.
 - X: explicitly installed, multi-account workspace-authorized, usage-priced

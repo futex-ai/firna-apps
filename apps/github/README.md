@@ -11,7 +11,9 @@ repository events to workspaces that explicitly install it.
 - Expose five read-only agent tools without exposing installation tokens to the
   component or model.
 - Authenticate GitHub webhooks before routing, lifecycle work, normalization,
-  persistence, or subscriber delivery.
+  persistence, platform effects, or subscriber delivery.
+- Publish a bounded 16-event agent catalog and acknowledge 29 additional
+  repository-engineering events without retaining their payloads.
 - Keep private keys, client secrets, webhook secrets, JWTs, and minted tokens
   inside trusted host credential paths.
 
@@ -32,26 +34,23 @@ authorization declared by the package.
 | `github_read_pr` | `owner`, `repository`, `number`, `include_files?`, `files_page?`, `files_per_page?` (maximum 10) | Pull request details and an optional bounded changed-file page. |
 | `github_read_issue` | `owner`, `repository`, `number`, `include_comments?`, `comments_page?`, `comments_per_page?` (maximum 10) | Issue details and an optional bounded comment page. |
 
-All five tools are declared `external_read`. The existing Contents and Pull
-requests write permissions remain available only to the platform's external
-repository workflow; the component emits only `GET` requests.
+All five tools are declared `external_read`, emit only `GET`, and declare the
+narrow installation-token permission subset they need. Broad registration
+grants remain available to platform workflows without being handed to each
+read operation.
 
-The `github_events` ingress publishes six native events for explicit agent
-subscription:
+The `github_events` ingress publishes 16 native events for explicit agent
+subscription. Thirteen may also emit a provider-neutral repository-change
+effect that causes Firna to re-read current pull-request status; the remaining
+three are subscriber-only. Another 29 exact event definitions are authenticated
+and acknowledged without normalization, persistence, effects, or delivery.
+The complete 16/29 matrix lives in the protocol below.
 
-- `push`
-- `pull_request`
-- `pull_request_review`
-- `pull_request_review_comment`
-- `issues`
-- `issue_comment`
-
-Installing GitHub does not subscribe or wake an agent. GitHub's implicit
-`ping`, `installation`, and `installation_repositories` deliveries are
-authenticated but are not subscribable content events. Ping receives a minimal
-acknowledgement. Installation creation, restoration, permission changes, and
-repository-selection changes invalidate cached tokens and reconcile coverage;
-suspension and deletion revoke provider access.
+Installing GitHub does not subscribe or wake an agent. GitHub's `ping`,
+`installation`, `installation_repositories`, `installation_target`, and
+mandatory `github_app_authorization` controls are authenticated but never
+subscribable. Lifecycle changes invalidate cached tokens and reconcile or
+revoke coverage and authorization as defined by the protocol.
 
 The GitHub App registrations are owned by the `Firna-AI` organization.
 Production uses:
@@ -74,13 +73,12 @@ The stable `br-main` preview uses its own registration:
 - Callback URL: <https://br-main.preview.firna.ai/apps/github/install/callback>
 - Webhook URL: <https://br-main.api.preview.firna.ai/apps/github/webhooks/github_events>
 
-Both registrations must match the manifest: Contents write, Issues read,
-Metadata read, and Pull requests write. Select only Push, Pull request, Pull
-request review, Pull request review comment, Issues, and Issue comment as
-configurable webhook events; GitHub sends installation lifecycle events
-implicitly. The package targets production and the stable preview, but excludes
-ephemeral `pr-N` previews because their callback and webhook URLs are not
-registered.
+Both registrations use the exact 16-permission map and 45-event baseline in
+the protocol. The original six checkboxes remain the pre-rollout state; add the
+other 39 plus `installation_target` only after the compatible Firna platform,
+package, and provider grants are active. Leave `meta` and global
+`security_advisory` off. The package targets production and stable preview but
+excludes ephemeral `pr-N` previews because their URLs are not registered.
 
 The manifest declares seven deployment-owned values:
 
@@ -139,10 +137,10 @@ event. Restore both previous values together if verification fails.
 - `manifest.yaml` owns registration metadata, permissions, tools, ingress,
   events, secrets, and runtime limits.
 - `component/src/github/tools/` owns the five read tools.
-- `component/src/github/webhook_validation.rs` owns signed delivery
-  verification and lifecycle classification.
-- `component/src/github/webhook_projection.rs` owns bounded event
-  normalization.
+- `component/src/github/webhook_validation/` owns signed common-envelope,
+  published-family, acknowledged, and lifecycle classification.
+- `component/src/github/webhook_projection/` owns bounded published
+  normalization and repository-change effects.
 - `tests/fixtures/webhooks/` contains credential-free provider payloads.
 - `tests/platform-runtime/` verifies the package through the pinned platform
   Wasm host.
