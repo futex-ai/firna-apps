@@ -1,0 +1,4 @@
+{
+  "action": "revoked",
+  "sender": {"id": 4001, "login": "octocat", "html_url": "https://github.com/octocat"}
+}

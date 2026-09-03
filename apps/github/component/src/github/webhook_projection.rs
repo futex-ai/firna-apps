@@ -2,21 +2,19 @@
 
 use std::collections::BTreeMap;
 
+use crate::github::webhook_effects;
 use crate::github::webhook_host::WebhookError;
+use crate::github::webhook_projection_common::{
+    MAX_TITLE_CHARS, actor_projection, bounded, canonical_url, comment_projection,
+    commit_projection, issue_projection, pull_request_projection, repository_projection,
+    review_projection,
+};
 use crate::github::webhook_projection_types::{
-    ActorProjection, CommentProjection, CommitProjection, EventPayload, EventProjection,
-    IssueProjection, NormalizedEvent, PullRequestProjection, RepositoryProjection,
-    ReviewProjection,
+    AutomationProjection, EventPayload, EventProjection, NormalizedEvent, StatusProjection,
 };
-use crate::github::webhook_types::{
-    Actor, Comment, Commit, GitHubWebhookPayload, Issue, PullRequest, Repository, Review,
-    VerifiedProviderEvent,
-};
+use crate::github::webhook_types::{GitHubWebhookPayload, VerifiedProviderEvent};
 
 const MAX_COMMITS: usize = 20;
-const MAX_TITLE_CHARS: usize = 256;
-const MAX_BODY_CHARS: usize = 2_000;
-const MAX_COMMIT_MESSAGE_CHARS: usize = 512;
 
 pub(super) fn normalize(
     verified: VerifiedProviderEvent,
@@ -46,6 +44,8 @@ pub(super) fn normalize(
     if let Some(login) = actor.login.as_ref() {
         source.insert(String::from("actor"), bounded(login, MAX_TITLE_CHARS));
     }
+    let platform_effects =
+        webhook_effects::repository_changes(&verified.verification.provider_event_type, &body);
     Ok(NormalizedEvent {
         app_id: verified.envelope.app_id,
         installation_id: verified.installation_id,
@@ -61,6 +61,7 @@ pub(super) fn normalize(
             action: body.action.as_deref().map(|value| bounded(value, 64)),
             event,
         },
+        platform_effects,
     })
 }
 
@@ -103,134 +104,116 @@ fn event_projection(
             issue: issue_projection(required(body.issue.as_ref())?),
             comment: comment_projection(required(body.comment.as_ref())?),
         }),
+        "check_run" => {
+            let run = required(body.check_run.as_ref())?;
+            Ok(EventProjection::CheckRun {
+                signal: automation_projection(
+                    run.id,
+                    Some(&run.name),
+                    &run.status,
+                    run.conclusion.as_deref(),
+                    run.check_suite
+                        .as_ref()
+                        .and_then(|suite| suite.name.as_deref()),
+                    &run.head_sha,
+                    run.html_url.as_deref(),
+                ),
+            })
+        }
+        "check_suite" => {
+            let suite = required(body.check_suite.as_ref())?;
+            Ok(EventProjection::CheckSuite {
+                signal: automation_projection(
+                    suite.id,
+                    None,
+                    &suite.status,
+                    suite.conclusion.as_deref(),
+                    suite.head_branch.as_deref(),
+                    &suite.head_sha,
+                    None,
+                ),
+            })
+        }
+        "status" => Ok(EventProjection::Status {
+            signal: StatusProjection {
+                sha: bounded(required(body.sha.as_ref())?, 64),
+                state: bounded(required(body.state.as_ref())?, 64),
+                context: body.context.as_deref().map(|value| bounded(value, 256)),
+                description: body.description.as_deref().map(|value| bounded(value, 512)),
+                target_url: body.target_url.as_deref().and_then(canonical_url),
+                branches: body
+                    .branches
+                    .iter()
+                    .take(8)
+                    .map(|branch| bounded(&branch.name, 255))
+                    .collect(),
+            },
+        }),
+        "workflow_job" => {
+            let job = required(body.workflow_job.as_ref())?;
+            Ok(EventProjection::WorkflowJob {
+                signal: automation_projection(
+                    job.id,
+                    Some(&job.name),
+                    &job.status,
+                    job.conclusion.as_deref(),
+                    job.head_branch.as_deref(),
+                    &job.head_sha,
+                    job.html_url.as_deref(),
+                ),
+            })
+        }
+        "workflow_run" => {
+            let run = required(body.workflow_run.as_ref())?;
+            Ok(EventProjection::WorkflowRun {
+                signal: automation_projection(
+                    run.id,
+                    Some(&run.name),
+                    &run.status,
+                    run.conclusion.as_deref(),
+                    run.head_branch.as_deref(),
+                    &run.head_sha,
+                    run.html_url.as_deref(),
+                ),
+            })
+        }
+        "merge_group" => {
+            let group = required(body.merge_group.as_ref())?;
+            Ok(EventProjection::MergeGroup {
+                head_ref: bounded(&group.head_ref, 255),
+                head_sha: bounded(&group.head_sha, 64),
+                base_ref: bounded(&group.base_ref, 255),
+                base_sha: bounded(&group.base_sha, 64),
+            })
+        }
+        "branch_protection_configuration" => Ok(EventProjection::BranchProtectionConfiguration),
+        "branch_protection_rule" => Ok(EventProjection::BranchProtectionRule),
+        "repository_ruleset" => Ok(EventProjection::RepositoryRuleset),
+        "security_and_analysis" => Ok(EventProjection::SecurityAndAnalysis),
         _ => Err(WebhookError::UnsupportedEvent),
     }
 }
 
-fn repository_projection(repository: &Repository) -> RepositoryProjection {
-    RepositoryProjection {
-        id: repository.id,
-        name: repository
-            .name
-            .as_deref()
-            .map(|value| bounded(value, MAX_TITLE_CHARS)),
-        full_name: repository
-            .full_name
-            .as_deref()
-            .map(|value| bounded(value, MAX_TITLE_CHARS)),
-        url: repository.html_url.as_deref().and_then(canonical_url),
-        private: repository.private,
-    }
-}
-
-fn actor_projection(actor: &Actor) -> ActorProjection {
-    ActorProjection {
-        id: actor.id,
-        login: actor
-            .login
-            .as_deref()
-            .map(|value| bounded(value, MAX_TITLE_CHARS)),
-        url: actor.html_url.as_deref().and_then(canonical_url),
-    }
-}
-
-fn commit_projection(commit: &Commit) -> CommitProjection {
-    CommitProjection {
-        sha: bounded(&commit.id, 64),
-        message: commit
-            .message
-            .as_deref()
-            .map(|value| bounded(value, MAX_COMMIT_MESSAGE_CHARS)),
-        url: commit.url.as_deref().and_then(canonical_url),
-        author_name: commit
-            .author
-            .as_ref()
-            .and_then(|author| author.name.as_deref())
-            .map(|value| bounded(value, MAX_TITLE_CHARS)),
-        author_login: commit
-            .author
-            .as_ref()
-            .and_then(|author| author.username.as_deref())
-            .map(|value| bounded(value, MAX_TITLE_CHARS)),
-    }
-}
-
-fn pull_request_projection(value: &PullRequest) -> PullRequestProjection {
-    PullRequestProjection {
-        id: value.id,
-        number: value.number,
-        title: bounded(&value.title, MAX_TITLE_CHARS),
-        body: value
-            .body
-            .as_deref()
-            .map(|body| bounded(body, MAX_BODY_CHARS)),
-        state: bounded(&value.state, 32),
-        draft: value.draft,
-        merged: value.merged,
-        url: canonical_url(&value.html_url),
-        author: actor_projection(&value.user),
-        head_ref: bounded(&value.head.name, 256),
-        head_sha: bounded(&value.head.sha, 64),
-        base_ref: bounded(&value.base.name, 256),
-        base_sha: bounded(&value.base.sha, 64),
-    }
-}
-
-fn review_projection(value: &Review) -> ReviewProjection {
-    ReviewProjection {
-        id: value.id,
-        state: bounded(&value.state, 32),
-        body: value
-            .body
-            .as_deref()
-            .map(|body| bounded(body, MAX_BODY_CHARS)),
-        url: canonical_url(&value.html_url),
-        submitted_at: value.submitted_at.clone(),
-        commit_sha: value.commit_id.as_deref().map(|sha| bounded(sha, 64)),
-        author: actor_projection(&value.user),
-    }
-}
-
-fn comment_projection(value: &Comment) -> CommentProjection {
-    CommentProjection {
-        id: value.id,
-        body: value
-            .body
-            .as_deref()
-            .map(|body| bounded(body, MAX_BODY_CHARS)),
-        url: canonical_url(&value.html_url),
-        created_at: value.created_at.clone(),
-        updated_at: value.updated_at.clone(),
-        author: actor_projection(&value.user),
-    }
-}
-
-fn issue_projection(value: &Issue) -> IssueProjection {
-    IssueProjection {
-        id: value.id,
-        number: value.number,
-        title: bounded(&value.title, MAX_TITLE_CHARS),
-        body: value
-            .body
-            .as_deref()
-            .map(|body| bounded(body, MAX_BODY_CHARS)),
-        state: bounded(&value.state, 32),
-        url: canonical_url(&value.html_url),
-        locked: value.locked,
-        author: actor_projection(&value.user),
+fn automation_projection(
+    id: u64,
+    name: Option<&str>,
+    status: &str,
+    conclusion: Option<&str>,
+    head_branch: Option<&str>,
+    head_sha: &str,
+    url: Option<&str>,
+) -> AutomationProjection {
+    AutomationProjection {
+        id,
+        name: name.map(|value| bounded(value, 256)),
+        status: bounded(status, 64),
+        conclusion: conclusion.map(|value| bounded(value, 64)),
+        head_branch: head_branch.map(|value| bounded(value, 255)),
+        head_sha: bounded(head_sha, 64),
+        url: url.and_then(canonical_url),
     }
 }
 
 fn required<T>(value: Option<&T>) -> Result<&T, WebhookError> {
     value.ok_or(WebhookError::EventTypeDisagreement)
-}
-
-fn bounded(value: &str, max_chars: usize) -> String {
-    value.chars().take(max_chars).collect()
-}
-
-fn canonical_url(value: &str) -> Option<String> {
-    value
-        .starts_with("https://github.com/")
-        .then(|| bounded(value, 2_048))
 }

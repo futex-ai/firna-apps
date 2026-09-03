@@ -105,6 +105,12 @@ fn component_filename() -> String {
 #[path = "../github_component_tests.rs"]
 mod github_component_tests;
 #[cfg(test)]
+#[path = "../github_effect_conformance_support.rs"]
+mod github_effect_conformance_support;
+#[cfg(test)]
+#[path = "../github_effect_conformance_tests.rs"]
+mod github_effect_conformance_tests;
+#[cfg(test)]
 #[path = "../github_file_smoke_tests.rs"]
 mod github_file_smoke_tests;
 #[cfg(test)]
@@ -122,6 +128,9 @@ mod github_runtime_support;
 #[cfg(test)]
 #[path = "../github_tool_smoke_tests.rs"]
 mod github_tool_smoke_tests;
+#[cfg(test)]
+#[path = "../github_webhook_manifest_tests.rs"]
+mod github_webhook_manifest_tests;
 #[cfg(test)]
 #[path = "../github_webhook_smoke_tests.rs"]
 mod github_webhook_smoke_tests;

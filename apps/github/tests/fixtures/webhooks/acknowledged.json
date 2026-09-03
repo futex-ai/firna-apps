@@ -1,0 +1,11 @@
+{
+  "action": "created",
+  "installation": {"id": 1001, "account": {"id": 2001, "login": "octo-org", "html_url": "https://github.com/octo-org"}},
+  "repository": {"id": 3001, "name": "repo", "full_name": "octo-org/repo", "html_url": "https://github.com/octo-org/repo", "private": true},
+  "sender": {"id": 4001, "login": "octocat", "html_url": "https://github.com/octocat"},
+  "client_payload": {
+    "token": "ACKNOWLEDGED-TOKEN-MARKER",
+    "patch": "ACKNOWLEDGED-PATCH-MARKER",
+    "nested": [{"private_key": "ACKNOWLEDGED-KEY-MARKER"}]
+  }
+}

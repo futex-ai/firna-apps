@@ -46,6 +46,12 @@ three are subscriber-only. Another 29 exact event definitions are authenticated
 and acknowledged without normalization, persistence, effects, or delivery.
 The complete 16/29 matrix lives in the protocol below.
 
+The subscriber-only definitions are `pull_request_review_comment`, `issues`,
+and `issue_comment`. Repository-change producers cover source pushes, pull
+request and review state, merge queues, CI/check/status changes, and repository
+policy changes. Tag-only pushes remain publishable agent events but do not
+trigger platform reconciliation.
+
 Installing GitHub does not subscribe or wake an agent. GitHub's `ping`,
 `installation`, `installation_repositories`, `installation_target`, and
 mandatory `github_app_authorization` controls are authenticated but never

@@ -2,6 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::github::webhook_signal_types::{
+    CheckRun, CheckSuite, MergeGroup, StatusBranch, WorkflowJob, WorkflowRun,
+};
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct WebhookEnvelope {
     pub(crate) app_id: String,
@@ -36,6 +40,8 @@ pub(crate) struct WebhookVerification {
     pub(crate) provider_event_id: String,
     pub(crate) provider_event_type: String,
     pub(crate) provider_user_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) provider_repository_id: Option<String>,
     pub(crate) installation_lifecycle: Option<ProviderInstallationLifecycle>,
 }
 
@@ -69,6 +75,18 @@ pub(crate) struct GitHubWebhookPayload {
     pub(crate) review: Option<Review>,
     pub(crate) comment: Option<Comment>,
     pub(crate) issue: Option<Issue>,
+    pub(crate) check_run: Option<CheckRun>,
+    pub(crate) check_suite: Option<CheckSuite>,
+    pub(crate) workflow_job: Option<WorkflowJob>,
+    pub(crate) workflow_run: Option<WorkflowRun>,
+    pub(crate) merge_group: Option<MergeGroup>,
+    pub(crate) sha: Option<String>,
+    pub(crate) state: Option<String>,
+    pub(crate) context: Option<String>,
+    pub(crate) description: Option<String>,
+    pub(crate) target_url: Option<String>,
+    #[serde(default)]
+    pub(crate) branches: Vec<StatusBranch>,
     #[serde(default)]
     pub(crate) repositories_added: Vec<Repository>,
     #[serde(default)]

@@ -13,6 +13,8 @@ mod provider_shape_tests;
 mod repository_contract_tests;
 mod repository_tests;
 mod support;
+mod webhook_catalog_tests;
+mod webhook_effect_tests;
 mod webhook_normalization_tests;
 mod webhook_support;
 mod webhook_verification_tests;

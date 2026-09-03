@@ -6,13 +6,23 @@ use crate::github::webhooks::normalize_event;
 
 use super::webhook_support::{fixture, valid_verification};
 
-const EVENTS: [&str; 6] = [
+const EVENTS: [&str; 16] = [
     "push",
     "pull_request",
     "pull_request_review",
     "pull_request_review_comment",
     "issues",
     "issue_comment",
+    "merge_group",
+    "check_run",
+    "check_suite",
+    "status",
+    "workflow_job",
+    "workflow_run",
+    "branch_protection_configuration",
+    "branch_protection_rule",
+    "repository_ruleset",
+    "security_and_analysis",
 ];
 
 #[test]

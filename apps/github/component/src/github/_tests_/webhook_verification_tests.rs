@@ -22,6 +22,7 @@ fn verifies_raw_sha256_signature_and_routes_numeric_identity() {
     assert_eq!(result["provider_user_id"], "4001");
     assert_eq!(result["provider_event_id"], DELIVERY);
     assert_eq!(result["provider_event_type"], "push");
+    assert_eq!(result["provider_repository_id"], "3001");
 }
 
 #[test]
@@ -153,6 +154,31 @@ fn acknowledges_authenticated_ping_before_installation_routing() {
     .expect("ping response should be JSON");
     assert_eq!(response["status_code"], 200);
     assert_eq!(response["body"], r#"{"ok":true}"#);
+}
+
+#[test]
+fn handles_installation_target_and_authorization_controls() {
+    let target = fixture("installation_target");
+    let result = verify_with_digest(
+        &envelope(
+            &target,
+            "installation_target",
+            Some(&format!("sha256={DIGEST}")),
+        ),
+        DIGEST,
+    );
+    assert_eq!(result["installation_lifecycle"], "reconcile");
+    assert_eq!(result["provider_installation_id"], "1001");
+
+    let authorization = fixture("github_app_authorization");
+    let (envelope, verification) = valid_verification(&authorization, "github_app_authorization");
+    assert_eq!(verification["provider_installation_id"], Value::Null);
+    assert_eq!(verification["provider_user_id"], "4001");
+    let response: Value = serde_json::from_str(&webhook_response(
+        &json!({"envelope": envelope, "verification": verification}).to_string(),
+    ))
+    .expect("authorization response should be JSON");
+    assert_eq!(response["status_code"], 200);
 }
 
 #[test]

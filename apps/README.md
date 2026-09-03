@@ -129,7 +129,8 @@ the same immutable package.
   values stay behind host-mediated credential injection.
 - `apps/github`: production-and-stable-preview, explicit-install built-in
   GitHub App package for short-lived repository credentials, five bounded read
-  tools, and six signed repository event definitions.
+  tools, 16 published signed repository events, and 29 authenticated dormant
+  events that are acknowledged without retention or delivery.
 - `apps/http`: workspace-default built-in HTTP app exposing `http_request`.
   It uses the first-party broad HTTP host capability and does not receive or
   inject app/provider credentials.
