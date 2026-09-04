@@ -15,7 +15,9 @@ use uuid::Uuid;
 
 use crate::manifest;
 use crate::x_runtime_support::runtime_with_host;
-use crate::x_test_support::{UnusedCredentialVault, call_tool_result, provider_response};
+use crate::x_test_support::{
+    UnusedCredentialVault, call_tool_result, provider_response, unused_installation_token_issuer,
+};
 
 #[tokio::test]
 async fn x_connections_keep_bearers_and_refresh_isolated() {
@@ -96,8 +98,13 @@ fn connection_runtime(
         None,
         None,
     );
-    let host =
-        CredentialScopedWasmHost::new(Arc::new(UnusedCredentialVault), provider, invocation, oauth);
+    let host = CredentialScopedWasmHost::new(
+        Arc::new(UnusedCredentialVault),
+        provider,
+        invocation,
+        oauth,
+        unused_installation_token_issuer(),
+    );
     runtime_with_host(Arc::new(host))
 }
 

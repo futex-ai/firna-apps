@@ -998,6 +998,7 @@ dependencies = [
  "fna-apps-store-interface",
  "fna-apps-wasm",
  "fna-db-enums",
+ "fna-external-repos-interface",
  "fna-store-interface",
  "fna-workstreams",
  "serde_json",

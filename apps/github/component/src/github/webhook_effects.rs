@@ -2,9 +2,10 @@
 
 use std::collections::HashSet;
 
+use crate::github::webhook_content_types::PullRequest;
 use crate::github::webhook_projection_types::RepositoryChangeEffect;
 use crate::github::webhook_signal_types::PullRequestReference;
-use crate::github::webhook_types::{GitHubWebhookPayload, PullRequest};
+use crate::github::webhook_types::GitHubWebhookPayload;
 
 const MAX_BRANCHES: usize = 8;
 const MAX_BRANCH_BYTES: usize = 255;

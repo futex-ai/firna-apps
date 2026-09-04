@@ -154,6 +154,37 @@ fn manifest_uses_the_selected_grants_and_narrow_read_tool_subsets() {
     }
 }
 
+#[test]
+fn manifest_excludes_security_alert_grants_and_events() {
+    let manifest = manifest();
+    let flow = manifest.credential_flows[0]
+        .installation_token()
+        .expect("GitHub installation-token flow");
+    for permission in [
+        "code_scanning_alerts",
+        "dependabot_alerts",
+        "repository_advisories",
+        "secret_scanning_alerts",
+    ] {
+        assert!(!flow.permissions.contains_key(permission));
+    }
+
+    let events = &manifest.ingress[0].events;
+    for event_type in [
+        "code_scanning_alert",
+        "dependabot_alert",
+        "repository_advisory",
+        "repository_vulnerability_alert",
+        "secret_scanning_alert",
+        "security_advisory",
+    ] {
+        assert!(
+            events.iter().all(|event| event.provider_type != event_type),
+            "unexpected security-alert event {event_type}"
+        );
+    }
+}
+
 fn expected_permissions() -> BTreeMap<String, InstallationPermissionLevel> {
     [
         ("actions", InstallationPermissionLevel::Write),

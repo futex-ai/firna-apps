@@ -102,6 +102,9 @@ fn component_filename() -> String {
 }
 
 #[cfg(test)]
+#[path = "../github_acknowledgement_conformance_tests.rs"]
+mod github_acknowledgement_conformance_tests;
+#[cfg(test)]
 #[path = "../github_component_tests.rs"]
 mod github_component_tests;
 #[cfg(test)]
@@ -122,6 +125,9 @@ mod github_host_contract_tests;
 #[cfg(test)]
 #[path = "../github_package_tests.rs"]
 mod github_package_tests;
+#[cfg(test)]
+#[path = "../github_reconciliation_conformance_support.rs"]
+mod github_reconciliation_conformance_support;
 #[cfg(test)]
 #[path = "../github_runtime_support.rs"]
 mod github_runtime_support;

@@ -89,16 +89,23 @@ pub(crate) fn records(envelope: &WebhookEnvelope) -> ConformanceRecords {
 }
 
 pub(crate) fn envelope() -> WebhookEnvelope {
+    envelope_for(
+        "pull_request_review",
+        include_bytes!("../fixtures/webhooks/pull_request_review.json"),
+    )
+}
+
+pub(crate) fn envelope_for(event_type: &str, body: &[u8]) -> WebhookEnvelope {
     WebhookEnvelope {
         app_id: String::from("github"),
         ingress_id: String::from("github_events"),
         headers: vec![
             header("x-hub-signature-256", &format!("sha256={DIGEST}")),
             header("x-github-delivery", DELIVERY),
-            header("x-github-event", "pull_request_review"),
+            header("x-github-event", event_type),
         ],
         query: BTreeMap::new(),
-        body: include_bytes!("../fixtures/webhooks/pull_request_review.json").to_vec(),
+        body: body.to_vec(),
         received_at: "2026-08-03T12:00:00Z".parse().expect("fixture time"),
     }
 }

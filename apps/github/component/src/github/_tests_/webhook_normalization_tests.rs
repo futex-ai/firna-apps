@@ -105,6 +105,40 @@ fn omits_secrets_patches_unknown_fields_and_noncanonical_urls() {
 }
 
 #[test]
+fn every_published_projection_drops_arbitrary_sensitive_fields() {
+    for event_type in EVENTS {
+        let mut body: Value =
+            serde_json::from_str(&fixture(event_type)).expect("fixture should be JSON");
+        body["authorization"] = json!("TOKEN-MARKER");
+        body["repository"]["private_key"] = json!("PRIVATE-MARKER");
+        body["sender"]["patch"] = json!("PATCH-MARKER");
+        body["arbitrary"] = json!({"nested": ["ARBITRARY-MARKER"]});
+
+        let encoded = normalize(&body.to_string(), event_type).to_string();
+        for marker in [
+            "TOKEN-MARKER",
+            "PRIVATE-MARKER",
+            "PATCH-MARKER",
+            "ARBITRARY-MARKER",
+        ] {
+            assert!(!encoded.contains(marker), "{event_type} retained {marker}");
+        }
+    }
+}
+
+#[test]
+fn acknowledged_events_have_no_normalized_projection() {
+    let body = fixture("acknowledged");
+    for event_type in super::webhook_catalog_tests::ACKNOWLEDGED {
+        let output = normalize(&body, event_type);
+        let encoded = output.to_string();
+        assert_eq!(output["reason"], "unsupported_github_event");
+        assert!(!encoded.contains("SECRET-MARKER"));
+        assert!(!encoded.contains("PATCH-MARKER"));
+    }
+}
+
+#[test]
 fn refuses_to_normalize_control_or_unsupported_events() {
     let body = fixture("installation");
     let output = normalize(&body, "installation");

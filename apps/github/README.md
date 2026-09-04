@@ -143,10 +143,12 @@ event. Restore both previous values together if verification fails.
 - `manifest.yaml` owns registration metadata, permissions, tools, ingress,
   events, secrets, and runtime limits.
 - `component/src/github/tools/` owns the five read tools.
-- `component/src/github/webhook_validation/` owns signed common-envelope,
-  published-family, acknowledged, and lifecycle classification.
-- `component/src/github/webhook_projection/` owns bounded published
-  normalization and repository-change effects.
+- `component/src/github/webhook_validation.rs` owns signed common-envelope and
+  acknowledge-only classification; the `webhook_*_validation.rs` family
+  modules own published and lifecycle shape checks.
+- `component/src/github/webhook_projection.rs` routes bounded normalization to
+  the content and signal family projections; `webhook_effects.rs` emits the
+  provider-neutral repository-change hints.
 - `tests/fixtures/webhooks/` contains credential-free provider payloads.
 - `tests/platform-runtime/` verifies the package through the pinned platform
   Wasm host.

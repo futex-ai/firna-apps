@@ -40,10 +40,13 @@ Install `wasm32-unknown-unknown` and the `wasm-tools` version from the root
 - `github_tool_smoke_tests.rs` exercises the tool host boundary.
 - `github_file_smoke_tests.rs` verifies commit-pinned tree checks.
 - `github_webhook_smoke_tests.rs` exercises signed event behavior.
+- `github_acknowledgement_conformance_tests.rs` proves every dormant event and
+  its retries bypass normalization and durable acceptance.
 - `github_webhook_manifest_tests.rs` checks the complete event and permission
   catalog.
 - `github_effect_conformance_tests.rs` exercises signed Wasm normalization,
-  atomic platform acceptance, effect dispatch, and workstream reconciliation.
+  atomic platform acceptance, effect dispatch, a provider status re-read,
+  snapshot replacement, and post-commit update publication.
 
 ### Related Docs
 

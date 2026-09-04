@@ -54,8 +54,22 @@ class PlanAppDeploysTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout.strip(), "slack")
 
+    def test_github_minor_release_is_selected_exactly_once(self) -> None:
+        result = self.run_plan(
+            [self.catalog_app("2.0.3", app_id="github")],
+            local_version="2.1.0",
+            app_id="github",
+        )
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.splitlines(), ["github"])
+        self.assertEqual(result.stderr.count("app github "), 1)
+
     def run_plan(
-        self, catalog_apps: list[dict[str, str]], local_version: str = "1.1.3"
+        self,
+        catalog_apps: list[dict[str, str]],
+        local_version: str = "1.1.3",
+        app_id: str = "slack",
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -66,15 +80,15 @@ class PlanAppDeploysTests(unittest.TestCase):
             manifests.write_text(
                 json.dumps(
                     {
-                        "directory": "slack",
-                        "id": "slack",
+                        "directory": app_id,
+                        "id": app_id,
                         "version": local_version,
                     }
                 )
                 + "\n",
                 encoding="utf-8",
             )
-            changed.write_text("slack\n", encoding="utf-8")
+            changed.write_text(f"{app_id}\n", encoding="utf-8")
             return subprocess.run(
                 [
                     "python3",
@@ -92,8 +106,8 @@ class PlanAppDeploysTests(unittest.TestCase):
             )
 
     @staticmethod
-    def catalog_app(version: str) -> dict[str, str]:
-        return {"app_id": "slack", "current_version": version}
+    def catalog_app(version: str, app_id: str = "slack") -> dict[str, str]:
+        return {"app_id": app_id, "current_version": version}
 
 
 if __name__ == "__main__":

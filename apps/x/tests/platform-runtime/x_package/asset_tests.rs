@@ -10,8 +10,8 @@ fn x_manifest_embeds_the_repo_owned_png_source() {
         fs::read_to_string(app_root().join("assets/icon.png.base64")).expect("read X icon base64");
     let png = fs::read(app_root().join("assets/icon.png")).expect("read X icon PNG");
 
-    assert_eq!(icon.media_type.as_str(), "image/png");
-    assert_eq!(icon.data_base64, base64.trim());
+    assert_eq!(icon.image.media_type.as_str(), "image/png");
+    assert_eq!(icon.image.data_base64, base64.trim());
     assert_eq!(icon.color_pair.primary, "#000000");
     assert_eq!(icon.color_pair.secondary, "#FFFFFF");
     assert_eq!(&png[..8], b"\x89PNG\r\n\x1a\n");

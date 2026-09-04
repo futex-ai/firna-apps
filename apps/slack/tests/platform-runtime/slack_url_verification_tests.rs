@@ -70,6 +70,7 @@ async fn slack_component_returns_url_verification_challenge_response() {
                 provider_event_id: String::from("challenge-token"),
                 provider_event_type: String::from("url_verification"),
                 provider_user_id: None,
+                provider_repository_id: None,
                 installation_lifecycle: None,
             },
         })

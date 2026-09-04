@@ -1,5 +1,6 @@
 //! Fail-closed validation and classification of signed GitHub webhook payloads.
 
+use crate::github::webhook_control_validation;
 use crate::github::webhook_event_validation;
 use crate::github::webhook_events;
 use crate::github::webhook_host::{WebhookError, WebhookSigner};
@@ -131,7 +132,7 @@ fn verify_payload_shape(
                 && payload.sender.as_ref().is_some_and(|sender| sender.id > 0),
         )
     } else {
-        webhook_event_validation::control(event_type, payload)
+        webhook_control_validation::control(event_type, payload)
     }
 }
 

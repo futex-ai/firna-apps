@@ -38,7 +38,10 @@ The app platform integration tests use `fna-apps-interface` and
 `fna-apps-wasm` directly from the pinned Firna platform revision, and the
 deployment workflow installs its CLI from the same revision. Update
 `platform.toml`, every standalone runtime test manifest, and the deployment
-workflow together; `cargo xtask check` rejects partial updates.
+workflow together; `cargo xtask check` rejects partial updates. These
+`tests/platform-runtime` pins are validation infrastructure rather than app
+package inputs, so a pin-only harness update does not require releasing every
+unchanged app.
 
 To install the matching `firna` CLI for local package validation:
 

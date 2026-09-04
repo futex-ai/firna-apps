@@ -12,13 +12,12 @@ use fna_apps_wasm::{HostHmacSha256Response, WasmHostMock};
 use fna_db_enums::AppPlatformEffectState;
 use fna_store_interface::workspace::{
     ClaimedWorkstreamReconciliation, DispatchWorkstreamReconciliationInput,
-    DispatchWorkstreamReconciliationOutcome, WorkstreamPrChecks,
-    WorkstreamReconciliationLeaseMutation, WorkstreamReconciliationStoreMock,
+    DispatchWorkstreamReconciliationOutcome, WorkstreamReconciliationLeaseMutation,
+    WorkstreamReconciliationStoreMock,
 };
 use fna_workstreams::{
     ConfiguredPlatformEffectDispatcher, ConfiguredWorkstreamReconciliationProcessor,
-    PlatformEffectDispatcher, RefreshWorkstreamRequest, WorkstreamReconciliationProcessor,
-    WorkstreamServiceMock,
+    PlatformEffectDispatcher, WorkstreamReconciliationProcessor,
 };
 use unimock::{MockFn as _, Unimock, matching};
 use uuid::Uuid;
@@ -26,10 +25,11 @@ use uuid::Uuid;
 use crate::github_effect_conformance_support::{
     DIGEST, accepted_records, changed_workstream, envelope, records,
 };
+use crate::github_reconciliation_conformance_support::configured_workstream_service;
 use crate::github_runtime_support::runtime_with_host;
 
 #[tokio::test]
-async fn real_review_fixture_reaches_atomic_acceptance_and_refreshes_a_snapshot() {
+async fn real_review_fixture_reaches_provider_reread_snapshot_commit_and_publication() {
     let envelope = envelope();
     let records = records(&envelope);
     let installation = records.installation.clone();
@@ -189,16 +189,7 @@ async fn dispatch_and_refresh(
         agent_id,
         &envelope,
     );
-    let observed = Arc::new(Mutex::new(None));
-    let observed_snapshot = observed.clone();
-    let workstreams = Arc::new(Unimock::new(
-        WorkstreamServiceMock::refresh
-            .next_call(matching!(RefreshWorkstreamRequest { .. }))
-            .answers_arc(Arc::new(move |_, _| {
-                *observed_snapshot.lock().expect("snapshot lock") = Some(snapshot.clone());
-                Ok(snapshot.clone())
-            })),
-    ));
+    let workstreams = configured_workstream_service(snapshot);
     let processed = ConfiguredWorkstreamReconciliationProcessor::new(
         workspace_store,
         workstreams,
@@ -208,13 +199,4 @@ async fn dispatch_and_refresh(
     .await
     .expect("reconcile workstream");
     assert_eq!(processed, 1);
-    assert_eq!(
-        observed
-            .lock()
-            .expect("snapshot lock")
-            .as_ref()
-            .expect("snapshot")
-            .pr_checks,
-        WorkstreamPrChecks::Passing
-    );
 }

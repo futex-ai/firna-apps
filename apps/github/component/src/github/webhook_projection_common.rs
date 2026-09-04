@@ -1,12 +1,11 @@
 //! Shared bounded projections for published GitHub webhook objects.
 
+use crate::github::webhook_content_types::{Comment, Commit, Issue, PullRequest, Review};
 use crate::github::webhook_projection_types::{
     ActorProjection, CommentProjection, CommitProjection, IssueProjection, PullRequestProjection,
     RepositoryProjection, ReviewProjection,
 };
-use crate::github::webhook_types::{
-    Actor, Comment, Commit, Issue, PullRequest, Repository, Review,
-};
+use crate::github::webhook_types::{Actor, Repository};
 
 pub(super) const MAX_TITLE_CHARS: usize = 256;
 const MAX_BODY_CHARS: usize = 2_000;
@@ -128,4 +127,10 @@ pub(super) fn canonical_url(value: &str) -> Option<String> {
     value
         .starts_with("https://github.com/")
         .then(|| bounded(value, 2_048))
+}
+
+pub(super) fn required<T>(
+    value: Option<&T>,
+) -> Result<&T, crate::github::webhook_host::WebhookError> {
+    value.ok_or(crate::github::webhook_host::WebhookError::EventTypeDisagreement)
 }
