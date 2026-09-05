@@ -8,14 +8,14 @@ authors = ["Polybase"]
 [workspace]
 
 [dependencies]
-fna-apps = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
-fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
-fna-apps-store-interface = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
-fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
-fna-db-enums = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
-fna-external-repos-interface = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
-fna-store-interface = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
-fna-workstreams = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
+fna-apps = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
+fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
+fna-apps-store-interface = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
+fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
+fna-db-enums = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
+fna-external-repos-interface = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
+fna-store-interface = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
+fna-workstreams = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
 serde_json = "1.0.151"
 tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
 unimock = "0.6.8"

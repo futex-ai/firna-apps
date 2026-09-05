@@ -7,6 +7,8 @@ use fna_apps_interface::manifest::{IngressEventHandling, InstallationPermissionL
 
 use crate::manifest;
 
+const PACKAGE_OVERVIEW: &str = include_str!("../../../README.md");
+
 const PUBLISHED: [&str; 16] = [
     "push",
     "pull_request",
@@ -100,6 +102,14 @@ fn manifest_declares_the_exact_published_and_acknowledged_baseline() {
         assert_eq!(event.handling, IngressEventHandling::Acknowledge);
         assert!(event.platform_effects.is_empty());
     }
+    let overview = PACKAGE_OVERVIEW
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    assert!(
+        overview
+            .contains("16 published signed repository events, and 28 authenticated dormant events")
+    );
 }
 
 #[test]

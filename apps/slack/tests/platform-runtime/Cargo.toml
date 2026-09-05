@@ -12,8 +12,8 @@ doctest = false
 
 [dependencies]
 chrono = "0.4.44"
-fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
-fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "92af016f93b3deba9abbc19c87b165a588d48457" }
+fna-apps-interface = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
+fna-apps-wasm = { git = "https://github.com/futex-ai/firna.git", rev = "009f2ad1c60a6e6c82f8c899b3a481d1e536afe0" }
 serde_json = "1.0.150"
 serde_yaml = "0.9.34"
 tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread"] }
