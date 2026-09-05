@@ -19,7 +19,7 @@ pub(super) const PUBLISHED_EVENTS: [&str; 16] = [
     "security_and_analysis",
 ];
 
-pub(super) const ACKNOWLEDGED_EVENTS: [&str; 29] = [
+pub(super) const ACKNOWLEDGED_EVENTS: [&str; 28] = [
     "create",
     "delete",
     "commit_comment",
@@ -28,7 +28,6 @@ pub(super) const ACKNOWLEDGED_EVENTS: [&str; 29] = [
     "release",
     "repository",
     "repository_dispatch",
-    "member",
     "public",
     "star",
     "watch",

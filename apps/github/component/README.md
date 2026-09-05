@@ -11,7 +11,7 @@ deduplication remain platform responsibilities.
 - Construct bounded, known `api.github.com` GET requests.
 - Request host-mediated bearer injection without receiving the raw token.
 - Verify GitHub HMAC signatures through an opaque host secret handle.
-- Classify control deliveries, 16 published events, and 29 acknowledged events.
+- Classify control deliveries, 16 published events, and 28 acknowledged events.
 - Convert published payloads into bounded, redacted projections and declared
   repository-change effects while never parsing acknowledged event content.
 
@@ -32,7 +32,9 @@ rejected before the final commit-pinned Contents request.
 Webhook verification uses the exact raw UTF-8 body, requires one lower-case
 `sha256=` digest, and compares it in constant time. It validates the delivery
 and event headers plus event-specific payload shape before returning trusted
-installation, account, repository, actor, and lifecycle metadata. Ping returns
+installation, account, optional repository/actor, account-label, and lifecycle
+metadata. Acknowledged events parse only that minimal common envelope and ignore
+all event-specific nested objects. Ping returns
 `{"ok":true}`; only manifest definitions with `handling: publish` normalize.
 
 Normalization caps commit lists at 20, titles and names at 256 characters,

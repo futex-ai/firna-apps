@@ -86,7 +86,7 @@ fn push(payload: &GitHubWebhookPayload, repository_id: String) -> Option<Reposit
     Some(effect(
         repository_id,
         "source",
-        vec![branch.to_owned()],
+        bounded_branches([branch.to_owned()]),
         None,
         payload.after.as_deref(),
     ))
@@ -101,7 +101,7 @@ fn pull_request(
     Some(effect(
         repository_id,
         change_kind,
-        vec![pull_request.head.name.clone()],
+        bounded_branches([pull_request.head.name.clone()]),
         Some(pull_request.number),
         Some(&pull_request.head.sha),
     ))
@@ -118,12 +118,19 @@ fn branch_effect(
         .into_iter()
         .map(str::to_owned)
         .collect::<Vec<_>>();
-    branches.extend(
-        pull_requests
-            .iter()
-            .filter_map(|pull_request| pull_request.head.as_ref())
-            .filter_map(|head| head.name.clone()),
-    );
+    let complete_pull_request_hints = pull_requests.iter().all(|pull_request| {
+        pull_request
+            .head
+            .as_ref()
+            .and_then(|head| head.name.as_ref())
+            .is_some()
+    });
+    branches.extend(pull_requests.iter().filter_map(|pull_request| {
+        pull_request
+            .head
+            .as_ref()
+            .and_then(|head| head.name.clone())
+    }));
     let pull_request_number = (pull_requests.len() == 1).then(|| pull_requests[0].number);
     let pull_request_head_sha = (pull_requests.len() == 1)
         .then(|| {
@@ -136,7 +143,9 @@ fn branch_effect(
     effect(
         repository_id,
         change_kind,
-        bounded_branches(branches),
+        complete_pull_request_hints
+            .then(|| bounded_branches(branches))
+            .flatten(),
         pull_request_number,
         pull_request_head_sha.or(head_sha),
     )
@@ -158,16 +167,17 @@ fn repository_effect(
     change_kind: &'static str,
     head_sha: Option<&str>,
 ) -> RepositoryChangeEffect {
-    effect(repository_id, change_kind, Vec::new(), None, head_sha)
+    effect(repository_id, change_kind, Some(Vec::new()), None, head_sha)
 }
 
 fn effect(
     repository_id: String,
     change_kind: &'static str,
-    branches: Vec<String>,
+    branches: Option<Vec<String>>,
     pull_request_number: Option<u64>,
     head_sha: Option<&str>,
 ) -> RepositoryChangeEffect {
+    let branches = branches.unwrap_or_default();
     RepositoryChangeEffect {
         kind: "repository_change",
         contract_version: 1,
@@ -184,14 +194,21 @@ fn effect(
     }
 }
 
-fn bounded_branches(branches: impl IntoIterator<Item = String>) -> Vec<String> {
+fn bounded_branches(branches: impl IntoIterator<Item = String>) -> Option<Vec<String>> {
     let mut seen = HashSet::new();
-    branches
-        .into_iter()
-        .filter(|branch| valid_branch(branch))
-        .filter(|branch| seen.insert(branch.clone()))
-        .take(MAX_BRANCHES)
-        .collect()
+    let mut bounded = Vec::new();
+    for branch in branches {
+        if !valid_branch(&branch) {
+            return None;
+        }
+        if seen.insert(branch.clone()) {
+            bounded.push(branch);
+            if bounded.len() > MAX_BRANCHES {
+                return None;
+            }
+        }
+    }
+    Some(bounded)
 }
 
 fn valid_branch(value: &str) -> bool {

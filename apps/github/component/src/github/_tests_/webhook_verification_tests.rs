@@ -23,6 +23,7 @@ fn verifies_raw_sha256_signature_and_routes_numeric_identity() {
     assert_eq!(result["provider_event_id"], DELIVERY);
     assert_eq!(result["provider_event_type"], "push");
     assert_eq!(result["provider_repository_id"], "3001");
+    assert_eq!(result["provider_account_label"], "octo-org");
 }
 
 #[test]
@@ -174,11 +175,12 @@ fn handles_installation_target_and_authorization_controls() {
     let (envelope, verification) = valid_verification(&authorization, "github_app_authorization");
     assert_eq!(verification["provider_installation_id"], Value::Null);
     assert_eq!(verification["provider_user_id"], "4001");
+    assert_eq!(verification["user_authorization_lifecycle"], "revoke");
     let response: Value = serde_json::from_str(&webhook_response(
         &json!({"envelope": envelope, "verification": verification}).to_string(),
     ))
     .expect("authorization response should be JSON");
-    assert_eq!(response["status_code"], 200);
+    assert_eq!(response, Value::Null);
 }
 
 #[test]
@@ -211,6 +213,19 @@ fn classifies_lifecycle_events_and_rejects_unsupported_events() {
         DIGEST,
     );
     assert_eq!(result["installation_lifecycle"], "reconcile");
+
+    let mut transferred: Value =
+        serde_json::from_str(&fixture("installation_target")).expect("fixture should be JSON");
+    transferred["action"] = json!("transferred");
+    let result = verify_with_digest(
+        &envelope(
+            &transferred.to_string(),
+            "installation_target",
+            Some(&format!("sha256={DIGEST}")),
+        ),
+        DIGEST,
+    );
+    assert_eq!(result["reason"], "github_event_type_disagreement");
 
     let mut unsupported: Value = serde_json::from_str(&body).expect("fixture should be JSON");
     unsupported["action"] = json!("created");

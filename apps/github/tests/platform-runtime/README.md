@@ -17,7 +17,7 @@ The tests run the real component through `fna-apps-wasm` without live GitHub
 credentials or network calls. They cover all five tools, credential references,
 request construction, provider failures, bounded file traversal, HMAC host
 calls, duplicate headers, ping, lifecycle classification, and all six event
-projection families. It also verifies all 16 published definitions, all 29
+projection families. It also verifies all 16 published definitions, all 28
 acknowledge-and-drop definitions, their exact permissions and effect
 declarations, and the package-to-platform reconciliation contract.
 

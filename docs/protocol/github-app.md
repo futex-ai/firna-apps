@@ -61,10 +61,10 @@ then this immutable package is published and active installations approve the
 new grants. An installation stays on its working old package until live grants
 satisfy `2.1.0`; pending approval must not strand its verifier.
 
-Stable preview activates first by selecting the other 39 matrix events and
+Stable preview activates first by selecting the other 38 matrix events and
 top-level `installation_target`. Production follows only after preview smoke.
 Top-level `meta` and global `security_advisory` remain unselected. Rollback
-first deselects the 39 additions and `installation_target`; URLs, secrets, and
+first deselects the 38 additions and `installation_target`; URLs, secrets, and
 approved permissions remain unchanged while the incident is investigated.
 
 ## Event Matrix
@@ -76,7 +76,7 @@ delivery.
 
 | Family | Published | Acknowledged |
 | --- | --- | --- |
-| Source/repository | `push` | `create`, `delete`, `commit_comment`, `fork`, `gollum`, `release`, `repository`, `repository_dispatch`, `member`, `public`, `star`, `watch` |
+| Source/repository | `push` | `create`, `delete`, `commit_comment`, `fork`, `gollum`, `release`, `repository`, `repository_dispatch`, `public`, `star`, `watch` |
 | Pull requests | `pull_request`, `pull_request_review`, `pull_request_review_comment`, `merge_group` | `pull_request_review_thread`, `merge_queue_entry` |
 | Issues/planning | `issues`, `issue_comment` | `issue_dependencies`, `sub_issues`, `label`, `milestone` |
 | CI/automation | `check_run`, `check_suite`, `status`, `workflow_job`, `workflow_run` | `workflow_dispatch` |
@@ -84,7 +84,7 @@ delivery.
 | Discussions | none | `discussion`, `discussion_comment` |
 | Repository policy | `branch_protection_configuration`, `branch_protection_rule`, `repository_ruleset`, `security_and_analysis` | `deploy_key`, `exemption_request_push_ruleset` |
 
-This is 16 published and 29 acknowledged definitions. Acknowledged definitions
+This is 16 published and 28 acknowledged definitions. Acknowledged definitions
 never appear in public app capability or subscription counts. Unknown event
 types still fail closed; there is no wildcard. Security-alert, organization,
 enterprise, account, membership-team, marketplace, sponsorship, classic
@@ -97,8 +97,8 @@ The package also handles controls outside the subscription catalog:
 - `installation` actions `created`, `unsuspend`, and
   `new_permissions_accepted` reconcile; `deleted` and `suspend` revoke.
 - `installation_repositories` actions `added` and `removed` reconcile.
-- `installation_target` actions `renamed` and `transferred` reconcile identity
-  and coverage without becoming agent content.
+- `installation_target` action `renamed` revision-fences the provider and Firna
+  installation labels, then reconciles coverage without becoming agent content.
 - mandatory `github_app_authorization` action `revoked` invalidates matching
   user authorization material when present and is an authenticated no-op when
   Firna holds none.
@@ -115,10 +115,14 @@ The component requires a GUID delivery id, lower-case event identifier, and
 HMAC-SHA256 with the opaque `webhook_secret` over unchanged UTF-8 bytes and
 compares the full digest in constant time before parsing.
 
-Every non-ping delivery contains a positive installation id and account id.
-Repository events also contain a positive repository id. The candidate and
-pinned verifier return that repository id in trusted metadata so the platform
-can reject an effect mismatch. Header/payload disagreement, duplicate headers,
+Every installation-routed delivery contains a positive installation id and
+account id. Published repository events also contain a positive repository id.
+Acknowledged events require only that installation identity; repository and
+sender metadata are optional and ignored when absent. The app-level
+`github_app_authorization` control instead requires the revoked user's positive
+sender id. The candidate and pinned verifier return authenticated optional
+repository, user, and account-label metadata for the platform actions that use
+them. Header/payload disagreement, duplicate headers,
 unsigned input, malformed ids, oversized input, and unknown shapes fail closed.
 Acknowledged events parse only the common signed envelope; arbitrary nested
 provider data is ignored after identity verification and never forwarded.
@@ -141,10 +145,11 @@ Exactly these 13 published events may emit one version-1
 | `push` | `source` | branch from `refs/heads/*`; tag pushes emit none |
 | `pull_request` | `pull_request` | head branch, PR number, head SHA |
 | `pull_request_review` | `review` | head branch, PR number, head SHA |
-| `merge_group` | `merge_queue` | bounded head/base branch hints and head SHA |
-| `check_run`, `check_suite`, `status` | `checks` | provider-supplied branch hints and head SHA; repository scope when ambiguous |
-| `workflow_job`, `workflow_run` | `workflow` | provider-supplied branch and head SHA; repository scope when absent |
-| `branch_protection_configuration`, `branch_protection_rule`, `repository_ruleset`, `security_and_analysis` | `repository_policy` | repository scope |
+| `merge_group` | `merge_queue` | repository scope and head SHA |
+| `check_run`, `check_suite`, `status` | `check` | provider-supplied branch hints and head SHA; repository scope when absent, invalid, incomplete, or over eight unique values |
+| `workflow_job`, `workflow_run` | `workflow` | provider-supplied branch/PR hints and head SHA; repository scope when absent, invalid, incomplete, or over eight unique values |
+| `branch_protection_configuration`, `branch_protection_rule`, `repository_ruleset` | `repository_policy` | repository scope |
+| `security_and_analysis` | `security` | repository scope |
 
 `pull_request_review_comment`, `issues`, and `issue_comment` remain published
 for subscribers but emit no platform effect. Each effect repeats only the
@@ -189,8 +194,8 @@ firna apps package apps/github
 cargo test --manifest-path apps/github/tests/platform-runtime/Cargo.toml --locked
 ```
 
-Pre-activation tests exercise all 45 exact definitions, controls, malformed and
-adversarial fixtures, the 16/29 split, effect conformance through the pinned
+Pre-activation tests exercise all 44 exact definitions, controls, malformed and
+adversarial fixtures, the 16/28 split, effect conformance through the pinned
 Firna runtime, duplicate and zero-subscriber acceptance, and a dormant-event
 flood beside a published PR event. When a branch-reachable disposable private
 repository and test App are available, smoke one PR/review/check path and one

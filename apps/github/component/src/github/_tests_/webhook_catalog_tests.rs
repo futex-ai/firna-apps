@@ -23,7 +23,7 @@ const PUBLISHED: [&str; 16] = [
     "security_and_analysis",
 ];
 
-pub(super) const ACKNOWLEDGED: [&str; 29] = [
+pub(super) const ACKNOWLEDGED: [&str; 28] = [
     "create",
     "delete",
     "commit_comment",
@@ -32,7 +32,6 @@ pub(super) const ACKNOWLEDGED: [&str; 29] = [
     "release",
     "repository",
     "repository_dispatch",
-    "member",
     "public",
     "star",
     "watch",
@@ -80,7 +79,7 @@ fn authenticates_every_acknowledged_event_without_specific_content() {
             DIGEST,
         );
         assert_eq!(result["provider_event_type"], event_type);
-        assert_eq!(result["provider_repository_id"], "3001");
+        assert_eq!(result["provider_repository_id"], Value::Null);
     }
 }
 
@@ -129,6 +128,7 @@ fn acknowledged_events_require_only_signed_common_identity() {
         serde_json::from_str(&fixture("acknowledged")).expect("fixture should be JSON");
     body["action"] = json!("future_provider_action");
     body["arbitrary"] = json!({"nested": ["SECRET-MARKER", {"patch": "PATCH-MARKER"}]});
+    body["pull_request"] = json!({"number": "not-an-integer"});
     for event_type in ACKNOWLEDGED {
         let result = verify_with_digest(
             &envelope(

@@ -26,7 +26,7 @@ const PUBLISHED: [&str; 16] = [
     "security_and_analysis",
 ];
 
-const ACKNOWLEDGED: [&str; 29] = [
+const ACKNOWLEDGED: [&str; 28] = [
     "create",
     "delete",
     "commit_comment",
@@ -35,7 +35,6 @@ const ACKNOWLEDGED: [&str; 29] = [
     "release",
     "repository",
     "repository_dispatch",
-    "member",
     "public",
     "star",
     "watch",
@@ -78,7 +77,7 @@ const EFFECTS: [&str; 13] = [
 fn manifest_declares_the_exact_published_and_acknowledged_baseline() {
     let manifest = manifest();
     let events = &manifest.ingress[0].events;
-    assert_eq!(events.len(), 45);
+    assert_eq!(events.len(), 44);
 
     for event_type in PUBLISHED {
         let event = events

@@ -470,11 +470,6 @@ ingress:
     description: A repository dispatch was received for a selected repository.
     contract_version: 1
     handling: acknowledge
-  - id: member
-    provider_type: member
-    description: Collaborator access changed for a selected GitHub repository.
-    contract_version: 1
-    handling: acknowledge
   - id: public
     provider_type: public
     description: A selected GitHub repository became public.

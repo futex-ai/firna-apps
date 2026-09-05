@@ -30,14 +30,11 @@ pub(super) fn control(
         ),
         "installation_repositories" => require(
             valid_installation(payload)
-                && matches!(action_value(payload), Some("added" | "removed"))
-                && (!payload.repositories_added.is_empty()
-                    || !payload.repositories_removed.is_empty()),
+                && matches!(action_value(payload), Some("added" | "removed")),
         ),
-        "installation_target" => require(
-            valid_installation(payload)
-                && matches!(action_value(payload), Some("renamed" | "transferred")),
-        ),
+        "installation_target" => {
+            require(valid_installation(payload) && matches!(action_value(payload), Some("renamed")))
+        }
         "github_app_authorization" => require(
             matches!(action_value(payload), Some("revoked"))
                 && payload.sender.as_ref().is_some_and(|sender| sender.id > 0),

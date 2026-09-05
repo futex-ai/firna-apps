@@ -109,22 +109,25 @@ fn tag_pushes_and_subscriber_only_events_emit_no_platform_effect() {
 }
 
 #[test]
-fn status_branch_hints_are_unique_and_bounded_to_eight() {
+fn excessive_or_incomplete_branch_hints_fall_back_to_repository_scope() {
     let mut body: Value = serde_json::from_str(&fixture("status")).expect("fixture should be JSON");
     body["branches"] = Value::Array(
-        (0..12)
+        (0..10)
             .map(|index| json!({"name": format!("branch-{index}")}))
-            .chain([json!({"name": "branch-0"})])
             .collect(),
     );
 
     let output = normalize(&body.to_string(), "status");
-    let branches = output["platform_effects"][0]["branches"]
-        .as_array()
-        .expect("branches should be present");
-    assert_eq!(branches.len(), 8);
-    assert_eq!(branches[0], "branch-0");
-    assert_eq!(branches[7], "branch-7");
+    assert_eq!(output["platform_effects"][0]["scope"], "repository");
+    assert!(output["platform_effects"][0].get("branches").is_none());
+
+    let mut body: Value =
+        serde_json::from_str(&fixture("check_run")).expect("fixture should be JSON");
+    body["check_run"]["check_suite"] = Value::Null;
+    body["check_run"]["pull_requests"][0]["head"] = Value::Null;
+    let output = normalize(&body.to_string(), "check_run");
+    assert_eq!(output["platform_effects"][0]["scope"], "repository");
+    assert!(output["platform_effects"][0].get("branches").is_none());
 }
 
 fn normalize(body: &str, event_type: &str) -> Value {

@@ -12,7 +12,7 @@ repository events to workspaces that explicitly install it.
   component or model.
 - Authenticate GitHub webhooks before routing, lifecycle work, normalization,
   persistence, platform effects, or subscriber delivery.
-- Publish a bounded 16-event agent catalog and acknowledge 29 additional
+- Publish a bounded 16-event agent catalog and acknowledge 28 additional
   repository-engineering events without retaining their payloads.
 - Keep private keys, client secrets, webhook secrets, JWTs, and minted tokens
   inside trusted host credential paths.
@@ -42,9 +42,9 @@ read operation.
 The `github_events` ingress publishes 16 native events for explicit agent
 subscription. Thirteen may also emit a provider-neutral repository-change
 effect that causes Firna to re-read current pull-request status; the remaining
-three are subscriber-only. Another 29 exact event definitions are authenticated
+three are subscriber-only. Another 28 exact event definitions are authenticated
 and acknowledged without normalization, persistence, effects, or delivery.
-The complete 16/29 matrix lives in the protocol below.
+The complete 16/28 matrix lives in the protocol below.
 
 The subscriber-only definitions are `pull_request_review_comment`, `issues`,
 and `issue_comment`. Repository-change producers cover source pushes, pull
@@ -79,9 +79,9 @@ The stable `br-main` preview uses its own registration:
 - Callback URL: <https://br-main.preview.firna.ai/apps/github/install/callback>
 - Webhook URL: <https://br-main.api.preview.firna.ai/apps/github/webhooks/github_events>
 
-Both registrations use the exact 16-permission map and 45-event baseline in
+Both registrations use the exact 16-permission map and 44-event baseline in
 the protocol. The original six checkboxes remain the pre-rollout state; add the
-other 39 plus `installation_target` only after the compatible Firna platform,
+other 38 plus `installation_target` only after the compatible Firna platform,
 package, and provider grants are active. Leave `meta` and global
 `security_advisory` off. The package targets production and stable preview but
 excludes ephemeral `pr-N` previews because their URLs are not registered.

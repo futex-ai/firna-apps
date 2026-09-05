@@ -48,7 +48,7 @@ To install the matching `firna` CLI for local package validation:
 ```sh
 cargo install --locked \
   --git https://github.com/futex-ai/firna.git \
-  --rev a086d06b10162257ca86b1620420ccb1a1d761f9 \
+  --rev 92af016f93b3deba9abbc19c87b165a588d48457 \
   --bin firna fna-cli
 firna apps validate apps/slack
 ```

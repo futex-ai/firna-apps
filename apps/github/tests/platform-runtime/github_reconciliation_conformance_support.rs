@@ -12,7 +12,8 @@ use fna_external_repos_interface::{
 };
 use fna_store_interface::workspace::{
     WorkstreamPrChecks, WorkstreamPrMergeable, WorkstreamPrReview, WorkstreamPrState,
-    WorkstreamRecord, WorkstreamSnapshot, WorkstreamSnapshotStoreMock, WorkstreamStoreMock,
+    WorkstreamRecord, WorkstreamSnapshot, WorkstreamSnapshotRefresh, WorkstreamSnapshotReplacement,
+    WorkstreamSnapshotStoreMock, WorkstreamStoreMock,
 };
 use fna_workstreams::{ConfiguredWorkstreamService, WorkstreamUpdatePublisherMock};
 use unimock::{MockFn as _, Unimock, matching};
@@ -87,18 +88,21 @@ pub(crate) fn configured_workstream_service(
                 Ok(binding.clone())
             })),
     ));
-    let snapshots = Arc::new(Unimock::new(
+    let snapshots = Arc::new(Unimock::new((
+        WorkstreamSnapshotStoreMock::reserve_workstream_snapshot_refresh
+            .next_call(matching!(_, _))
+            .returns(Ok(WorkstreamSnapshotRefresh { generation: 1 })),
         WorkstreamSnapshotStoreMock::replace_workstream_snapshot
-            .next_call(matching!(_, _, _, _))
+            .next_call(matching!(_, _, _, _, _))
             .answers_arc(Arc::new(
-                move |_, actual_workspace_id, actual_agent_id, actual, _| {
+                move |_, actual_workspace_id, actual_agent_id, _, actual, _| {
                     assert_eq!(actual_workspace_id, workspace_id);
                     assert_eq!(actual_agent_id, agent_id);
                     assert_eq!(actual, expected_snapshot);
-                    Ok(refreshed.clone())
+                    Ok(WorkstreamSnapshotReplacement::Applied(refreshed.clone()))
                 },
             )),
-    ));
+    )));
     let repositories = Arc::new(Unimock::new(
         ExternalRepoServiceMock::get_by_id
             .next_call(matching!(_))

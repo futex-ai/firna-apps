@@ -38,12 +38,16 @@ pub(crate) struct WebhookResponseRequest {
 pub(crate) struct WebhookVerification {
     pub(crate) provider_account_id: String,
     pub(crate) provider_installation_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) provider_account_label: Option<String>,
     pub(crate) provider_event_id: String,
     pub(crate) provider_event_type: String,
     pub(crate) provider_user_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) provider_repository_id: Option<String>,
     pub(crate) installation_lifecycle: Option<ProviderInstallationLifecycle>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) user_authorization_lifecycle: Option<ProviderUserAuthorizationLifecycle>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -51,6 +55,19 @@ pub(crate) struct WebhookVerification {
 pub(crate) enum ProviderInstallationLifecycle {
     Reconcile,
     Revoke,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum ProviderUserAuthorizationLifecycle {
+    Revoke,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct AcknowledgedWebhookPayload {
+    pub(crate) installation: Option<Installation>,
+    pub(crate) repository: Option<Repository>,
+    pub(crate) sender: Option<Actor>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -88,10 +105,6 @@ pub(crate) struct GitHubWebhookPayload {
     pub(crate) target_url: Option<String>,
     #[serde(default)]
     pub(crate) branches: Vec<StatusBranch>,
-    #[serde(default)]
-    pub(crate) repositories_added: Vec<Repository>,
-    #[serde(default)]
-    pub(crate) repositories_removed: Vec<Repository>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

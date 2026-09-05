@@ -18,10 +18,7 @@ pub(crate) fn webhook_response(request: &str) -> String {
     let Ok(request) = serde_json::from_str::<WebhookResponseRequest>(request) else {
         return encode_error(WebhookError::InvalidEnvelope);
     };
-    if !matches!(
-        request.verification.provider_event_type.as_str(),
-        "ping" | "github_app_authorization"
-    ) {
+    if request.verification.provider_event_type != "ping" {
         return String::from("null");
     }
     encode(&json!({

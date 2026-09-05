@@ -5,7 +5,8 @@ use crate::github::webhook_event_validation;
 use crate::github::webhook_events;
 use crate::github::webhook_host::{WebhookError, WebhookSigner};
 use crate::github::webhook_types::{
-    GitHubWebhookPayload, ProviderInstallationLifecycle, WebhookEnvelope, WebhookVerification,
+    AcknowledgedWebhookPayload, GitHubWebhookPayload, ProviderInstallationLifecycle,
+    ProviderUserAuthorizationLifecycle, WebhookEnvelope, WebhookVerification,
 };
 
 const MAX_PAYLOAD_BYTES: usize = 262_144;
@@ -39,6 +40,11 @@ pub(super) fn verify(
     if !is_event_type(event_type) {
         return Err(WebhookError::MalformedEventType);
     }
+    if webhook_events::is_acknowledged(event_type) {
+        let payload = serde_json::from_slice::<AcknowledgedWebhookPayload>(&envelope.body)
+            .or(Err(WebhookError::InvalidJson))?;
+        return build_acknowledged_verification(event_type, delivery, &payload);
+    }
     let payload = serde_json::from_slice::<GitHubWebhookPayload>(&envelope.body)
         .or(Err(WebhookError::InvalidJson))?;
     verify_payload_shape(event_type, &payload)?;
@@ -54,11 +60,13 @@ fn build_verification(
         return Ok(WebhookVerification {
             provider_account_id: String::from("ping"),
             provider_installation_id: None,
+            provider_account_label: None,
             provider_event_id: delivery.to_owned(),
             provider_event_type: event_type.to_owned(),
             provider_user_id: None,
             provider_repository_id: None,
             installation_lifecycle: None,
+            user_authorization_lifecycle: None,
         });
     }
     if event_type == "github_app_authorization" {
@@ -69,11 +77,13 @@ fn build_verification(
         return Ok(WebhookVerification {
             provider_account_id: sender.id.to_string(),
             provider_installation_id: None,
+            provider_account_label: sender.login.clone(),
             provider_event_id: delivery.to_owned(),
             provider_event_type: event_type.to_owned(),
             provider_user_id: Some(sender.id.to_string()),
             provider_repository_id: None,
             installation_lifecycle: None,
+            user_authorization_lifecycle: Some(ProviderUserAuthorizationLifecycle::Revoke),
         });
     }
     let installation = payload
@@ -101,6 +111,7 @@ fn build_verification(
     Ok(WebhookVerification {
         provider_account_id: installation.account.id.to_string(),
         provider_installation_id: Some(installation.id.to_string()),
+        provider_account_label: installation.account.login.clone(),
         provider_event_id: delivery.to_owned(),
         provider_event_type: event_type.to_owned(),
         provider_user_id: payload
@@ -110,6 +121,41 @@ fn build_verification(
             .map(|sender| sender.id.to_string()),
         provider_repository_id,
         installation_lifecycle,
+        user_authorization_lifecycle: None,
+    })
+}
+
+fn build_acknowledged_verification(
+    event_type: &str,
+    delivery: &str,
+    payload: &AcknowledgedWebhookPayload,
+) -> Result<WebhookVerification, WebhookError> {
+    let installation = payload
+        .installation
+        .as_ref()
+        .filter(|installation| installation.id != 0)
+        .ok_or(WebhookError::MissingInstallation)?;
+    if installation.account.id == 0 {
+        return Err(WebhookError::MissingAccount);
+    }
+    Ok(WebhookVerification {
+        provider_account_id: installation.account.id.to_string(),
+        provider_installation_id: Some(installation.id.to_string()),
+        provider_account_label: installation.account.login.clone(),
+        provider_event_id: delivery.to_owned(),
+        provider_event_type: event_type.to_owned(),
+        provider_user_id: payload
+            .sender
+            .as_ref()
+            .filter(|sender| sender.id != 0)
+            .map(|sender| sender.id.to_string()),
+        provider_repository_id: payload
+            .repository
+            .as_ref()
+            .filter(|repository| repository.id != 0)
+            .map(|repository| repository.id.to_string()),
+        installation_lifecycle: None,
+        user_authorization_lifecycle: None,
     })
 }
 
@@ -119,18 +165,6 @@ fn verify_payload_shape(
 ) -> Result<(), WebhookError> {
     if webhook_events::is_published(event_type) {
         webhook_event_validation::published(event_type, payload)
-    } else if webhook_events::is_acknowledged(event_type) {
-        require(
-            payload
-                .installation
-                .as_ref()
-                .is_some_and(|installation| installation.id > 0 && installation.account.id > 0)
-                && payload
-                    .repository
-                    .as_ref()
-                    .is_some_and(|repository| repository.id > 0)
-                && payload.sender.as_ref().is_some_and(|sender| sender.id > 0),
-        )
     } else {
         webhook_control_validation::control(event_type, payload)
     }
@@ -147,9 +181,7 @@ fn lifecycle(event_type: &str, action: Option<&str>) -> Option<ProviderInstallat
         ("installation_repositories", Some("added" | "removed")) => {
             Some(ProviderInstallationLifecycle::Reconcile)
         }
-        ("installation_target", Some("renamed" | "transferred")) => {
-            Some(ProviderInstallationLifecycle::Reconcile)
-        }
+        ("installation_target", Some("renamed")) => Some(ProviderInstallationLifecycle::Reconcile),
         _ => None,
     }
 }
@@ -215,14 +247,6 @@ fn is_event_type(value: &str) -> bool {
         && value
             .bytes()
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
-}
-
-fn require(condition: bool) -> Result<(), WebhookError> {
-    if condition {
-        Ok(())
-    } else {
-        Err(WebhookError::EventTypeDisagreement)
-    }
 }
 
 fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {

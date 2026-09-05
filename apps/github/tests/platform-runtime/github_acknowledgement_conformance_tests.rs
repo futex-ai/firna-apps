@@ -10,7 +10,7 @@ use unimock::{MockFn as _, Unimock, matching};
 use crate::github_effect_conformance_support::{DIGEST, envelope_for, records};
 use crate::github_runtime_support::runtime_with_host;
 
-const ACKNOWLEDGED: [&str; 29] = [
+const ACKNOWLEDGED: [&str; 28] = [
     "create",
     "delete",
     "commit_comment",
@@ -19,7 +19,6 @@ const ACKNOWLEDGED: [&str; 29] = [
     "release",
     "repository",
     "repository_dispatch",
-    "member",
     "public",
     "star",
     "watch",
