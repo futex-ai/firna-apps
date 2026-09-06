@@ -14,6 +14,23 @@ pub(super) struct NormalizedEvent {
     pub(super) provider_account_id: String,
     pub(super) source: BTreeMap<String, String>,
     pub(super) payload: EventPayload,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub(super) platform_effects: Vec<RepositoryChangeEffect>,
+}
+
+#[derive(Serialize)]
+pub(super) struct RepositoryChangeEffect {
+    pub(super) kind: &'static str,
+    pub(super) contract_version: u64,
+    pub(super) provider_repository_id: String,
+    pub(super) change_kind: &'static str,
+    pub(super) scope: &'static str,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub(super) branches: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) pull_request_number: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) head_sha: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -57,6 +74,52 @@ pub(super) enum EventProjection {
         issue: IssueProjection,
         comment: CommentProjection,
     },
+    CheckRun {
+        signal: AutomationProjection,
+    },
+    CheckSuite {
+        signal: AutomationProjection,
+    },
+    Status {
+        signal: StatusProjection,
+    },
+    WorkflowJob {
+        signal: AutomationProjection,
+    },
+    WorkflowRun {
+        signal: AutomationProjection,
+    },
+    MergeGroup {
+        head_ref: String,
+        head_sha: String,
+        base_ref: String,
+        base_sha: String,
+    },
+    BranchProtectionConfiguration,
+    BranchProtectionRule,
+    RepositoryRuleset,
+    SecurityAndAnalysis,
+}
+
+#[derive(Serialize)]
+pub(super) struct AutomationProjection {
+    pub(super) id: u64,
+    pub(super) name: Option<String>,
+    pub(super) status: String,
+    pub(super) conclusion: Option<String>,
+    pub(super) head_branch: Option<String>,
+    pub(super) head_sha: String,
+    pub(super) url: Option<String>,
+}
+
+#[derive(Serialize)]
+pub(super) struct StatusProjection {
+    pub(super) sha: String,
+    pub(super) state: String,
+    pub(super) context: Option<String>,
+    pub(super) description: Option<String>,
+    pub(super) target_url: Option<String>,
+    pub(super) branches: Vec<String>,
 }
 
 #[derive(Serialize)]

@@ -33,7 +33,7 @@ pub(crate) fn normalize_event(request: &str) -> String {
         Ok(verified) => verified,
         Err(_) => return encode_error(WebhookError::InvalidEnvelope),
     };
-    if !webhook_validation::is_supported_content_event(&verified.verification.provider_event_type) {
+    if !webhook_validation::is_published_event(&verified.verification.provider_event_type) {
         return encode_error(WebhookError::UnsupportedEvent);
     }
     let body = match serde_json::from_slice::<GitHubWebhookPayload>(&verified.envelope.body) {

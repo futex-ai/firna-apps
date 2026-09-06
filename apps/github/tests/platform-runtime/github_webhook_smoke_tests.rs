@@ -4,8 +4,9 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use fna_apps_interface::runtime::{
-    AppRuntime, ProviderInstallationLifecycle, VerifiedProviderEvent, WebhookEnvelope,
-    WebhookHeader, WebhookResponseRequest,
+    AppRuntime, NormalizedPlatformEffect, ProviderInstallationLifecycle, RepositoryChangeKind,
+    RepositoryChangeScope, VerifiedProviderEvent, WebhookEnvelope, WebhookHeader,
+    WebhookResponseRequest,
 };
 use fna_apps_wasm::{HostHmacSha256Request, HostHmacSha256Response, WasmHostMock};
 use serde_json::Value;
@@ -54,6 +55,7 @@ async fn signed_push_verifies_and_normalizes_through_real_wasm() {
     );
     assert_eq!(verification.provider_event_id, DELIVERY);
     assert_eq!(verification.provider_event_type, "push");
+    assert_eq!(verification.provider_repository_id.as_deref(), Some("3001"));
     let normalized = runtime
         .normalize_event(VerifiedProviderEvent {
             workspace_id: Uuid::now_v7(),
@@ -70,6 +72,19 @@ async fn signed_push_verifies_and_normalizes_through_real_wasm() {
     assert_eq!(normalized.payload["event"]["kind"], "push");
     assert!(normalized.payload.get("signature").is_none());
     assert!(normalized.payload.get("token").is_none());
+    let [NormalizedPlatformEffect::RepositoryChange(effect)] =
+        normalized.platform_effects.as_slice()
+    else {
+        panic!("push should emit one repository change");
+    };
+    assert_eq!(effect.provider_repository_id, "3001");
+    assert_eq!(effect.change_kind, RepositoryChangeKind::Source);
+    assert_eq!(effect.scope, RepositoryChangeScope::Branches);
+    assert_eq!(effect.branches, ["main"]);
+    assert_eq!(
+        effect.head_sha.as_deref(),
+        Some("2222222222222222222222222222222222222222")
+    );
 }
 
 #[tokio::test]
@@ -92,6 +107,43 @@ async fn remaining_declared_events_normalize_through_real_wasm() {
             "issue_comment",
             include_str!("../fixtures/webhooks/issue_comment.json"),
         ),
+        (
+            "merge_group",
+            include_str!("../fixtures/webhooks/merge_group.json"),
+        ),
+        (
+            "check_run",
+            include_str!("../fixtures/webhooks/check_run.json"),
+        ),
+        (
+            "check_suite",
+            include_str!("../fixtures/webhooks/check_suite.json"),
+        ),
+        ("status", include_str!("../fixtures/webhooks/status.json")),
+        (
+            "workflow_job",
+            include_str!("../fixtures/webhooks/workflow_job.json"),
+        ),
+        (
+            "workflow_run",
+            include_str!("../fixtures/webhooks/workflow_run.json"),
+        ),
+        (
+            "branch_protection_configuration",
+            include_str!("../fixtures/webhooks/branch_protection_configuration.json"),
+        ),
+        (
+            "branch_protection_rule",
+            include_str!("../fixtures/webhooks/branch_protection_rule.json"),
+        ),
+        (
+            "repository_ruleset",
+            include_str!("../fixtures/webhooks/repository_ruleset.json"),
+        ),
+        (
+            "security_and_analysis",
+            include_str!("../fixtures/webhooks/security_and_analysis.json"),
+        ),
     ];
 
     for (event_type, body) in cases {
@@ -110,6 +162,11 @@ async fn remaining_declared_events_normalize_through_real_wasm() {
             .await
             .unwrap();
         assert_eq!(normalized.payload["event"]["kind"], event_type);
+        let subscriber_only = matches!(
+            event_type,
+            "pull_request_review_comment" | "issues" | "issue_comment"
+        );
+        assert_eq!(normalized.platform_effects.is_empty(), subscriber_only);
     }
 }
 

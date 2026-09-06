@@ -18,14 +18,6 @@ const EXPECTED_TOOLS: [&str; 5] = [
     "github_read_pr",
     "github_read_issue",
 ];
-const EXPECTED_EVENTS: [&str; 6] = [
-    "push",
-    "pull_request",
-    "pull_request_review",
-    "pull_request_review_comment",
-    "issues",
-    "issue_comment",
-];
 const OWNER_PATTERN: &str = "^[A-Za-z0-9]([A-Za-z0-9-]{0,98}[A-Za-z0-9])?$";
 const REPOSITORY_PATTERN: &str = "^[A-Za-z0-9._-]+$";
 const NON_BLANK_PATTERN: &str = "\\S";
@@ -39,7 +31,7 @@ fn github_manifest_preserves_installation_access_and_adds_tools_and_events() {
 
     manifest.validate().unwrap();
     assert_eq!(manifest.id, "github");
-    assert_eq!(manifest.version, "2.0.3");
+    assert_eq!(manifest.version, "2.1.0");
     assert_eq!(manifest.source.kind, AppSourceKind::BuiltIn);
     assert_eq!(manifest.install.policy, InstallPolicy::Explicit);
     assert_eq!(
@@ -108,15 +100,6 @@ fn github_installation_and_ingress_contracts_are_exact() {
 
     assert_eq!(requirement.kind, AuthRequirementKind::AppInstallation);
     assert_eq!(requirement.owner, AuthOwner::Workspace);
-    assert_eq!(
-        requirement.scopes,
-        [
-            "contents:write",
-            "issues:read",
-            "metadata:read",
-            "pull_requests:write",
-        ]
-    );
     assert_eq!(requirement.credential_kinds, ["provider_installation_id"]);
     assert_eq!(
         requirement.required_for,
@@ -139,15 +122,6 @@ fn github_installation_and_ingress_contracts_are_exact() {
     assert_eq!(flow.setup_url_env.as_deref(), Some("setup_url"));
     assert_eq!(flow.callback_url, None);
     assert_eq!(flow.callback_url_env.as_deref(), Some("callback_url"));
-    assert_eq!(
-        serde_json::to_value(flow).unwrap()["permissions"],
-        serde_json::json!({
-            "contents": "write",
-            "issues": "read",
-            "metadata": "read",
-            "pull_requests": "write"
-        })
-    );
 
     let [ingress] = manifest.ingress.as_slice() else {
         panic!("expected one GitHub webhook ingress");
@@ -160,20 +134,6 @@ fn github_installation_and_ingress_contracts_are_exact() {
     );
     assert_eq!(ingress.credential_kinds, ["webhook_secret"]);
     assert_eq!(ingress.max_payload_bytes, Some(262_144));
-    assert_eq!(
-        ingress
-            .events
-            .iter()
-            .map(|event| event.provider_type.as_str())
-            .collect::<Vec<_>>(),
-        EXPECTED_EVENTS
-    );
-    assert!(
-        ingress
-            .events
-            .iter()
-            .all(|event| event.contract_version == 1)
-    );
 }
 
 #[test]

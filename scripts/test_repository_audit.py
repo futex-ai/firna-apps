@@ -97,6 +97,31 @@ class RepositoryAuditTests(unittest.TestCase):
             self.assertEqual(len(failures), 1)
             self.assertIn("version `1.0.0` is not above `1.0.0`", failures[0])
 
+    def test_platform_runtime_pin_only_change_skips_version_bump(self) -> None:
+        with TestRepository() as repository:
+            repository.write("apps/slack/manifest.yaml", "id: slack\nversion: 1.0.0\n")
+            repository.write(
+                "apps/slack/tests/platform-runtime/Cargo.toml",
+                'fna-apps-interface = { rev = "old" }\n',
+            )
+            repository.write(
+                "apps/slack/tests/platform-runtime/Cargo.lock",
+                'source = "old"\n',
+            )
+            repository.commit("seed")
+            repository.write(
+                "apps/slack/tests/platform-runtime/Cargo.toml",
+                'fna-apps-interface = { rev = "new" }\n',
+            )
+            repository.write(
+                "apps/slack/tests/platform-runtime/Cargo.lock",
+                'source = "new"\n',
+            )
+
+            failures = repository_audit.audit_changed_versions(repository.root, "HEAD")
+
+            self.assertEqual(failures, [])
+
     def test_audit_deploy_config_reports_invalid_configuration(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

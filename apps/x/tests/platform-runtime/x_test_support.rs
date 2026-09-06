@@ -1,17 +1,20 @@
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use fna_apps::credentials::{
     AppCredentialVault, PutInstallationCredential, PutInstallationCredentialPair,
     PutOAuthConnectionCredentials, PutUserGrantCredential,
 };
+use fna_apps::installation_flow::DynInstallationTokenIssuer;
 use fna_apps_interface::runtime::{AppRuntime, AppToolCall, AppToolResult};
 use fna_apps_interface::{Error, Result};
 use fna_apps_store_interface::{
     AppCredentialRecord, AppCredentialRefreshInvalidation, AppCredentialRefreshRelease,
-    AppInstallationRecord,
+    AppInstallationRecord, AppInstallationReplacement,
 };
 use fna_apps_wasm::{HostCredentialReference, HostHttpResponse, WasmComponentRuntime};
 use serde_json::Value;
+use unimock::Unimock;
 use uuid::Uuid;
 
 pub(crate) async fn call_tool_result(
@@ -114,6 +117,14 @@ impl AppCredentialVault for UnusedCredentialVault {
         panic!("OAuth lifecycle should own installation credentials")
     }
 
+    fn publish_installation_credential(
+        &self,
+        _input: PutInstallationCredential,
+        _replacement: AppInstallationReplacement,
+    ) -> Result<AppInstallationRecord> {
+        panic!("OAuth lifecycle should own installation credentials")
+    }
+
     fn remove_installation_credential(
         &self,
         _workspace_id: Uuid,
@@ -172,4 +183,8 @@ impl AppCredentialVault for UnusedCredentialVault {
     fn resolve_record(&self, _credential: &AppCredentialRecord) -> Result<Option<String>> {
         panic!("lifecycle-managed X access tokens resolve through the token service")
     }
+}
+
+pub(crate) fn unused_installation_token_issuer() -> DynInstallationTokenIssuer {
+    Arc::new(Unimock::new(()))
 }

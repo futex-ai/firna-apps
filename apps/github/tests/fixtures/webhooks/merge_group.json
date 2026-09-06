@@ -1,0 +1,12 @@
+{
+  "action": "checks_requested",
+  "installation": {"id": 1001, "account": {"id": 2001, "login": "octo-org", "html_url": "https://github.com/octo-org"}},
+  "repository": {"id": 3001, "name": "repo", "full_name": "octo-org/repo", "html_url": "https://github.com/octo-org/repo", "private": true},
+  "sender": {"id": 4001, "login": "octocat", "html_url": "https://github.com/octocat"},
+  "merge_group": {
+    "head_ref": "refs/heads/gh-readonly-queue/main/pr-17",
+    "head_sha": "4444444444444444444444444444444444444444",
+    "base_ref": "refs/heads/main",
+    "base_sha": "2222222222222222222222222222222222222222"
+  }
+}

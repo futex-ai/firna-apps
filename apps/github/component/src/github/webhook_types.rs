@@ -2,6 +2,11 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::github::webhook_content_types::{Comment, Commit, Issue, PullRequest, Review};
+use crate::github::webhook_signal_types::{
+    CheckRun, CheckSuite, MergeGroup, StatusBranch, WorkflowJob, WorkflowRun,
+};
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct WebhookEnvelope {
     pub(crate) app_id: String,
@@ -33,10 +38,16 @@ pub(crate) struct WebhookResponseRequest {
 pub(crate) struct WebhookVerification {
     pub(crate) provider_account_id: String,
     pub(crate) provider_installation_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) provider_account_label: Option<String>,
     pub(crate) provider_event_id: String,
     pub(crate) provider_event_type: String,
     pub(crate) provider_user_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) provider_repository_id: Option<String>,
     pub(crate) installation_lifecycle: Option<ProviderInstallationLifecycle>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) user_authorization_lifecycle: Option<ProviderUserAuthorizationLifecycle>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -44,6 +55,19 @@ pub(crate) struct WebhookVerification {
 pub(crate) enum ProviderInstallationLifecycle {
     Reconcile,
     Revoke,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum ProviderUserAuthorizationLifecycle {
+    Revoke,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct AcknowledgedWebhookPayload {
+    pub(crate) installation: Option<Installation>,
+    pub(crate) repository: Option<Repository>,
+    pub(crate) sender: Option<Actor>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -69,10 +93,18 @@ pub(crate) struct GitHubWebhookPayload {
     pub(crate) review: Option<Review>,
     pub(crate) comment: Option<Comment>,
     pub(crate) issue: Option<Issue>,
+    pub(crate) check_run: Option<CheckRun>,
+    pub(crate) check_suite: Option<CheckSuite>,
+    pub(crate) workflow_job: Option<WorkflowJob>,
+    pub(crate) workflow_run: Option<WorkflowRun>,
+    pub(crate) merge_group: Option<MergeGroup>,
+    pub(crate) sha: Option<String>,
+    pub(crate) state: Option<String>,
+    pub(crate) context: Option<String>,
+    pub(crate) description: Option<String>,
+    pub(crate) target_url: Option<String>,
     #[serde(default)]
-    pub(crate) repositories_added: Vec<Repository>,
-    #[serde(default)]
-    pub(crate) repositories_removed: Vec<Repository>,
+    pub(crate) branches: Vec<StatusBranch>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -100,73 +132,4 @@ pub(crate) struct Repository {
     pub(crate) full_name: Option<String>,
     pub(crate) html_url: Option<String>,
     pub(crate) private: Option<bool>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct Commit {
-    pub(crate) id: String,
-    pub(crate) message: Option<String>,
-    pub(crate) url: Option<String>,
-    pub(crate) author: Option<CommitAuthor>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CommitAuthor {
-    pub(crate) name: Option<String>,
-    pub(crate) username: Option<String>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct PullRequest {
-    pub(crate) id: u64,
-    pub(crate) number: u64,
-    pub(crate) title: String,
-    pub(crate) body: Option<String>,
-    pub(crate) state: String,
-    pub(crate) draft: Option<bool>,
-    pub(crate) merged: Option<bool>,
-    pub(crate) html_url: String,
-    pub(crate) user: Actor,
-    pub(crate) head: GitReference,
-    pub(crate) base: GitReference,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct GitReference {
-    #[serde(rename = "ref")]
-    pub(crate) name: String,
-    pub(crate) sha: String,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct Review {
-    pub(crate) id: u64,
-    pub(crate) state: String,
-    pub(crate) body: Option<String>,
-    pub(crate) html_url: String,
-    pub(crate) submitted_at: Option<String>,
-    pub(crate) commit_id: Option<String>,
-    pub(crate) user: Actor,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct Comment {
-    pub(crate) id: u64,
-    pub(crate) body: Option<String>,
-    pub(crate) html_url: String,
-    pub(crate) created_at: Option<String>,
-    pub(crate) updated_at: Option<String>,
-    pub(crate) user: Actor,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct Issue {
-    pub(crate) id: u64,
-    pub(crate) number: u64,
-    pub(crate) title: String,
-    pub(crate) body: Option<String>,
-    pub(crate) state: String,
-    pub(crate) html_url: String,
-    pub(crate) locked: Option<bool>,
-    pub(crate) user: Actor,
 }

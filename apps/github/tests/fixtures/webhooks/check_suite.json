@@ -1,0 +1,14 @@
+{
+  "action": "completed",
+  "installation": {"id": 1001, "account": {"id": 2001, "login": "octo-org", "html_url": "https://github.com/octo-org"}},
+  "repository": {"id": 3001, "name": "repo", "full_name": "octo-org/repo", "html_url": "https://github.com/octo-org/repo", "private": true},
+  "sender": {"id": 4001, "login": "octocat", "html_url": "https://github.com/octocat"},
+  "check_suite": {
+    "id": 7201,
+    "status": "completed",
+    "conclusion": "success",
+    "head_branch": "events",
+    "head_sha": "3333333333333333333333333333333333333333",
+    "pull_requests": [{"number": 17, "head": {"ref": "events", "sha": "3333333333333333333333333333333333333333"}}]
+  }
+}

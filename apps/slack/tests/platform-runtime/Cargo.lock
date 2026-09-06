@@ -14,9 +14,10 @@ dependencies = [
 [[package]]
 name = "ai-interface"
 version = "0.3.0"
-source = "git+https://github.com/futex-ai/ai.git?rev=4505459668c27e6d5c809baaec614abaecc83f32#4505459668c27e6d5c809baaec614abaecc83f32"
+source = "git+https://github.com/futex-ai/ai.git?rev=35da3dd9f5b7316bcfbdfa99c665e406220ffaec#35da3dd9f5b7316bcfbdfa99c665e406220ffaec"
 dependencies = [
  "async-trait",
+ "internal-error",
  "serde",
  "serde_json",
  "thiserror 2.0.19",
@@ -397,7 +398,7 @@ dependencies = [
 [[package]]
 name = "diesel-enum-macro"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=733d089519f799b78f52a173db5cc1507fd72e65#733d089519f799b78f52a173db5cc1507fd72e65"
+source = "git+https://github.com/futex-ai/firna.git?rev=009f2ad1c60a6e6c82f8c899b3a481d1e536afe0#009f2ad1c60a6e6c82f8c899b3a481d1e536afe0"
 dependencies = [
  "serde",
 ]
@@ -545,7 +546,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=733d089519f799b78f52a173db5cc1507fd72e65#733d089519f799b78f52a173db5cc1507fd72e65"
+source = "git+https://github.com/futex-ai/firna.git?rev=009f2ad1c60a6e6c82f8c899b3a481d1e536afe0#009f2ad1c60a6e6c82f8c899b3a481d1e536afe0"
 dependencies = [
  "ai-interface",
  "async-trait",
@@ -567,7 +568,7 @@ dependencies = [
 [[package]]
 name = "fna-apps-wasm"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=733d089519f799b78f52a173db5cc1507fd72e65#733d089519f799b78f52a173db5cc1507fd72e65"
+source = "git+https://github.com/futex-ai/firna.git?rev=009f2ad1c60a6e6c82f8c899b3a481d1e536afe0#009f2ad1c60a6e6c82f8c899b3a481d1e536afe0"
 dependencies = [
  "async-trait",
  "fna-apps-interface",
@@ -583,7 +584,7 @@ dependencies = [
 [[package]]
 name = "fna-db-enums"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/firna.git?rev=733d089519f799b78f52a173db5cc1507fd72e65#733d089519f799b78f52a173db5cc1507fd72e65"
+source = "git+https://github.com/futex-ai/firna.git?rev=009f2ad1c60a6e6c82f8c899b3a481d1e536afe0#009f2ad1c60a6e6c82f8c899b3a481d1e536afe0"
 dependencies = [
  "diesel-enum-macro",
  "serde",

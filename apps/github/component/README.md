@@ -11,9 +11,9 @@ deduplication remain platform responsibilities.
 - Construct bounded, known `api.github.com` GET requests.
 - Request host-mediated bearer injection without receiving the raw token.
 - Verify GitHub HMAC signatures through an opaque host secret handle.
-- Classify ping, installation lifecycle, and six deliverable event types.
-- Convert provider responses and webhook payloads into bounded, redacted
-  projections.
+- Classify control deliveries, 16 published events, and 28 acknowledged events.
+- Convert published payloads into bounded, redacted projections and declared
+  repository-change effects while never parsing acknowledged event content.
 
 ## What This Crate Does
 
@@ -32,8 +32,10 @@ rejected before the final commit-pinned Contents request.
 Webhook verification uses the exact raw UTF-8 body, requires one lower-case
 `sha256=` digest, and compares it in constant time. It validates the delivery
 and event headers plus event-specific payload shape before returning trusted
-installation, account, actor, and lifecycle metadata. Ping returns
-`{"ok":true}`; only the six manifest-declared content events normalize.
+installation, account, optional repository/actor, account-label, and lifecycle
+metadata. Acknowledged events parse only that minimal common envelope and ignore
+all event-specific nested objects. Ping returns
+`{"ok":true}`; only manifest definitions with `handling: publish` normalize.
 
 Normalization caps commit lists at 20, titles and names at 256 characters,
 commit messages at 512, and bodies and comments at 2,000. It retains only
@@ -52,7 +54,8 @@ cargo build --manifest-path apps/github/component/Cargo.toml \
 ## Development
 
 Unit tests mock `GitHubProvider`, `Clock`, and `WebhookSigner` with
-`unimock`. Fixtures cover every subscribed event and implicit control shape.
+`unimock`. Credential-free fixtures cover every published, acknowledged, and
+control event plus adversarial redaction and shape cases.
 
 ### Key Code
 

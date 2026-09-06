@@ -16,7 +16,7 @@ use uuid::Uuid;
 
 use crate::manifest;
 use crate::x_runtime_support::runtime_with_host;
-use crate::x_test_support::UnusedCredentialVault;
+use crate::x_test_support::{UnusedCredentialVault, unused_installation_token_issuer};
 
 #[tokio::test]
 async fn x_host_refreshes_and_retries_once_after_unauthorized() {
@@ -49,6 +49,7 @@ async fn x_host_refreshes_and_retries_once_after_unauthorized() {
         provider.clone(),
         invocation,
         oauth.clone(),
+        unused_installation_token_issuer(),
     );
     let runtime = runtime_with_host(Arc::new(host));
 
